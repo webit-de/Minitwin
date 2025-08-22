@@ -1,0 +1,39 @@
+# Bundler and vendorized gems
+/.bundle/
+/vendor/
+
+# Gem build artifacts
+/pkg/
+/*.gem
+
+# Lockfile (commit for apps, ignore for gems)
+/Gemfile.lock
+
+# Coverage and docs
+/coverage/
+/doc/
+/.yardoc/
+
+# Logs and temp files
+/log/
+/tmp/
+
+# Local environment files
+/.env
+/.env.*
+
+# Editor/IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+
+# OS-specific
+.DS_Store
+
+# Debug/REPL history
+/.byebug_history
+/.irb_history
+
+# Test status caches
+/.rspec_status
