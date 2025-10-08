@@ -35,11 +35,18 @@ class MiniTwin
     end
 
     def attribute_methods
-      public_methods(false).select do |method|
-        method_name = method.to_s
-        next false if method_name.end_with?("=", "?", "!")
+      # Prefer class-level cache of allowed attribute keys (setter names
+      # without the trailing '='). This ensures aliased properties (where the
+      # original reader is protected) are still considered assignable.
+      if self.class.respond_to?(:allowed_attribute_keys, true)
+        self.class.send(:allowed_attribute_keys).to_a
+      else
+        public_methods(false).select do |method|
+          method_name = method.to_s
+          next false if method_name.end_with?("=", "?", "!")
 
-        respond_to?(:"#{method}=")
+          respond_to?(:"#{method}=")
+        end
       end
     end
 

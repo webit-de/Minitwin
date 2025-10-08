@@ -17,25 +17,24 @@ class MiniTwin
         nested_class = create_nested_class(name:, &block)
 
         define_method("#{name}=") do |values|
+          element_klass = twin || nested_class
           values = Array(values).map do |v|
-            if twin.present?
+            if element_klass
               if v.nil?
                 nil
-              elsif v.is_a?(twin)
+              elsif v.is_a?(element_klass)
                 v
               elsif v.respond_to?(:to_h)
-                twin.new(**v.to_h)
+                element_klass.new(**v.to_h)
               elsif v.respond_to?(:attributes)
-                twin.new(**v.attributes)
+                element_klass.new(**v.attributes)
               elsif v.is_a?(Array) && v.size == 2 && v.last.is_a?(Hash)
-                twin.new(**v.last)
+                element_klass.new(**v.last)
               elsif v.is_a?(Hash)
-                twin.new(**v)
+                element_klass.new(**v)
               else
                 v
               end
-            elsif v.is_a?(Hash)
-              nested_class.new(**v)
             else
               v
             end

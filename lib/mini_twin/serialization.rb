@@ -40,7 +40,11 @@ class MiniTwin
     end
 
     def attributes
-      attribute_methods.index_with { |m| public_send(m) }
+      # Use setter-based attribute names and read via `send` to allow
+      # accessing protected original readers when aliases (`as:`) are used.
+      attribute_methods.each_with_object({}) do |m, h|
+        h[m] = send(m) if respond_to?(m, true)
+      end
     end
 
     def valid?

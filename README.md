@@ -126,12 +126,40 @@ Assignment helpers
 - assign_params(ActionController::Parameters)
 - assign_object(Object)
 
+Notes for `assign_object`:
+- Uses the twin's defined setter names to copy values, so attributes aliased via `as:` are populated correctly.
+- For collections defined with a block or `twin:`, incoming elements are wrapped into the element twin, enabling aliased getters and nested behavior on read.
+
+Example:
+
+```
+class AliasTwin < MiniTwin
+  property :sub_property, as: :renamed
+end
+
+class AliasCollectionTwin < MiniTwin
+  collection :items do
+    property :sub_property, as: :renamed
+  end
+end
+
+model1 = Data.define(:sub_property).new(sub_property: "x")
+t1 = AliasTwin.new.assign_object(model1)
+t1.renamed #=> "x"
+
+elem = Data.define(:sub_property)
+model2 = Data.define(:items).new(items: [ elem.new(sub_property: "a") ])
+t2 = AliasCollectionTwin.new.assign_object(model2)
+t2.items.first.renamed #=> "a"  # element is wrapped as a twin
+```
+
 Serialization
 -------------
 
 - to_hash(render_nil: false) → ActiveSupport::HashWithIndifferentAccess (if AS is available)
 - to_h alias
 - to_json forwards to `to_hash.to_json`
+- attributes returns a Hash keyed by base setter names (original property names), even when public getters are aliased via `as:`.
 
 Virtual properties are omitted from `to_hash`.
 
@@ -276,6 +304,7 @@ Edge Cases & Behavior Notes
 - Block properties: `prop = {}` initializes an empty nested twin; `prop = nil` clears it.
 - Composition: When using `on:`, the source object must be available either via `from_objects(source: ...)` or via a reader method. A helpful error is raised if the source is missing.
 - Aliases: When using `as:`, the original name is protected so only the alias is public. Predicate methods (`?`) are not double-aliased.
+- Attributes export: `attributes` uses base setter names (e.g., `secret_value`) for keys and reads values even when the original reader is protected by aliasing.
 
 Performance Notes
 -----------------
