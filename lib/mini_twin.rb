@@ -1,6 +1,7 @@
 require "json"
 require "set"
 require "fileutils"
+require "zeitwerk"
 require "dry-types"
 require "active_support/core_ext/object/blank"
 require "active_support/core_ext/hash/indifferent_access"
@@ -11,12 +12,14 @@ begin
 rescue LoadError
 end
 
+# Setup Zeitwerk loader for the gem to support Rails autoloading
+loader = Zeitwerk::Loader.for_gem
+loader.inflector.inflect(
+  "mini_twin" => "MiniTwin"
+)
+loader.setup
+
 require_relative "mini_twin/version"
-require_relative "mini_twin/types"
-require_relative "mini_twin/initialization"
-require_relative "mini_twin/assignment"
-require_relative "mini_twin/serialization"
-require_relative "mini_twin/class_methods"
 
 class MiniTwin
   include ActiveModel::Model if defined?(ActiveModel::Model)
