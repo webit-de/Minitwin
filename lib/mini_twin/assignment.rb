@@ -1,4 +1,9 @@
 class MiniTwin
+  # Assign/update helpers to merge incoming data into an existing twin.
+  # - assign_object: copy readable attributes from an object and remember it
+  # - assign_hash / assign_params: update only known attributes, recursing into
+  #   nested twins and collection items when possible
+  # - to_object: copy from a model to the twin via setters (one-way mirror)
   module Assignment
     def assign_object(model)
       attribute_methods.each do |method|
@@ -45,7 +50,9 @@ class MiniTwin
     def to_object(model)
       self.public_methods(false).each do |method|
         next unless method.to_s.end_with?("=")
-        self.send(method, model.send(method[..-2]))
+        attr = method[..-2]
+        next unless model.respond_to?(attr)
+        self.send(method, model.public_send(attr))
       end
       self
     end

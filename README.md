@@ -64,6 +64,23 @@ DSL Reference
 - collection
   - Options: `as:`, `default: []`, `getter:`, `twin:`, `on:`
   - Also defines Rails-style `name_attributes` getter/setter aliases.
+- nested
+  - Usage: `nested :container do ... end`
+  - Groups inner properties under a container key in serialization while exposing them as top-level setters/getters on the parent.
+  - Inner properties are omitted at the top level in `to_hash`/`to_json` and appear only under the container.
+  - Supports deeper nesting via nested blocks within the group.
+
+Notes:
+- The DSL methods (`property`, `collection`, `nested`) are private class methods intended for use inside twin class bodies (e.g., `class MyTwin < MiniTwin; property :x; end`). They are not part of the public class API and aren’t callable as `MyTwin.property` from the outside.
+
+Public Class API
+----------------
+
+The following class methods are public and supported:
+
+- `from_hash`, `from_json`, `from_params`
+- `from_object`, `from_objects`, `from_collection`
+- `to_rbs` (RBS generation for the class)
 
 Types are provided via `Types` from dry-types:
 
@@ -126,6 +143,43 @@ Development
 - Run tests: `bundle exec rake test`
 - Ruby version: `>= 3.4`
 
+RBS Types
+---------
+
+MiniTwin can generate RBS signatures for your twins so type checkers (e.g., Steep) know your attribute types.
+
+- Types come from the DSL:
+  - `type:` (Dry::Types) on a property determines its RBS type (e.g., `Types::Params::Integer.lax` → `Integer`, `Types::Params::Bool` → `bool`).
+  - `twin:` or a nested block defines a nested twin class, which is referenced as the property type.
+  - Collections become `Array[ElementType]`.
+
+- Generate RBS on exit by setting an environment variable:
+
+```
+MINI_TWIN_RBS_OUT=sig/mini_twin_generated.rbs bundle exec rake test
+```
+
+This writes RBS for all loaded twins (with names) to `sig/mini_twin_generated.rbs`.
+
+- Programmatic API:
+
+```
+class UserTwin < MiniTwin
+  property :id, type: Types::Params::Integer.lax
+  property :name
+  property :profile do
+    property :bio
+  end
+end
+
+File.write("sig/user_twin.rbs", UserTwin.to_rbs)
+```
+
+Notes:
+- Nested block twins are assigned a stable constant under the parent (e.g., `UserTwin::Profile`) to allow RBS to reference them.
+- Properties without a `type:` are emitted as `untyped`.
+- Aliased getters (`as:`) are reflected with the alias as reader and the original as writer.
+
 Project Layout
 --------------
 
@@ -135,9 +189,113 @@ Project Layout
 - lib/mini_twin/initialization.rb – instance setup and helpers
 - lib/mini_twin/assignment.rb – assignment helpers
 - lib/mini_twin/serialization.rb – to_hash/to_json/valid?/attributes
-- lib/mini_twin/class_methods.rb – class DSL and constructors
+- lib/mini_twin/class_methods.rb – includes the following internal modules:
+  - lib/mini_twin/class_methods/dsl.rb – DSL for `property`, `collection`, `nested`
+  - lib/mini_twin/class_methods/constructors.rb – `from_*`, registries
+  - lib/mini_twin/class_methods/rbs.rb – RBS generation helpers
+  - lib/mini_twin/class_methods/caches.rb – small caches and invalidation
+  - lib/mini_twin/class_methods/types_helper.rb – type defaults and coercion helpers
+
+Design Overview
+---------------
+
+MiniTwin is a plain-Ruby, framework-light “twin” object. It exposes a simple DSL for defining:
+
+- Properties: scalar or nested (via a block), with optional type coercion and validations.
+- Collections: arrays of scalars or nested twins.
+- Nested groups: group related properties under a container key while keeping a flat write API.
+- Composition: map read access to external objects via `on:` without copying data.
+
+At runtime, a twin is just a Ruby object with generated getters/setters. The modules under `lib/mini_twin` compose these responsibilities:
+
+- `ClassMethods`: the DSL (`property`, `collection`) and constructors (`from_*`).
+- `Initialization`: filters constructor args to known attributes, builds nested twins.
+- `Assignment`: assign/update from objects, hashes, or params.
+- `Serialization`: convert a twin back to a hash/JSON; aggregate validations.
+- `Types`: `Dry::Types` integration via a convenient `Types` module.
+
+How It Works
+------------
+
+- Defining properties
+  - `property :name` defines a writer (`name=`) and a getter (`name`).
+  - `as:` creates a public alias for the getter and protects the original name.
+  - `type:` (Dry::Types) coerces on write; invalid coercions return the raw value.
+  - `default:` is used when the getter returns `nil` or when not set via constructor.
+  - Block form builds a nested anonymous twin class and wires `name=` to construct it.
+  - `twin:` embeds another twin class, accepting a hash, an instance, or an object with `to_h`/`attributes`.
+
+- Defining collections
+  - `collection :items` behaves like an array; `items=` converts each element.
+  - Block form or `twin:` ensures each element is a nested twin instance.
+  - Adds Rails-style `items_attributes` getter/setter aliases for form helpers.
+
+- Constructors
+  - `from_hash`, `from_json`, `from_params(ActionController::Parameters)`,
+    `from_object`, and `from_objects(order:, customer:)`.
+  - `from_objects` merges attribute hashes from multiple sources; last one wins on key conflicts.
+  - When composing via `on:`, the referenced external objects are stored internally and read on demand.
+
+- Assignment
+  - `assign_hash` and `assign_params` update only known attributes.
+  - Nested hashes update nested twins in place; collections update existing elements by index.
+  - `assign_object` copies matching attributes from a plain object and stores it internally for composition.
+  - `to_object(model)` copies values from a model’s getters into the twin via setters (for mirroring state).
+
+- Serialization
+  - `to_hash(render_nil: false)` returns a `HashWithIndifferentAccess` when ActiveSupport is present; otherwise a plain Hash.
+  - Nested twins serialize recursively; arrays preserve elements and drop only `nil`.
+  - Virtual properties are omitted.
+
+- Validations
+  - If ActiveModel is loaded, `validates:` options on properties are applied.
+  - Errors from nested twins and collections are aggregated using dot/bracket notation (e.g., `duplo.brick`, `items[0].name`).
+  - ActiveModel is optional; without it, twins are always considered valid.
+
+Edge Cases & Behavior Notes
+---------------------------
+
+- Type coercion: Coercion errors (`Dry::Types::CoercionError`, `TypeError`, `ArgumentError`) fall back to the raw input instead of raising.
+- `twin:` handling: accepts `nil`, a twin instance, a Hash, or an object with `attributes`/`to_h`. Arrays shaped like Rails param pairs (`["0", {...}]`) are also supported.
+- Block properties: `prop = {}` initializes an empty nested twin; `prop = nil` clears it.
+- Composition: When using `on:`, the source object must be available either via `from_objects(source: ...)` or via a reader method. A helpful error is raised if the source is missing.
+- Aliases: When using `as:`, the original name is protected so only the alias is public. Predicate methods (`?`) are not double-aliased.
+
+Performance Notes
+-----------------
+
+- Reflection caching: Twins cache the list of serializable getters and allowed attribute keys to reduce reflection during `initialize` and `to_hash`. Caches are invalidated when new properties/collections are defined.
+
+Contributing
+------------
+
+- Run tests: `bundle exec rake test`
+- Coding style: keep changes minimal and focused; prefer improving core behavior over adding new surface area.
+- Docs: see `docs/ARCHITECTURE.md` for internals.
 
 License
 -------
+
+Nested Grouping
+----------------
+
+Expose a clean input API while serializing under a nested key:
+
+```
+class ProfileTwin < MiniTwin
+  nested :profile do
+    property :bio
+    property :website
+  end
+end
+
+t = ProfileTwin.new(bio: "Hello", website: "https://example.com")
+t.to_hash
+#=> { profile: { bio: "Hello", website: "https://example.com" } }
+```
+
+Notes:
+- You can nest groups: `nested :outer { property :a; nested :inner { property :b } }`.
+- Top-level proxy methods for inner properties are virtual (not serialized at the top level).
 
 MIT

@@ -1,4 +1,8 @@
 class MiniTwin
+  # Serialization to Hash/JSON and ActiveModel validation aggregation.
+  # Converts nested twins recursively and preserves array items (dropping only
+  # nil). When ActiveModel validations are available, nested errors are
+  # surfaced on the parent using dot/bracket notation.
   module Serialization
     def to_hash(render_nil: false)
       klass = defined?(HashWithIndifferentAccess) ? HashWithIndifferentAccess : Hash
@@ -6,8 +10,11 @@ class MiniTwin
       klass.new.tap do |hash|
         virtual_props = self.class.virtual_properties.to_set
 
-        self.class.instance_methods(false).each do |method|
-          next if method.end_with?("=") || method.end_with?("?") || method.end_with?("_attributes")
+        # Prefer cached list of serializable getters when available
+        methods_to_serialize = self.class.respond_to?(:serializable_getters) ? self.class.serializable_getters : self.class.instance_methods(false)
+
+        methods_to_serialize.each do |method|
+          next if method.to_s.end_with?("=") || method.to_s.end_with?("?") || method.to_s.end_with?("_attributes")
           next if virtual_props.include?(method) || protected_methods(false).include?(method)
 
           value = send(method)
@@ -18,7 +25,7 @@ class MiniTwin
             when MiniTwin
               value.to_hash
             when Array
-              value.filter_map { |item| item.respond_to?(:to_hash) ? item.to_hash : item.presence }
+              value.map { |item| item.respond_to?(:to_hash) ? item.to_hash : item }.compact
             else
               value
             end
@@ -43,8 +50,10 @@ class MiniTwin
         super
 
         self.class.block_properties.each do |property|
-          self.send(property).valid?
-          self.send(property).errors.each do |attribute|
+          child = self.send(property)
+          next unless child.respond_to?(:valid?)
+          child.valid?
+          child.errors.each do |attribute|
             errors.add("#{property}.#{attribute.attribute}", attribute.message)
           end
         end

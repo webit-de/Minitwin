@@ -1,7 +1,17 @@
 class MiniTwin
+  # Instance construction and low-level helpers used by the DSL-generated
+  # accessors. Filters unknown keys on initialize and seeds nested block
+  # properties so that validations on nested twins can run.
   module Initialization
     def initialize(**args)
-      allowed_keys = self.class.instance_methods(false).to_set
+      # Filter only attributes that have corresponding writer methods on this class
+      allowed_keys = (
+        if self.class.respond_to?(:allowed_attribute_keys)
+          self.class.allowed_attribute_keys
+        else
+          self.class.instance_methods(false).grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
+        end
+      )
       args.select! { |arg, _| allowed_keys.include?(arg.to_sym) }
 
       getter_defaults =
@@ -9,7 +19,7 @@ class MiniTwin
           class.
           block_properties.
           select { |method| allowed_keys.include?(method) }.
-          index_with { nil }
+          index_with { {} }
 
       super(**getter_defaults.merge(args))
     end
