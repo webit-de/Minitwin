@@ -117,7 +117,7 @@ class MiniTwin
         const_name = name.to_s.split('_').map(&:capitalize).join
         nested_klass = self.const_get(const_name) rescue nil
 
-        prop_paths = []
+        leafs = []
         if nested_klass && nested_klass.respond_to?(:properties)
           walker = nil
           walker = ->(klass, path) do
@@ -125,29 +125,35 @@ class MiniTwin
               if meta[:nested_class]
                 walker.call(meta[:nested_class], path + [prop])
               else
-                prop_paths << (path + [prop])
+                leafs << { path: (path + [prop]), as: (meta[:as] if meta[:as] && meta[:as] != prop) }
               end
             end
           end
           walker.call(nested_klass, [])
         end
 
-        prop_paths.each do |path|
+        leafs.each do |leaf|
+          path = leaf[:path]
           prop = path.last
+          alias_name = leaf[:as] || prop
 
-          define_method(prop) do
+          # Public getter uses alias when present; reads inner via alias to
+          # respect protected original readers inside the nested twin.
+          define_method(alias_name) do
             obj = public_send(name)
             path[0..-2].each { |seg| obj = obj.public_send(seg) }
-            obj.public_send(prop)
+            inner_read = leaf[:as] || prop
+            obj.public_send(inner_read)
           end
 
+          # Setter uses original base name to call the nested twin's writer.
           define_method("#{prop}=") do |value|
             obj = public_send(name)
             path[0..-2].each { |seg| obj = obj.public_send(seg) }
             obj.public_send("#{prop}=", value)
           end
 
-          virtual_properties << prop
+          virtual_properties << alias_name
         end
 
         invalidate_caches

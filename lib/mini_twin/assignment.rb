@@ -6,11 +6,7 @@ class MiniTwin
   # - to_object: copy from a model to the twin via setters (one-way mirror)
   module Assignment
     def assign_object(model)
-      keys = []
-      keys.concat(self.class.properties.keys) if self.class.respond_to?(:properties)
-      keys.concat(self.class.collections.keys) if self.class.respond_to?(:collections)
-
-      keys.each do |method|
+      attribute_methods.each do |method|
         next unless model.respond_to?(method)
         value = model.public_send(method)
         assign_attribute(method:, value:)

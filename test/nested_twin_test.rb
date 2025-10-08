@@ -6,20 +6,30 @@ class NestedTwin < MiniTwin
   property :another_sub_property, default: "default"
   nested :nested do
     property :this_is_nested
+    property :rename_me, as: :nested_renamed
   end
 end
 
 class NestedTwinTest < ActiveSupport::TestCase
   test "should handle nested twins" do
-    twin = NestedTwin.new(sub_property: "test", this_is_nested: 'nested')
+    twin = NestedTwin.new(sub_property: "test", this_is_nested: 'nested', rename_me: 'omg')
     result = twin.to_hash
     # Top-level alias is used and default property is present
     assert_equal "test", result[:renamed]
     assert_equal "default", result[:another_sub_property]
     # Nested proxy is grouped under :nested
     assert_equal "nested", result[:nested][:this_is_nested]
+    assert_equal "omg", result[:nested][:nested_renamed]
     # Proxy is not serialized at top-level
     assert_not result.key?(:this_is_nested)
+  end
+
+  test "should handle nested twins from objects" do
+    obj = Data.define(:rename_me).new(rename_me: 'omg')
+    twin = NestedTwin.from_object(obj)
+    assert_raises(NoMethodError) { twin.rename_me }
+    assert_equal({ another_sub_property: "default", nested: { nested_renamed: 'omg' } }.deep_stringify_keys, twin.to_hash)
+    assert_equal 'omg', twin.nested_renamed
   end
 end
 
