@@ -103,6 +103,22 @@ obj.id   #=> 7
 obj.name #=> "Dana"
 ```
 
+Notes on collections with `on:`:
+- When a `collection` is defined with `on: :source`, the getter wraps each raw element coming from the source into the configured element twin (either the block-defined twin or the `twin:` class). This ensures aliases (`as:`), nested properties, and validations behave as expected when reading from composed objects.
+- Example:
+
+```
+class ContractTwin < MiniTwin
+  collection :items, on: :contract do
+    property :sub, as: :renamed
+  end
+end
+
+contract = Data.define(:items).new(items: [ Data.define(:sub).new(sub: "x") ])
+t = ContractTwin.from_objects(contract: contract)
+t.items.first.renamed #=> "x"  # element is a twin instance
+```
+
 Assignment helpers
 ------------------
 

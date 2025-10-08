@@ -191,7 +191,37 @@ class MiniTwin
                 if raw.nil?
                   (!default.nil?) ? default : (type ? self.class.send(:type_default_value, type) : nil)
                 else
-                  type ? self.class.send(:coerce_with_type, raw, type) : raw
+                  # If this is a collection property, wrap elements into the
+                  # configured element twin so renamed getters etc. work when
+                  # reading via composition (on: ...).
+                  begin
+                    meta = self.class.respond_to?(:collections) ? self.class.collections[name.to_sym] : nil
+                  rescue StandardError
+                    meta = nil
+                  end
+
+                  if meta && raw.is_a?(Array)
+                    elem_klass = meta[:element_twin]
+                    raw.map do |v|
+                      if v.nil?
+                        nil
+                      elsif elem_klass && v.is_a?(elem_klass)
+                        v
+                      elsif elem_klass && v.respond_to?(:to_h)
+                        elem_klass.new(**v.to_h)
+                      elsif elem_klass && v.respond_to?(:attributes)
+                        elem_klass.new(**v.attributes)
+                      elsif elem_klass && v.is_a?(Array) && v.size == 2 && v.last.is_a?(Hash)
+                        elem_klass.new(**v.last)
+                      elsif elem_klass && v.is_a?(Hash)
+                        elem_klass.new(**v)
+                      else
+                        v
+                      end
+                    end
+                  else
+                    type ? self.class.send(:coerce_with_type, raw, type) : raw
+                  end
                 end
               else
                 if !name.end_with?("?") && instance_variable_defined?("@#{name}")
