@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "dry-types", ">= 1.7"
-  spec.add_dependency "activesupport", ">= 6.1"
+  spec.add_dependency "activesupport", ">= 8.0"
   spec.add_dependency "zeitwerk", ">= 2.6"
 
   # Development/test dependencies
