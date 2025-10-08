@@ -1,0 +1,23 @@
+stages:
+  - test
+
+variables:
+  BUNDLE_PATH: vendor/bundle
+  BUNDLE_JOBS: "4"
+  BUNDLE_RETRY: "3"
+  RAILS_ENV: test
+
+test:
+  stage: test
+  image: ruby:3.4-slim-trixie
+  interruptible: true
+  cache:
+    paths:
+      - vendor/bundle
+  before_script:
+    - gem install bundler -N || true
+    - apt-get update -qq && apt-get install --no-install-recommends -y libz-dev
+    - bundle config set path "$BUNDLE_PATH"
+    - bundle install
+  script:
+    - bundle exec rake test
