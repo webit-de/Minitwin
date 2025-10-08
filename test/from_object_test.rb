@@ -7,7 +7,7 @@ class TwinFromObject < MiniTwin
 end
 
 class FromObjectTest < ActiveSupport::TestCase
-  should "instantiate from a plain object and track model" do
+  test "should instantiate from a plain object and track model" do
     model = Data.define(:sub_property, :another_sub_property).new(sub_property: "test", another_sub_property: "another test")
     obj = TwinFromObject.from_object(model)
     assert_equal "test", obj.renamed

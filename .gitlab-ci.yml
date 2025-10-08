@@ -16,7 +16,6 @@ test:
       - vendor/bundle
   before_script:
     - gem install bundler -N || true
-    - apt-get update -qq && apt-get install --no-install-recommends -y libz-dev
     - bundle config set path "$BUNDLE_PATH"
     - bundle install
   script:

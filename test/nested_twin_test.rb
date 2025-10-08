@@ -10,7 +10,7 @@ class NestedTwin < MiniTwin
 end
 
 class NestedTwinTest < ActiveSupport::TestCase
-  should "handle nested twins" do
+  test "should handle nested twins" do
     twin = NestedTwin.new(sub_property: "test", this_is_nested: 'nested')
     result = twin.to_hash
     # Top-level alias is used and default property is present
@@ -33,7 +33,7 @@ class DeepNestedTwin < MiniTwin
 end
 
 class DeepNestedTwinTest < ActiveSupport::TestCase
-  should "serialize nested structure in to_hash and to_json" do
+  test "should serialize nested structure in to_hash and to_json" do
     twin = DeepNestedTwin.new(a: "A", b: "B")
 
     h = twin.to_hash

@@ -6,7 +6,7 @@ class AliasTwin < MiniTwin
 end
 
 class AliasProtectionTest < ActiveSupport::TestCase
-  should "protect original name when aliased" do
+  test "should protect original name when aliased" do
     t = AliasTwin.new
     assert_equal 10, t.public_value
     assert_raises(NoMethodError) { t.secret_value }

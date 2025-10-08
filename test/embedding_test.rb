@@ -12,7 +12,7 @@ class EmbeddingTwin < MiniTwin
 end
 
 class EmbeddingTest < ActiveSupport::TestCase
-  should "embed sub twins via twin option" do
+  test "should embed sub twins via twin option" do
     obj = EmbeddingTwin.from_hash(
       {
         sub_twin: { sub_property: "test sub property" },

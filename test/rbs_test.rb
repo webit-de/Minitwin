@@ -16,7 +16,7 @@ class RbsTwin < MiniTwin
 end
 
 class RbsTest < ActiveSupport::TestCase
-  should "generate RBS signatures with types and nested classes" do
+  test "should generate RBS signatures with types and nested classes" do
     rbs = RbsTwin.to_rbs
 
     assert_includes rbs, "class ::RbsTwin"

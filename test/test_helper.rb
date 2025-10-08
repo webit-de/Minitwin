@@ -1,16 +1,6 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
-begin
-  require "simplecov"
-  SimpleCov.start do
-    add_filter "/test/"
-  end
-rescue LoadError
-  # SimpleCov is optional
-end
-
 require "minitest/autorun"
-require "shoulda/context"
 
 # ActiveSupport goodies used in tests (e.g., HashWithIndifferentAccess, time helpers)
 require "active_support/test_case"

@@ -10,7 +10,7 @@ class FromJsonTwin < MiniTwin
 end
 
 class FromJsonTest < ActiveSupport::TestCase
-  should "build from JSON with symbolized keys" do
+  test "should build from JSON with symbolized keys" do
     json = { id: "12", name: "Alice", string: 1, date: '2025-05-23' }.to_json
     t = FromJsonTwin.from_json(json)
     assert_equal 12, t.id

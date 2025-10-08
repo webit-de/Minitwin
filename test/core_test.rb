@@ -2,7 +2,7 @@ require "test_helper"
 require "mini_twin"
 
 class MiniTwinCoreTest < ActiveSupport::TestCase
-  should "expose VERSION and DSL" do
+  test "should expose VERSION and DSL" do
     assert MiniTwin::VERSION
 
     klass = Class.new(MiniTwin) do

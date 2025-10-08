@@ -7,7 +7,7 @@ class AssignSubTwin < MiniTwin
 end
 
 class AssignmentTest < ActiveSupport::TestCase
-  should "assign hash and params" do
+  test "should assign hash and params" do
     twin = AssignSubTwin.new
     assert_nil twin.sub_property
     assert_equal "default", twin.another_sub_property

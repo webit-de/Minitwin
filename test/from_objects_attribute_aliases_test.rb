@@ -24,7 +24,7 @@ class FromObjectsAliasTwin < MiniTwin
 end
 
 class FromObjectsAttributeAliasesTest < ActiveSupport::TestCase
-  should "merge attribute_aliases into attributes" do
+  test "should merge attribute_aliases into attributes" do
     model = AliasModel.new({ real_name: "Value" })
     twin = FromObjectsAliasTwin.from_object(model)
     assert_equal "Value", twin.alias_name

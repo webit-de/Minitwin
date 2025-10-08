@@ -11,7 +11,7 @@ class CompositionTwin < MiniTwin
 end
 
 class CompositionTest < ActiveSupport::TestCase
-  should "instantiate composition twins from objects" do
+  test "should instantiate composition twins from objects" do
     customer = Data.define(:id, :name).new(id: 123, name: "Petra Rodriguez")
     address = Data.define(:id, :street, :latitude).new(id: "abc", street: "1234 fake street", latitude: 55.76)
     obj = CompositionTwin.from_objects(customer:, address:)

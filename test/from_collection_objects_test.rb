@@ -24,7 +24,7 @@ class FromCollectionAliasTwin < MiniTwin
 end
 
 class FromCollectionObjectsTest < ActiveSupport::TestCase
-  should "build from array of objects with attributes and aliases" do
+  test "should build from array of objects with attributes and aliases" do
     models = [AliasModel2.new({ real_name: "A" }), AliasModel2.new({ real_name: "B" })]
     list = FromCollectionAliasTwin.from_collection(models)
     assert_equal ["A", "B"], list.map(&:alias_name)

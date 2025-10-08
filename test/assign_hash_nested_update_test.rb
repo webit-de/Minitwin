@@ -11,7 +11,7 @@ class AssignNestedOuter < MiniTwin
 end
 
 class AssignHashNestedUpdateTest < ActiveSupport::TestCase
-  should "update nested collection items via assign_hash" do
+  test "should update nested collection items via assign_hash" do
     t = AssignNestedOuter.from_hash(items: [
       { value: 1, nested: { nval: "a" } },
       { value: 2, nested: { nval: "b" } }

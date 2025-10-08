@@ -18,7 +18,7 @@ class SerTestTwin < MiniTwin
 end
 
 class SerializationTest < ActiveSupport::TestCase
-  should "convert to hash with indifferent access and omit virtuals" do
+  test "should convert to hash with indifferent access and omit virtuals" do
     obj = SerTestTwin.from_hash(
       wrong_runtime: "3",
       wrong_lego: { brick: 123 },

@@ -13,7 +13,7 @@ class ValidationTwin < MiniTwin
 end
 
 class ValidationTest < ActiveSupport::TestCase
-  should "validate nested properties" do
+  test "should validate nested properties" do
     obj = ValidationTwin.new(wrong_runtime: 123)
     assert_not obj.valid?
     assert_equal [ :validated_property, :"duplo.brick" ], obj.errors.messages.keys
@@ -25,7 +25,7 @@ class ValidationTest < ActiveSupport::TestCase
     assert obj.valid?
   end
 
-  should "validate collections" do
+  test "should validate collections" do
     obj = ValidationTwin.new(validated_property: 123, duplo: { brick: 123 }, cool_stuff: [ { property: "valid" }, {} ])
     assert_not obj.valid?
     assert_equal [ :"cool_stuff[1].property" ], obj.errors.messages.keys

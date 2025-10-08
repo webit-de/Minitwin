@@ -50,7 +50,7 @@ class CombinedTwin < MiniTwin
 end
 
 class CombinedTwinTest < ActiveSupport::TestCase
-  should "build, compose, and serialize a fully-featured twin" do
+  test "should build, compose, and serialize a fully-featured twin" do
     # External models for composition
     customer = Data.define(:id, :name).new(id: 42, name: "Alice")
     shipping = Data.define(:street, :latitude).new(street: "Ruby Rd", latitude: 12.34)

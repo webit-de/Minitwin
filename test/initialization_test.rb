@@ -36,7 +36,7 @@ class InitTestTwin < MiniTwin
 end
 
 class InitializationTest < ActiveSupport::TestCase
-  should "successfully create with coercions and defaults" do
+  test "should successfully create with coercions and defaults" do
     obj = InitTestTwin.from_hash(
       wrong_runtime: "3",
       wrong_lego: { brick: 123, brick_wrong: "wrong" },
