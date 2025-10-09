@@ -326,6 +326,19 @@ Contributing
 - Coding style: keep changes minimal and focused; prefer improving core behavior over adding new surface area.
 - Docs: see `docs/ARCHITECTURE.md` for internals.
 
+Developer Notes
+---------------
+
+- Coercion helpers: Internally, conversion of incoming values into twins is centralized.
+  - `coerce_value_to_twin(value, klass)`: Wraps hashes, ActiveModel objects (`attributes`), objects with `to_h`, Rails param-pair arrays (e.g., `["0", {...}]`), and plain objects (by reflecting property readers or instance variables) into `klass`.
+  - `coerce_collection_array(raw)`: Treats any array-like (e.g., ActiveRecord `CollectionProxy`) as an array using `to_a`.
+  - Used by: collection setters, block property setters, `twin:` property setters, and composition getters for collections.
+  - Benefit: consistent behavior and fewer code paths to maintain.
+
+- Enrichment on constructors: `from_objects` (and therefore `from_object` and `from_collection`) will populate missing or `nil` attributes by calling same-named readers on source objects. Collections normalize via `to_a`.
+
+- Serialization: Uses cached `serializable_getters` to avoid repeated reflection. Virtual and protected readers are excluded; aliases are respected.
+
 License
 -------
 

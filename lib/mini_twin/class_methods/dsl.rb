@@ -18,45 +18,8 @@ class MiniTwin
 
         define_method("#{name}=") do |values|
           element_klass = twin || nested_class
-          values = Array(values).map do |v|
-            if element_klass
-              if v.nil?
-                nil
-              elsif v.is_a?(element_klass)
-                v
-              elsif v.respond_to?(:to_h)
-                element_klass.new(**v.to_h)
-              elsif v.respond_to?(:attributes)
-                element_klass.new(**v.attributes)
-              elsif v.is_a?(Array) && v.size == 2 && v.last.is_a?(Hash)
-                element_klass.new(**v.last)
-              elsif v.is_a?(Hash)
-                element_klass.new(**v)
-              else
-                # Fallback: build attributes hash from readable properties or instance vars
-                attrs = {}
-                begin
-                  if element_klass.respond_to?(:properties)
-                    element_klass.properties.each_key do |k|
-                      attrs[k] = v.public_send(k) if v.respond_to?(k)
-                    end
-                  end
-                rescue StandardError
-                end
-
-                if attrs.empty? && v.instance_variables.any?
-                  v.instance_variables.each do |var|
-                    key = var.to_s.delete("@").to_sym
-                    attrs[key] = v.instance_variable_get(var)
-                  end
-                end
-
-                attrs.empty? ? v : element_klass.new(**attrs)
-              end
-            else
-              v
-            end
-          end
+          arr = self.class.send(:coerce_collection_array, values)
+          values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
           define_instance_variable(name:, value: values)
         end
         alias_method "#{name}_attributes=", "#{name}="
@@ -80,44 +43,11 @@ class MiniTwin
           nested_class = create_nested_class(name:, &block)
 
           define_method("#{name}=") do |value|
-            if value.nil?
-              define_instance_variable(name:, value: nil)
-            else
-              # Accept common shapes: Hash, ActiveModel-like (attributes), objects with to_h,
-              # and plain Ruby objects by reflecting their instance variables/readers.
-              coerced =
-                if value.respond_to?(:to_h)
-                  value.to_h
-                elsif value.respond_to?(:attributes)
-                  value.attributes
-                elsif value.is_a?(Hash)
-                  value
-                else
-                  # Fallback: build a hash from readable properties matching the nested class
-                  # or from instance variables if available.
-                  h = {}
-                  begin
-                    if nested_class.respond_to?(:properties)
-                      nested_class.properties.each_key do |k|
-                        h[k] = value.public_send(k) if value.respond_to?(k)
-                      end
-                    end
-                  rescue StandardError
-                  end
-
-                  if h.empty? && value.instance_variables.any?
-                    value.instance_variables.each do |var|
-                      key = var.to_s.delete("@").to_sym
-                      h[key] = value.instance_variable_get(var)
-                    end
-                  end
-
-                  h
-                end
-
-              raise "Unprocessable input for property '#{name}'." unless coerced.is_a?(Hash)
-              define_instance_variable(name:, value: nested_class.new(**coerced))
+            coerced = self.class.send(:coerce_value_to_twin, value, nested_class)
+            unless coerced.nil? || coerced.is_a?(nested_class)
+              raise "Unprocessable input for property '#{name}'."
             end
+            define_instance_variable(name:, value: coerced)
           end
 
           add_block_property(name:)
@@ -126,19 +56,7 @@ class MiniTwin
           define_method("#{name}=") do |value|
             value =
               if twin.present?
-                if value.nil?
-                  nil
-                elsif value.is_a?(twin)
-                  value
-                elsif value.respond_to?(:to_h)
-                  twin.new(**value.to_h)
-                elsif value.respond_to?(:attributes)
-                  twin.new(**value.attributes)
-                elsif value.is_a?(Hash)
-                  twin.new(**value)
-                else
-                  value
-                end
+                self.class.send(:coerce_value_to_twin, value, twin)
               else
                 setter ? setter.call(value) : value
               end
@@ -255,44 +173,8 @@ class MiniTwin
 
                   if meta && (raw.is_a?(Array) || raw.respond_to?(:to_a))
                     elem_klass = meta[:element_twin]
-                    arr = raw.is_a?(Array) ? raw : raw.to_a
-                    arr.map do |v|
-                      if v.nil?
-                        nil
-                      elsif elem_klass && v.is_a?(elem_klass)
-                        v
-                      elsif elem_klass && v.respond_to?(:to_h)
-                        elem_klass.new(**v.to_h)
-                      elsif elem_klass && v.respond_to?(:attributes)
-                        elem_klass.new(**v.attributes)
-                      elsif elem_klass && v.is_a?(Array) && v.size == 2 && v.last.is_a?(Hash)
-                        elem_klass.new(**v.last)
-                      elsif elem_klass && v.is_a?(Hash)
-                        elem_klass.new(**v)
-                      elsif elem_klass
-                        # Fallback: reflect into attrs from readers or instance vars
-                        attrs = {}
-                        begin
-                          if elem_klass.respond_to?(:properties)
-                            elem_klass.properties.each_key do |k|
-                              attrs[k] = v.public_send(k) if v.respond_to?(k)
-                            end
-                          end
-                        rescue StandardError
-                        end
-
-                        if attrs.empty? && v.instance_variables.any?
-                          v.instance_variables.each do |var|
-                            key = var.to_s.delete("@").to_sym
-                            attrs[key] = v.instance_variable_get(var)
-                          end
-                        end
-
-                        attrs.empty? ? v : elem_klass.new(**attrs)
-                      else
-                        v
-                      end
-                    end
+                    arr = self.class.send(:coerce_collection_array, raw)
+                    arr.map { |v| self.class.send(:coerce_value_to_twin, v, elem_klass) }
                   else
                     type ? self.class.send(:coerce_with_type, raw, type) : raw
                   end

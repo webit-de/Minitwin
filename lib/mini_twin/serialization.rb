@@ -8,15 +8,13 @@ class MiniTwin
       klass = defined?(HashWithIndifferentAccess) ? HashWithIndifferentAccess : Hash
 
       klass.new.tap do |hash|
-        virtual_props = self.class.virtual_properties.to_set
-
-        # Prefer cached list of serializable getters when available
-        methods_to_serialize = self.class.respond_to?(:serializable_getters) ? self.class.serializable_getters : self.class.instance_methods(false)
+        methods_to_serialize = if self.class.respond_to?(:serializable_getters, true)
+          self.class.send(:serializable_getters)
+        else
+          self.class.instance_methods(false).reject { |m| (s = m.to_s).end_with?("=") || s.end_with?("?") || s.end_with?("_attributes") }
+        end
 
         methods_to_serialize.each do |method|
-          next if method.to_s.end_with?("=") || method.to_s.end_with?("?") || method.to_s.end_with?("_attributes")
-          next if virtual_props.include?(method) || protected_methods(false).include?(method)
-
           value = send(method)
           next if value.nil? && !render_nil
 
