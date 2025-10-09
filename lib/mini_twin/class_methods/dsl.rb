@@ -33,7 +33,25 @@ class MiniTwin
               elsif v.is_a?(Hash)
                 element_klass.new(**v)
               else
-                v
+                # Fallback: build attributes hash from readable properties or instance vars
+                attrs = {}
+                begin
+                  if element_klass.respond_to?(:properties)
+                    element_klass.properties.each_key do |k|
+                      attrs[k] = v.public_send(k) if v.respond_to?(k)
+                    end
+                  end
+                rescue StandardError
+                end
+
+                if attrs.empty? && v.instance_variables.any?
+                  v.instance_variables.each do |var|
+                    key = var.to_s.delete("@").to_sym
+                    attrs[key] = v.instance_variable_get(var)
+                  end
+                end
+
+                attrs.empty? ? v : element_klass.new(**attrs)
               end
             else
               v
@@ -65,10 +83,40 @@ class MiniTwin
             if value.nil?
               define_instance_variable(name:, value: nil)
             else
-              value = value.to_h if value.respond_to?(:to_h)
-              value = value.attributes if value.respond_to?(:attributes)
-              raise "Unprocessable input for property '#{name}'." unless value.is_a? Hash
-              define_instance_variable(name:, value: nested_class.new(**value))
+              # Accept common shapes: Hash, ActiveModel-like (attributes), objects with to_h,
+              # and plain Ruby objects by reflecting their instance variables/readers.
+              coerced =
+                if value.respond_to?(:to_h)
+                  value.to_h
+                elsif value.respond_to?(:attributes)
+                  value.attributes
+                elsif value.is_a?(Hash)
+                  value
+                else
+                  # Fallback: build a hash from readable properties matching the nested class
+                  # or from instance variables if available.
+                  h = {}
+                  begin
+                    if nested_class.respond_to?(:properties)
+                      nested_class.properties.each_key do |k|
+                        h[k] = value.public_send(k) if value.respond_to?(k)
+                      end
+                    end
+                  rescue StandardError
+                  end
+
+                  if h.empty? && value.instance_variables.any?
+                    value.instance_variables.each do |var|
+                      key = var.to_s.delete("@").to_sym
+                      h[key] = value.instance_variable_get(var)
+                    end
+                  end
+
+                  h
+                end
+
+              raise "Unprocessable input for property '#{name}'." unless coerced.is_a?(Hash)
+              define_instance_variable(name:, value: nested_class.new(**coerced))
             end
           end
 
@@ -220,6 +268,26 @@ class MiniTwin
                         elem_klass.new(**v.last)
                       elsif elem_klass && v.is_a?(Hash)
                         elem_klass.new(**v)
+                      elsif elem_klass
+                        # Fallback: reflect into attrs from readers or instance vars
+                        attrs = {}
+                        begin
+                          if elem_klass.respond_to?(:properties)
+                            elem_klass.properties.each_key do |k|
+                              attrs[k] = v.public_send(k) if v.respond_to?(k)
+                            end
+                          end
+                        rescue StandardError
+                        end
+
+                        if attrs.empty? && v.instance_variables.any?
+                          v.instance_variables.each do |var|
+                            key = var.to_s.delete("@").to_sym
+                            attrs[key] = v.instance_variable_get(var)
+                          end
+                        end
+
+                        attrs.empty? ? v : elem_klass.new(**attrs)
                       else
                         v
                       end

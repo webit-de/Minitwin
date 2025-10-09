@@ -119,6 +119,8 @@ t = ContractTwin.from_objects(contract: contract)
 t.items.first.renamed #=> "x"  # element is a twin instance
 ```
 
+- Elements without `to_h`/`attributes` (e.g., plain Ruby or ActiveModel objects) are also supported: the getter reflects values using the element twin's property names (falling back to instance variables) and instantiates element twins accordingly.
+
 Assignment helpers
 ------------------
 
@@ -279,6 +281,7 @@ How It Works
     `from_object`, and `from_objects(order:, customer:)`.
   - `from_objects` merges attribute hashes from multiple sources; last one wins on key conflicts.
   - When composing via `on:`, the referenced external objects are stored internally and read on demand.
+  - `from_collection` accepts arrays of hashes, objects with `to_h`/`attributes`, ActiveModel objects, or plain Ruby objects. For non-hash elements it reflects values by calling readers matching the element twin's properties (or instance variables) and instantiates the element twin.
 
 - Assignment
   - `assign_hash` and `assign_params` update only known attributes.

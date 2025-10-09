@@ -6,12 +6,25 @@ class TwinFromObject < MiniTwin
   property :another_sub_property, default: "default"
 end
 
+class NestedTwinFromObject < MiniTwin
+  property :sub_property, as: :renamed
+  property :another_sub_property do
+    property :name
+    property :age
+  end
+end
+
 class SubTwinFromObject < MiniTwin
   property :property, on: :contract
   collection :with_collection, on: :contract do
     property :sub_property, as: :renamed
     property :another_sub_property
   end
+end
+
+class Person
+  include ActiveModel::Model
+  attr_accessor :name, :age, :sub_property, :another_sub_property
 end
 
 class FromObjectTest < ActiveSupport::TestCase
@@ -26,6 +39,21 @@ class FromObjectTest < ActiveSupport::TestCase
     assert_equal model, obj.instance_variable_get("@internal_model__model")
     assert_equal "test2", obj.renamed
     assert_equal "default", obj.another_sub_property
+  end
+
+  test "should instantiate from an activemodel object" do
+    model = Person.new(sub_property: 'bob', another_sub_property: '18')
+    obj = TwinFromObject.from_object(model)
+    assert_equal "bob", obj.renamed
+    assert_equal "18", obj.another_sub_property
+  end
+
+  test "should instantiate from an activemodel object in a block" do
+    person = Person.new(name: 'bob', age: '18')
+    model = Data.define(:sub_property, :another_sub_property).new(sub_property: "test", another_sub_property: person)
+    obj = NestedTwinFromObject.from_object(model)
+    assert_equal "test", obj.renamed
+    assert_equal "bob", obj.another_sub_property.name
   end
 
   test "should correctly instantiate from object with collections" do
