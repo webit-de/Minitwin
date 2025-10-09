@@ -253,9 +253,10 @@ class MiniTwin
                     meta = nil
                   end
 
-                  if meta && raw.is_a?(Array)
+                  if meta && (raw.is_a?(Array) || raw.respond_to?(:to_a))
                     elem_klass = meta[:element_twin]
-                    raw.map do |v|
+                    arr = raw.is_a?(Array) ? raw : raw.to_a
+                    arr.map do |v|
                       if v.nil?
                         nil
                       elsif elem_klass && v.is_a?(elem_klass)

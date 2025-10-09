@@ -49,6 +49,36 @@ class MiniTwin
             end
           end.reduce({}, :merge)
 
+        # Enrich attributes with relation-style readers (e.g., has_one/has_many)
+        # when they are not present in the model's attributes hash. This allows
+        # nested block/twin properties and collections to be populated from
+        # object readers commonly used by ORMs like ActiveRecord.
+        begin
+          properties.each do |prop, _meta|
+            next if attributes.key?(prop)
+            models.each_value do |model|
+              next unless model.respond_to?(prop)
+              val = model.public_send(prop)
+              next if val.nil?
+              attributes[prop] = val
+              break
+            end
+          end
+
+          collections.each_key do |coll|
+            next if attributes.key?(coll)
+            models.each_value do |model|
+              next unless model.respond_to?(coll)
+              val = model.public_send(coll)
+              next if val.nil?
+              attributes[coll] = val.respond_to?(:to_a) ? val.to_a : Array(val)
+              break
+            end
+          end
+        rescue StandardError
+          # Be resilient to unexpected model behavior; proceed with best-effort enrichment
+        end
+
         obj = new(**attributes)
         models.each { |name, model| obj.instance_variable_set(internal_model_name(name), model) }
         obj

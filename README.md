@@ -120,6 +120,8 @@ t.items.first.renamed #=> "x"  # element is a twin instance
 ```
 
 - Elements without `to_h`/`attributes` (e.g., plain Ruby or ActiveModel objects) are also supported: the getter reflects values using the element twin's property names (falling back to instance variables) and instantiates element twins accordingly.
+ - Elements without `to_h`/`attributes` (e.g., plain Ruby or ActiveModel objects) are also supported: the getter reflects values using the element twin's property names (falling back to instance variables) and instantiates element twins accordingly.
+ - For has_many relations (e.g., ActiveRecord CollectionProxy), the getter treats any array-like value that responds to `to_a` as a list and wraps each element into the element twin. The raw relation object is not exposed to callers.
 
 Assignment helpers
 ------------------
@@ -281,6 +283,9 @@ How It Works
     `from_object`, and `from_objects(order:, customer:)`.
   - `from_objects` merges attribute hashes from multiple sources; last one wins on key conflicts.
   - When composing via `on:`, the referenced external objects are stored internally and read on demand.
+  - Enrichment: if a property or collection is not present in a model's `attributes` hash, `from_objects` will attempt to populate it by calling a same-named reader on the provided models. This covers typical ORM associations:
+    - has_one: nested block/twin properties are initialized from the reader value.
+    - has_many: collections accept relation proxies and normalize via `to_a`, wrapping elements into the configured element twin.
   - `from_collection` accepts arrays of hashes, objects with `to_h`/`attributes`, ActiveModel objects, or plain Ruby objects. For non-hash elements it reflects values by calling readers matching the element twin's properties (or instance variables) and instantiates the element twin.
 
 - Assignment
