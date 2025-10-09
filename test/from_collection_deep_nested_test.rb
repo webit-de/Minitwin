@@ -10,6 +10,11 @@ end
 class Category
   include ActiveModel::Model
   attr_accessor :name, :subcategories, :info, :tag
+
+  # Simulate has_one-like overshadowing in attributes by returning nil for :info
+  def attributes
+    { name: @name, subcategories: @subcategories, info: nil, tag: @tag }
+  end
 end
 
 class CategoryInfo

@@ -364,4 +364,59 @@ Notes:
 - You can nest groups: `nested :outer { property :a; nested :inner { property :b } }`.
 - Top-level proxy methods for inner properties are virtual (not serialized at the top level).
 
+Nested Grouping Inside Collections
+----------------------------------
+
+You can also use `nested` inside collection elements, and combine it with has_one-style enrichment where the source object’s `attributes` omits the association but a reader method returns it.
+
+Example:
+
+```
+class CategoryInfo < MiniTwin; end
+
+class CategoryTwin < MiniTwin
+  property :name
+  property :info do
+    property :label
+  end
+  nested :extra do
+    property :tag
+  end
+end
+
+class ServiceTwin < MiniTwin
+  property :title
+  collection :categories, twin: CategoryTwin
+end
+
+# Source objects (e.g., ActiveRecord/Plain Ruby) where `attributes` has `info: nil`
+Category = Data.define(:name, :info, :tag) do
+  def attributes
+    { name: name, info: nil, tag: tag } # has_one-like: info omitted/nil in attributes
+  end
+end
+
+service = OpenStruct.new(
+  title: "My Service",
+  categories: [
+    Category.new("C1", OpenStruct.new(label: "L1"), "T1"),
+    Category.new("C2", OpenStruct.new(label: "L2"), "T2")
+  ]
+)
+
+t = ServiceTwin.from_object(service)
+t.to_hash
+# => {
+#   title: "My Service",
+#   categories: [
+#     { name: "C1", info: { label: "L1" }, extra: { tag: "T1" } },
+#     { name: "C2", info: { label: "L2" }, extra: { tag: "T2" } }
+#   ]
+# }
+```
+
+Notes:
+- Collections accept array-like values (e.g., AR CollectionProxy via `to_a`).
+- For has_one-like `info`, when `attributes` has `nil`, MiniTwin enriches the element twin from the reader method so `info` is still instantiated.
+
 MIT
