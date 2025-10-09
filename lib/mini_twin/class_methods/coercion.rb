@@ -24,6 +24,19 @@ class MiniTwin
                 attrs[k] = value.public_send(k) if value.respond_to?(k)
               end
             end
+            if target_klass.respond_to?(:collections)
+              target_klass.collections.each_key do |k|
+                attrs[k] = value.public_send(k) if value.respond_to?(k)
+              end
+            end
+
+            # Also map any direct setters (e.g., nested group leaf setters like `tag=`)
+            if target_klass.respond_to?(:allowed_attribute_keys, true)
+              target_klass.send(:allowed_attribute_keys).each do |k|
+                next if attrs.key?(k)
+                attrs[k] = value.public_send(k) if value.respond_to?(k)
+              end
+            end
           rescue StandardError
           end
 
@@ -46,4 +59,3 @@ class MiniTwin
     end
   end
 end
-
