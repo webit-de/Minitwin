@@ -286,7 +286,7 @@ How It Works
   - Enrichment: if a property or collection is missing OR has a `nil` value in a model's `attributes` hash, `from_objects` will attempt to populate it by calling a same-named reader on the provided models (even when the `attributes` hash contains the key set to `nil`). This covers typical ORM associations:
     - has_one: nested block/twin properties are initialized from the reader value.
     - has_many: collections accept relation proxies and normalize via `to_a`, wrapping elements into the configured element twin.
-  - `from_collection` accepts arrays of hashes, objects with `to_h`/`attributes`, ActiveModel objects, or plain Ruby objects. For non-hash elements it reflects values by calling readers matching the element twin's properties (or instance variables) and instantiates the element twin.
+  - `from_collection` accepts arrays of hashes, objects with `to_h`/`attributes`, ActiveModel objects, or plain Ruby objects. It reuses `from_objects` semantics for each element, including alias handling and enrichment of missing/nil properties or collections from readers (has_one/has_many). For non-hash elements it reflects values by calling readers matching the element twin's properties (or instance variables) and instantiates the element twin.
 
 - Assignment
   - `assign_hash` and `assign_params` update only known attributes.

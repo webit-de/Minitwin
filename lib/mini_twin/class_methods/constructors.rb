@@ -87,29 +87,7 @@ class MiniTwin
       end
 
       def from_collection(models)
-        models.map do |item|
-          if item.respond_to?(:attributes)
-            if item.respond_to?(:attribute_aliases)
-              combined = item.attributes.dup
-              item.attribute_aliases.each do |alias_name, real_attr|
-                combined[alias_name] = item.public_send(real_attr)
-              end
-              new(**combined)
-            else
-              new(**item.attributes)
-            end
-          elsif item.respond_to?(:to_h)
-            new(**item.to_h)
-          elsif item.is_a?(Hash)
-            new(**item)
-          else
-            attrs = item.instance_variables.each_with_object({}) do |var, hash|
-              key = var.to_s.delete("@").to_sym
-              hash[key] = item.instance_variable_get(var)
-            end
-            new(**attrs)
-          end
-        end
+        models.map { |item| from_objects(model: item) }
       end
 
       def internal_model_name(name)
