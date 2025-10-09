@@ -283,7 +283,7 @@ How It Works
     `from_object`, and `from_objects(order:, customer:)`.
   - `from_objects` merges attribute hashes from multiple sources; last one wins on key conflicts.
   - When composing via `on:`, the referenced external objects are stored internally and read on demand.
-  - Enrichment: if a property or collection is not present in a model's `attributes` hash, `from_objects` will attempt to populate it by calling a same-named reader on the provided models. This covers typical ORM associations:
+  - Enrichment: if a property or collection is missing OR has a `nil` value in a model's `attributes` hash, `from_objects` will attempt to populate it by calling a same-named reader on the provided models (even when the `attributes` hash contains the key set to `nil`). This covers typical ORM associations:
     - has_one: nested block/twin properties are initialized from the reader value.
     - has_many: collections accept relation proxies and normalize via `to_a`, wrapping elements into the configured element twin.
   - `from_collection` accepts arrays of hashes, objects with `to_h`/`attributes`, ActiveModel objects, or plain Ruby objects. For non-hash elements it reflects values by calling readers matching the element twin's properties (or instance variables) and instantiates the element twin.

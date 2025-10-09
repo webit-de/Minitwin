@@ -55,7 +55,8 @@ class MiniTwin
         # object readers commonly used by ORMs like ActiveRecord.
         begin
           properties.each do |prop, _meta|
-            next if attributes.key?(prop)
+            # Only enrich when attribute is missing or nil
+            next if attributes.key?(prop) && !attributes[prop].nil?
             models.each_value do |model|
               next unless model.respond_to?(prop)
               val = model.public_send(prop)
@@ -66,7 +67,8 @@ class MiniTwin
           end
 
           collections.each_key do |coll|
-            next if attributes.key?(coll)
+            # Only enrich when attribute is missing or nil
+            next if attributes.key?(coll) && !attributes[coll].nil?
             models.each_value do |model|
               next unless model.respond_to?(coll)
               val = model.public_send(coll)
