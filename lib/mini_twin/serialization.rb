@@ -32,6 +32,11 @@ class MiniTwin
         # Include dynamic alias keys (defined per instance via `as: -> { ... }`).
         if instance_variable_defined?(:@__dynamic_aliases__) && @__dynamic_aliases__ && !@__dynamic_aliases__.empty?
           @__dynamic_aliases__.each do |target_method, alias_method|
+            # Skip nested proxy aliases at the top level; nested groups
+            # serialize under their container key only.
+            if target_method.is_a?(Symbol) && target_method.to_s.start_with?("__nested_read__")
+              next
+            end
             # Read the value from the original target method to avoid issues if
             # the alias method is overridden. Apply the same transformation rules
             # as above for nested twins and arrays.

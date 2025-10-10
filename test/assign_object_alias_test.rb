@@ -18,6 +18,20 @@ class AssignAliasAsLambdaTwin < MiniTwin
   property :another_sub_property, as: -> { @sub_property }
 end
 
+class NestedAssignAliasAsLambdaTwin < MiniTwin
+  nested :some_nesting do
+    property :sub_property
+    property :another_sub_property, as: -> { @sub_property }
+  end
+end
+
+class CollectionDynamicAliasTwin < MiniTwin
+  collection :items do
+    property :sub_property
+    property :another_sub_property, as: -> { @sub_property }
+  end
+end
+
 class AssignObjectAliasTest < ActiveSupport::TestCase
   test "assign_object copies attributes for aliased property" do
     model = Data.define(:sub_property, :another_sub_property).new(sub_property: "x", another_sub_property: "y")
@@ -66,11 +80,17 @@ class AssignObjectAliasTest < ActiveSupport::TestCase
     refute h2.key?(:key1)
   end
 
-  class CollectionDynamicAliasTwin < MiniTwin
-    collection :items do
-      property :sub_property
-      property :another_sub_property, as: -> { @sub_property }
-    end
+  test "assign_object copies attributes with nested aliased property" do
+    model = Data.define(:sub_property, :another_sub_property).new(sub_property: "a", another_sub_property: "b")
+    twin = NestedAssignAliasAsLambdaTwin.new
+    twin.assign_object(model)
+
+    assert_equal "a", twin.sub_property
+    assert_equal "b", twin.a
+    # Update via top-level nested proxies
+    twin.sub_property = "x"
+    twin.another_sub_property = "y"
+    assert_equal({ some_nesting: { sub_property: "x", x: "y" } }.deep_stringify_keys, twin.to_hash)
   end
 
   test "dynamic alias works in collection elements and renames on change" do
@@ -104,25 +124,25 @@ class AssignObjectAliasTest < ActiveSupport::TestCase
   end
 
   test "dynamic alias works on collection name and updates on rename" do
-    model = Data.define(:alias_key, :items).new('things', [{ value: 1 }, { value: 2 }])
+    model = Data.define(:alias_key, :items).new('things', [ { value: 1 }, { value: 2 } ])
     twin = CollectionNameDynamicAliasTwin.from_hash(alias_key: model.alias_key, items: model.items)
 
     # Access via dynamic collection reader
     assert_respond_to twin, :things
-    assert_equal [1, 2], twin.things.map(&:value)
+    assert_equal [ 1, 2 ], twin.things.map(&:value)
 
     # Serialization uses dynamic collection name and omits base name
     h = twin.to_hash
     assert h.key?(:things)
     refute h.key?(:items)
-    assert_equal [{ value: 1 }, { value: 2 }].map(&:with_indifferent_access), h[:things]
+    assert_equal [ { value: 1 }, { value: 2 } ].map(&:with_indifferent_access), h[:things]
 
     # Update alias key and verify rename takes effect
     twin.alias_key = 'stuff'
     h2 = twin.to_hash
     assert h2.key?(:stuff)
     refute h2.key?(:things)
-    assert_equal [1, 2], twin.stuff.map(&:value)
+    assert_equal [ 1, 2 ], twin.stuff.map(&:value)
   end
 
 end

@@ -86,6 +86,10 @@ class MiniTwin
         const_name = name.to_s.split('_').map(&:capitalize).join
         nested_klass = self.const_get(const_name) rescue nil
 
+        # Registry for dynamic nested aliases (as: -> { ... }) on leafs
+        @dynamic_nested_aliases ||= []
+        def self.dynamic_nested_aliases; @dynamic_nested_aliases ||= []; end
+
         leafs = []
         if nested_klass && nested_klass.respond_to?(:properties)
           walker = nil
@@ -104,15 +108,21 @@ class MiniTwin
         leafs.each do |leaf|
           path = leaf[:path]
           prop = path.last
-          alias_name = leaf[:as] || prop
+          as_meta = leaf[:as]
 
-          # Public getter uses alias when present; reads inner via alias to
-          # respect protected original readers inside the nested twin.
-          define_method(alias_name) do
+          # Define a stable internal reader for this leaf to support dynamic aliasing
+          target_reader = "__nested_read__#{([name] + path).join('__')}"
+          define_method(target_reader) do
             obj = public_send(name)
             path[0..-2].each { |seg| obj = obj.public_send(seg) }
-            inner_read = leaf[:as] || prop
-            obj.public_send(inner_read)
+            if as_meta.is_a?(Proc)
+              # When inner property has a dynamic alias, original reader may be protected.
+              obj.send(prop)
+            else
+              inner_read = as_meta || prop
+              # Use send to allow accessing protected original readers
+              obj.send(inner_read)
+            end
           end
 
           # Setter uses original base name to call the nested twin's writer.
@@ -120,9 +130,24 @@ class MiniTwin
             obj = public_send(name)
             path[0..-2].each { |seg| obj = obj.public_send(seg) }
             obj.public_send("#{prop}=", value)
+            __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
           end
 
-          virtual_properties << alias_name
+          # Static alias: define a public getter method with the alias name
+          if as_meta && !as_meta.is_a?(Proc)
+            alias_name = as_meta
+            define_method(alias_name) do
+              send(target_reader)
+            end
+            virtual_properties << alias_name
+          else
+            # Dynamic alias: register for instance-level aliasing and rely on
+            # __recompute_dynamic_aliases__ to create the per-instance method.
+            self.dynamic_nested_aliases << { target: target_reader.to_sym, as: (as_meta || prop), group: name, path: path }
+          end
+
+          # Always hide the internal reader from serialization
+          virtual_properties << target_reader.to_sym
         end
 
         invalidate_caches

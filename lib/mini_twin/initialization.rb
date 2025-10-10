@@ -97,6 +97,28 @@ class MiniTwin
           __apply_dynamic_alias__(coll, alias_name)
         end
       end
+
+      # Handle nested dynamic aliases (registered by DSL#nested)
+      if self.class.respond_to?(:dynamic_nested_aliases)
+        self.class.dynamic_nested_aliases.each do |entry|
+          as_meta = entry[:as]
+          target = entry[:target]
+          if as_meta.is_a?(Proc)
+            begin
+              obj = public_send(entry[:group])
+              entry[:path][0..-2].each { |seg| obj = obj.public_send(seg) }
+              alias_name = obj.instance_exec(&as_meta)
+            rescue StandardError
+              next
+            end
+            next if alias_name.nil?
+            __apply_dynamic_alias__(target, alias_name)
+          else
+            # Static alias recorded by nested to support protected inner readers
+            __apply_dynamic_alias__(target, as_meta)
+          end
+        end
+      end
     end
 
     def __apply_dynamic_alias__(target_method, alias_name)
