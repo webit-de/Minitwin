@@ -10,7 +10,10 @@ class MiniTwin
 
         props = properties
         props.each do |prop, meta|
-          reader_name = (meta[:as] && meta[:as] != prop) ? meta[:as] : prop
+          as_meta = meta[:as]
+          # Dynamic aliases (Proc) cannot be represented statically in RBS;
+          # fall back to the base property name.
+          reader_name = (as_meta && !as_meta.is_a?(Proc) && as_meta != prop) ? as_meta : prop
           type = rbs_type_for(meta)
           lines << "  attr_reader #{reader_name}: #{type}"
           if instance_methods(false).include?("#{prop}=".to_sym)

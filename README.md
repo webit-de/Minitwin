@@ -314,6 +314,64 @@ Edge Cases & Behavior Notes
 - Aliases: When using `as:`, the original name is protected so only the alias is public. Predicate methods (`?`) are not double-aliased.
 - Attributes export: `attributes` uses base setter names (e.g., `secret_value`) for keys and reads values even when the original reader is protected by aliasing.
 
+Dynamic Aliases (as: -> { ... })
+--------------------------------
+
+You can compute the public reader name dynamically using a lambda. The lambda runs in the instance context, so it can access other attributes or ivars.
+
+Example:
+
+```
+class DynamicAliasTwin < MiniTwin
+  property :key
+  property :value, as: -> { key }
+end
+
+t = DynamicAliasTwin.from_hash(key: "x", value: 1)
+t.x        #=> 1
+t.to_hash  #=> { x: 1 }
+
+# Renaming updates the public reader and serialization
+t.key = "y"
+t.value = 2
+t.y        #=> 2
+t.to_hash  #=> { y: 2 }
+```
+
+Notes:
+- The original property reader is protected when using a dynamic alias, just like static aliases.
+- Dynamic alias names should be symbols or strings; `as:` coercion uses `to_sym`.
+- Serialization (`to_hash`/`to_json`) includes dynamic alias keys. Base property names are omitted when aliased.
+- Works inside collection elements as well; each element computes its own alias.
+
+Collection Name Dynamic Alias
+-----------------------------
+
+You can also compute the collection reader name dynamically:
+
+```
+class BagTwin < MiniTwin
+  property :alias_key
+  collection :items, as: -> { alias_key } do
+    property :value
+  end
+end
+
+t = BagTwin.from_hash(alias_key: "things", items: [{ value: 1 }, { value: 2 }])
+t.things.map(&:value) #=> [1, 2]
+t.to_hash             #=> { alias_key: "things", things: [{ value: 1 }, { value: 2 }] }
+
+t.alias_key = "stuff"
+t.to_hash             #=> { alias_key: "stuff", stuff: [{ value: 1 }, { value: 2 }] }
+```
+
+Collision handling:
+- If two dynamic aliases resolve to the same name on an instance (e.g., two different properties both compute "x"), an ArgumentError is raised.
+- If a dynamic alias resolves to a method name that already exists on the instance, an ArgumentError is raised.
+
+Introspection:
+- `t.dynamic_aliases` returns a hash of `alias_name => target_method` for the current instance.
+
 Performance Notes
 -----------------
 

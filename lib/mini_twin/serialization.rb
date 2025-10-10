@@ -28,6 +28,27 @@ class MiniTwin
               value
             end
         end
+
+        # Include dynamic alias keys (defined per instance via `as: -> { ... }`).
+        if instance_variable_defined?(:@__dynamic_aliases__) && @__dynamic_aliases__ && !@__dynamic_aliases__.empty?
+          @__dynamic_aliases__.each do |target_method, alias_method|
+            # Read the value from the original target method to avoid issues if
+            # the alias method is overridden. Apply the same transformation rules
+            # as above for nested twins and arrays.
+            value = send(target_method)
+            next if value.nil? && !render_nil
+
+            hash[alias_method] =
+              case value
+              when MiniTwin
+                value.to_hash
+              when Array
+                value.map { |item| item.respond_to?(:to_hash) ? item.to_hash : item }.compact
+              else
+                value
+              end
+          end
+        end
       end
     end
 

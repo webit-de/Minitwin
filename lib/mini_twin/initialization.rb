@@ -22,6 +22,9 @@ class MiniTwin
           index_with { {} }
 
       super(**getter_defaults.merge(args))
+
+      # Establish any dynamic alias methods after initialization
+      __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
     end
 
     private
@@ -52,6 +55,84 @@ class MiniTwin
 
     def define_instance_variable(name:, value:)
       instance_variable_set("@#{name}".delete_suffix("?"), value)
+    end
+
+    # Define or update per-instance alias methods for properties/collections
+    # where `as:` was provided as a Proc. The Proc is executed in the context
+    # of the instance to compute the alias name.
+    def __recompute_dynamic_aliases__
+      @__dynamic_aliases__ ||= {}
+      @__dynamic_aliases_rev__ ||= {}
+
+      # Handle scalar properties
+      if self.class.respond_to?(:properties)
+        self.class.properties.each do |prop, meta|
+          as_meta = meta[:as]
+          next unless as_meta.is_a?(Proc)
+
+          begin
+            alias_name = instance_exec(&as_meta)
+          rescue StandardError
+            next
+          end
+          next if alias_name.nil?
+
+          __apply_dynamic_alias__(prop, alias_name)
+        end
+      end
+
+      # Handle collections
+      if self.class.respond_to?(:collections)
+        self.class.collections.each do |coll, meta|
+          as_meta = meta[:as]
+          next unless as_meta.is_a?(Proc)
+
+          begin
+            alias_name = instance_exec(&as_meta)
+          rescue StandardError
+            next
+          end
+          next if alias_name.nil?
+
+          __apply_dynamic_alias__(coll, alias_name)
+        end
+      end
+    end
+
+    def __apply_dynamic_alias__(target_method, alias_name)
+      alias_key = alias_name.to_sym rescue alias_name
+
+      prev = @__dynamic_aliases__[target_method]
+      if prev && prev != alias_key
+        begin
+          singleton_class.send(:remove_method, prev)
+        rescue NameError
+        end
+        @__dynamic_aliases_rev__.delete(prev)
+      end
+
+      # Collision checks: alias already used by another target or an existing method
+      if @__dynamic_aliases_rev__.key?(alias_key) && @__dynamic_aliases_rev__[alias_key] != target_method
+        raise ArgumentError, "Dynamic alias '#{alias_key}' already defined for '#{@__dynamic_aliases_rev__[alias_key]}'"
+      end
+
+      if (respond_to?(alias_key, true) || respond_to?(alias_key, false)) && @__dynamic_aliases_rev__[alias_key] != target_method
+        raise ArgumentError, "Cannot define dynamic alias '#{alias_key}': method already exists"
+      end
+
+      # Define forwarding method on the singleton class
+      singleton_class.send(:define_method, alias_key) do
+        send(target_method)
+      end
+
+      @__dynamic_aliases__[target_method] = alias_key
+      @__dynamic_aliases_rev__[alias_key] = target_method
+    end
+
+    # Public: expose current dynamic aliases as a Hash of alias_name => target_method
+    def dynamic_aliases
+      return {} unless instance_variable_defined?(:@__dynamic_aliases_rev__) && @__dynamic_aliases_rev__
+      @__dynamic_aliases_rev__.dup
     end
   end
 end

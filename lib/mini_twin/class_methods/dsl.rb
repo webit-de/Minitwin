@@ -21,6 +21,7 @@ class MiniTwin
           arr = self.class.send(:coerce_collection_array, values)
           values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
           define_instance_variable(name:, value: values)
+          __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
         end
         alias_method "#{name}_attributes=", "#{name}="
 
@@ -48,6 +49,7 @@ class MiniTwin
               raise "Unprocessable input for property '#{name}'."
             end
             define_instance_variable(name:, value: coerced)
+            __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
           end
 
           add_block_property(name:)
@@ -61,6 +63,7 @@ class MiniTwin
                 setter ? setter.call(value) : value
               end
             define_instance_variable(name:, value:)
+            __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
           end
         end
 
@@ -198,9 +201,15 @@ class MiniTwin
           end
 
         define_method(name, &getter_proc)
-        if as.present? && name != as
-          alias_method as, name
-          protected name
+        if as.present?
+          if as.is_a?(Proc)
+            # Dynamic alias: protect original reader and let instances
+            # compute and define the alias method at runtime.
+            protected name
+          elsif name != as
+            alias_method as, name
+            protected name
+          end
         end
       end
 

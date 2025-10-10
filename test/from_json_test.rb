@@ -17,7 +17,7 @@ class FromJsonTest < ActiveSupport::TestCase
     assert_equal "Alice", t.name
     assert_instance_of Date, t.date
     assert_equal "1", t.string
-    assert_equal nil, t.not_given_date
+    assert_nil t.not_given_date
   end
 end
 
