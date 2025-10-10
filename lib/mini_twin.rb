@@ -14,6 +14,13 @@ end
 
 # Setup Zeitwerk loader for the gem to support Rails autoloading
 loader = Zeitwerk::Loader.for_gem
+# Ignore the Bundler auto-require shim file (lib/mini-twin.rb), which does not
+# follow Zeitwerk's constant naming conventions.
+begin
+  loader.ignore(File.join(__dir__, "mini-twin.rb"))
+rescue NoMethodError
+  # Older Zeitwerk versions may not support ignore here; safe to skip.
+end
 loader.inflector.inflect(
   "mini_twin" => "MiniTwin"
 )
