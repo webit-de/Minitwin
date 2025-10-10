@@ -14,7 +14,7 @@ class MiniTwin
       end
 
       def collection(name, validates: {}, default: [], as: nil, getter: nil, twin: nil, on: nil, **_opts, &block)
-        nested_class = create_nested_class(name:, &block)
+        nested_class = block ? create_nested_class(name:, &block) : nil
 
         define_method("#{name}=") do |values|
           element_klass = twin || nested_class
