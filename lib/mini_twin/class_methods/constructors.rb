@@ -53,33 +53,7 @@ class MiniTwin
         # when they are not present in the model's attributes hash. This allows
         # nested block/twin properties and collections to be populated from
         # object readers commonly used by ORMs like ActiveRecord.
-        begin
-          properties.each do |prop, _meta|
-            # Only enrich when attribute is missing or nil
-            next if attributes.key?(prop) && !attributes[prop].nil?
-            models.each_value do |model|
-              next unless model.respond_to?(prop)
-              val = model.public_send(prop)
-              next if val.nil?
-              attributes[prop] = val
-              break
-            end
-          end
-
-          collections.each_key do |coll|
-            # Only enrich when attribute is missing or nil
-            next if attributes.key?(coll) && !attributes[coll].nil?
-            models.each_value do |model|
-              next unless model.respond_to?(coll)
-              val = model.public_send(coll)
-              next if val.nil?
-              attributes[coll] = val.respond_to?(:to_a) ? val.to_a : Array(val)
-              break
-            end
-          end
-        rescue StandardError
-          # Be resilient to unexpected model behavior; proceed with best-effort enrichment
-        end
+        enrich_attributes_from_models!(attributes, models)
 
         obj = new(**attributes)
         models.each { |name, model| obj.instance_variable_set(internal_model_name(name), model) }
@@ -91,7 +65,35 @@ class MiniTwin
       end
 
       def internal_model_name(name)
-        "@internal_model__#{name}" if name.present?
+        "#{MiniTwin::INTERNAL_MODEL_PREFIX}#{name}" if name.present?
+      end
+
+      def enrich_attributes_from_models!(attributes, models)
+        begin
+          properties.each_key do |key|
+            enrich_attribute_from_models(attributes, models, key, is_collection: false)
+          end
+
+          collections.each_key do |key|
+            enrich_attribute_from_models(attributes, models, key, is_collection: true)
+          end
+        rescue StandardError
+          # Be resilient to unexpected model behavior; proceed with best-effort enrichment
+        end
+      end
+
+      def enrich_attribute_from_models(attributes, models, key, is_collection:)
+        # Only enrich when attribute is missing or nil
+        return if attributes.key?(key) && !attributes[key].nil?
+
+        models.each_value do |model|
+          next unless model.respond_to?(key)
+          val = model.public_send(key)
+          next if val.nil?
+
+          attributes[key] = is_collection ? coerce_collection_array(val) : val
+          break
+        end
       end
     end
   end

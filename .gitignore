@@ -6,9 +6,6 @@
 /pkg/
 /*.gem
 
-# Lockfile (commit for apps, ignore for gems)
-/Gemfile.lock
-
 # Coverage and docs
 /coverage/
 /doc/

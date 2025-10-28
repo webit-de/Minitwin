@@ -25,4 +25,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest", ">= 5.18"
   spec.add_development_dependency "actionpack", ">= 6.1"
   spec.add_development_dependency "activemodel", ">= 6.1"
+  spec.add_development_dependency "simplecov", ">= 0.22"
 end

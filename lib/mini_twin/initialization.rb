@@ -61,84 +61,83 @@ class MiniTwin
     # where `as:` was provided as a Proc. The Proc is executed in the context
     # of the instance to compute the alias name.
     def __recompute_dynamic_aliases__
-      @__dynamic_aliases__ ||= {}
-      @__dynamic_aliases_rev__ ||= {}
+      instance_variable_set(MiniTwin::DYNAMIC_ALIASES_VAR, {}) unless instance_variable_defined?(MiniTwin::DYNAMIC_ALIASES_VAR)
+      instance_variable_set(MiniTwin::DYNAMIC_ALIASES_REV_VAR, {}) unless instance_variable_defined?(MiniTwin::DYNAMIC_ALIASES_REV_VAR)
 
-      # Handle scalar properties
-      if self.class.respond_to?(:properties)
-        self.class.properties.each do |prop, meta|
-          as_meta = meta[:as]
-          next unless as_meta.is_a?(Proc)
-
-          begin
-            alias_name = instance_exec(&as_meta)
-          rescue StandardError
-            next
-          end
-          next if alias_name.nil?
-
-          __apply_dynamic_alias__(prop, alias_name)
-        end
-      end
-
-      # Handle collections
-      if self.class.respond_to?(:collections)
-        self.class.collections.each do |coll, meta|
-          as_meta = meta[:as]
-          next unless as_meta.is_a?(Proc)
-
-          begin
-            alias_name = instance_exec(&as_meta)
-          rescue StandardError
-            next
-          end
-          next if alias_name.nil?
-
-          __apply_dynamic_alias__(coll, alias_name)
-        end
-      end
+      # Handle scalar properties and collections
+      __recompute_aliases_for_collection__(:properties)
+      __recompute_aliases_for_collection__(:collections)
 
       # Handle nested dynamic aliases (registered by DSL#nested)
-      if self.class.respond_to?(:dynamic_nested_aliases)
-        self.class.dynamic_nested_aliases.each do |entry|
-          as_meta = entry[:as]
-          target = entry[:target]
-          if as_meta.is_a?(Proc)
-            begin
-              obj = public_send(entry[:group])
-              entry[:path][0..-2].each { |seg| obj = obj.public_send(seg) }
-              alias_name = obj.instance_exec(&as_meta)
-            rescue StandardError
-              next
-            end
-            next if alias_name.nil?
-            __apply_dynamic_alias__(target, alias_name)
-          else
-            # Static alias recorded by nested to support protected inner readers
-            __apply_dynamic_alias__(target, as_meta)
-          end
+      __recompute_nested_aliases__
+    end
+
+    def __recompute_aliases_for_collection__(collection_method)
+      return unless self.class.respond_to?(collection_method)
+
+      self.class.public_send(collection_method).each do |key, meta|
+        as_meta = meta[:as]
+        next unless as_meta.is_a?(Proc)
+
+        alias_name = __compute_alias_name__(as_meta)
+        next if alias_name.nil?
+
+        __apply_dynamic_alias__(key, alias_name)
+      end
+    end
+
+    def __recompute_nested_aliases__
+      return unless self.class.respond_to?(:dynamic_nested_aliases)
+
+      self.class.dynamic_nested_aliases.each do |entry|
+        as_meta = entry[:as]
+        target = entry[:target]
+
+        if as_meta.is_a?(Proc)
+          alias_name = __compute_nested_alias_name__(entry)
+          next if alias_name.nil?
+          __apply_dynamic_alias__(target, alias_name)
+        else
+          # Static alias recorded by nested to support protected inner readers
+          __apply_dynamic_alias__(target, as_meta)
         end
       end
     end
 
+    def __compute_alias_name__(as_proc)
+      instance_exec(&as_proc)
+    rescue StandardError
+      nil
+    end
+
+    def __compute_nested_alias_name__(entry)
+      obj = public_send(entry[:group])
+      entry[:path][0..-2].each { |seg| obj = obj.public_send(seg) }
+      obj.instance_exec(&entry[:as])
+    rescue StandardError
+      nil
+    end
+
     def __apply_dynamic_alias__(target_method, alias_name)
       alias_key = alias_name.to_sym rescue alias_name
+      aliases = instance_variable_get(MiniTwin::DYNAMIC_ALIASES_VAR)
+      aliases_rev = instance_variable_get(MiniTwin::DYNAMIC_ALIASES_REV_VAR)
 
-      prev = @__dynamic_aliases__[target_method]
+      prev = aliases[target_method]
       if prev && prev != alias_key
         begin
           singleton_class.send(:remove_method, prev)
         rescue NameError
         end
-        @__dynamic_aliases_rev__.delete(prev)
+        aliases_rev.delete(prev)
       end
 
       # Collision checks: alias already used by another target or an existing method
-      if @__dynamic_aliases_rev__.key?(alias_key) && @__dynamic_aliases_rev__[alias_key] != target_method
-        raise ArgumentError, "Dynamic alias '#{alias_key}' already defined for '#{@__dynamic_aliases_rev__[alias_key]}'"
+      if aliases_rev.key?(alias_key) && aliases_rev[alias_key] != target_method
+        raise ArgumentError, "Dynamic alias '#{alias_key}' already defined for '#{aliases_rev[alias_key]}'"
       end
 
-      if (respond_to?(alias_key, true) || respond_to?(alias_key, false)) && @__dynamic_aliases_rev__[alias_key] != target_method
+      if (respond_to?(alias_key, true) || respond_to?(alias_key, false)) && aliases_rev[alias_key] != target_method
         raise ArgumentError, "Cannot define dynamic alias '#{alias_key}': method already exists"
       end
 
@@ -147,14 +146,15 @@ class MiniTwin
         send(target_method)
       end
 
-      @__dynamic_aliases__[target_method] = alias_key
-      @__dynamic_aliases_rev__[alias_key] = target_method
+      aliases[target_method] = alias_key
+      aliases_rev[alias_key] = target_method
     end
 
     # Public: expose current dynamic aliases as a Hash of alias_name => target_method
     def dynamic_aliases
-      return {} unless instance_variable_defined?(:@__dynamic_aliases_rev__) && @__dynamic_aliases_rev__
-      @__dynamic_aliases_rev__.dup
+      rev_var = MiniTwin::DYNAMIC_ALIASES_REV_VAR
+      return {} unless instance_variable_defined?(rev_var) && instance_variable_get(rev_var)
+      instance_variable_get(rev_var).dup
     end
   end
 end

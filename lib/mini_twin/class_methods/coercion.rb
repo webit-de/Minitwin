@@ -3,89 +3,108 @@ class MiniTwin
     module Coercion
       private
 
+      # Iterate over all attribute sources (properties, collections, and allowed keys)
+      # for a target class, yielding each key to the block
+      def iterate_attribute_sources(target_klass, &block)
+        return unless target_klass
+
+        if target_klass.respond_to?(:properties)
+          target_klass.properties.each_key(&block)
+        end
+
+        if target_klass.respond_to?(:collections)
+          target_klass.collections.each_key(&block)
+        end
+
+        if target_klass.respond_to?(:allowed_attribute_keys, true)
+          target_klass.send(:allowed_attribute_keys).each(&block)
+        end
+      end
+
       def coerce_value_to_twin(value, target_klass)
         return nil if value.nil?
-        return value if target_klass && value.is_a?(target_klass)
-        if target_klass && value.respond_to?(:to_h)
-          attrs = value.to_h
-          enrich_attrs_from_readers!(attrs, value, target_klass)
-          return target_klass.new(**attrs)
-        end
-        if target_klass && value.respond_to?(:attributes)
-          attrs = value.attributes
-          enrich_attrs_from_readers!(attrs, value, target_klass)
-          return target_klass.new(**attrs)
-        end
-        if target_klass && value.is_a?(Array) && value.size == 2 && value.last.is_a?(Hash)
-          return target_klass.new(**value.last)
-        end
-        if target_klass && value.is_a?(Hash)
-          return target_klass.new(**value)
-        end
+        return value unless target_klass
+        return value if value.is_a?(target_klass)
+
+        # Check array pair format before to_h (arrays respond to :to_h in Ruby 3+)
+        return coerce_from_array_pair(value, target_klass) if array_pair_format?(value)
+        # Try standard conversion methods
+        return coerce_from_to_h(value, target_klass) if value.respond_to?(:to_h) && !value.is_a?(Array)
+        return coerce_from_attributes(value, target_klass) if value.respond_to?(:attributes)
+        return target_klass.new(**value) if value.is_a?(Hash)
 
         # Fallback: reflect by reading known properties or instance variables
-        if target_klass
-          attrs = {}
-          begin
-            if target_klass.respond_to?(:properties)
-              target_klass.properties.each_key do |k|
-                attrs[k] = value.public_send(k) if value.respond_to?(k)
-              end
-            end
-            if target_klass.respond_to?(:collections)
-              target_klass.collections.each_key do |k|
-                attrs[k] = value.public_send(k) if value.respond_to?(k)
-              end
-            end
+        coerce_by_reflection(value, target_klass)
+      end
 
-            # Also map any direct setters (e.g., nested group leaf setters like `tag=`)
-            if target_klass.respond_to?(:allowed_attribute_keys, true)
-              target_klass.send(:allowed_attribute_keys).each do |k|
-                next if attrs.key?(k)
-                attrs[k] = value.public_send(k) if value.respond_to?(k)
-              end
-            end
-          rescue StandardError
+      def coerce_from_to_h(value, target_klass)
+        attrs = value.to_h
+        enrich_attrs_from_readers!(attrs, value, target_klass)
+        target_klass.new(**attrs)
+      end
+
+      def coerce_from_attributes(value, target_klass)
+        attrs = value.attributes
+        enrich_attrs_from_readers!(attrs, value, target_klass)
+        target_klass.new(**attrs)
+      end
+
+      def array_pair_format?(value)
+        value.is_a?(Array) && value.size == 2 && value.last.is_a?(Hash)
+      end
+
+      def coerce_from_array_pair(value, target_klass)
+        target_klass.new(**value.last)
+      end
+
+      def coerce_by_reflection(value, target_klass)
+        attrs = extract_attrs_by_reflection(value, target_klass)
+        attrs = extract_instance_variables(value) if attrs.empty?
+        attrs.empty? ? value : target_klass.new(**attrs)
+      end
+
+      def extract_attrs_by_reflection(value, target_klass)
+        attrs = {}
+        begin
+          iterate_attribute_sources(target_klass) do |key|
+            next if attrs.key?(key)
+            attrs[key] = value.public_send(key) if value.respond_to?(key)
           end
-
-          if attrs.empty? && value.respond_to?(:instance_variables) && value.instance_variables.any?
-            value.instance_variables.each do |var|
-              key = var.to_s.delete("@").to_sym
-              attrs[key] = value.instance_variable_get(var)
-            end
-          end
-
-          return (attrs.empty? ? value : target_klass.new(**attrs))
+        rescue StandardError
+          # Continue with partial attributes if reflection fails
         end
+        attrs
+      end
 
-        value
+      def extract_instance_variables(value)
+        return {} unless value.respond_to?(:instance_variables) && value.instance_variables.any?
+
+        value.instance_variables.each_with_object({}) do |var, attrs|
+          key = var.to_s.delete("@").to_sym
+          attrs[key] = value.instance_variable_get(var)
+        end
       end
 
       def enrich_attrs_from_readers!(attrs, source, target_klass)
+        return attrs unless target_klass
+
         begin
-          if target_klass.respond_to?(:properties)
-            target_klass.properties.each_key do |k|
-              next if attrs.key?(k) && !attrs[k].nil?
-              attrs[k] = source.public_send(k) if source.respond_to?(k)
-            end
-          end
-          if target_klass.respond_to?(:collections)
-            target_klass.collections.each_key do |k|
-              next if attrs.key?(k) && !attrs[k].nil?
-              if source.respond_to?(k)
-                v = source.public_send(k)
-                attrs[k] = coerce_collection_array(v)
-              end
-            end
-          end
-          if target_klass.respond_to?(:allowed_attribute_keys, true)
-            target_klass.send(:allowed_attribute_keys).each do |k|
-              next if attrs.key?(k) && !attrs[k].nil?
-              attrs[k] = source.public_send(k) if source.respond_to?(k)
+          # Enrich from properties and allowed attribute keys
+          iterate_attribute_sources(target_klass) do |key|
+            next if attrs.key?(key) && !attrs[key].nil?
+            next unless source.respond_to?(key)
+
+            # Special handling for collections to ensure array coercion
+            if target_klass.respond_to?(:collections) && target_klass.collections.key?(key)
+              attrs[key] = coerce_collection_array(source.public_send(key))
+            else
+              attrs[key] = source.public_send(key)
             end
           end
         rescue StandardError
+          # Be resilient to unexpected source behavior
         end
+
         attrs
       end
 

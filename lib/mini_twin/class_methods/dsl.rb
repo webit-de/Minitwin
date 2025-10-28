@@ -92,17 +92,16 @@ class MiniTwin
 
         leafs = []
         if nested_klass && nested_klass.respond_to?(:properties)
-          walker = nil
-          walker = ->(klass, path) do
+          extract_leaf_properties = ->(klass, path) do
             klass.properties.each do |prop, meta|
               if meta[:nested_class]
-                walker.call(meta[:nested_class], path + [prop])
+                extract_leaf_properties.call(meta[:nested_class], path + [prop])
               else
                 leafs << { path: (path + [prop]), as: (meta[:as] if meta[:as] && meta[:as] != prop) }
               end
             end
           end
-          walker.call(nested_klass, [])
+          extract_leaf_properties.call(nested_klass, [])
         end
 
         leafs.each do |leaf|
@@ -111,7 +110,7 @@ class MiniTwin
           as_meta = leaf[:as]
 
           # Define a stable internal reader for this leaf to support dynamic aliasing
-          target_reader = "__nested_read__#{([name] + path).join('__')}"
+          target_reader = "#{MiniTwin::NESTED_READER_PREFIX}#{([name] + path).join('__')}"
           define_method(target_reader) do
             obj = public_send(name)
             path[0..-2].each { |seg| obj = obj.public_send(seg) }
@@ -174,67 +173,88 @@ class MiniTwin
       end
 
       def define_getter_method(name:, as:, on:, default:, getter:, type: nil)
-        getter_proc =
-          if getter.present?
-            -> { instance_exec(&getter) }
-          else
-            -> {
-              if on.present?
-                model = instance_variable_get(self.class.internal_model_name(on)) || (send(on) rescue nil)
-                if model.nil?
-                  raise "Property '#{name}' refers to unknown composition source '#{on}' in #{self.class}. Ensure the model is provided via from_objects or a reader exists."
-                end
-                raise "The instance of '#{model.class}' does not respond to '#{name}'." unless model.respond_to?(name)
-
-                raw = model.send(name)
-                if raw.nil?
-                  (!default.nil?) ? default : (type ? self.class.send(:type_default_value, type) : nil)
-                else
-                  # If this is a collection property, wrap elements into the
-                  # configured element twin so renamed getters etc. work when
-                  # reading via composition (on: ...).
-                  begin
-                    meta = self.class.respond_to?(:collections) ? self.class.collections[name.to_sym] : nil
-                  rescue StandardError
-                    meta = nil
-                  end
-
-                  if meta && (raw.is_a?(Array) || raw.respond_to?(:to_a))
-                    elem_klass = meta[:element_twin]
-                    arr = self.class.send(:coerce_collection_array, raw)
-                    arr.map { |v| self.class.send(:coerce_value_to_twin, v, elem_klass) }
-                  else
-                    type ? self.class.send(:coerce_with_type, raw, type) : raw
-                  end
-                end
-              else
-                if !name.end_with?("?") && instance_variable_defined?("@#{name}")
-                  val = instance_variable_get("@#{name}")
-                  return (!default.nil?) ? default : (type ? self.class.send(:type_default_value, type) : nil) if val.nil?
-                  type ? self.class.send(:coerce_with_type, val, type) : val
-                else
-                  if !default.nil?
-                    default
-                  elsif type
-                    self.class.send(:type_default_value, type)
-                  else
-                    nil
-                  end
-                end
-              end
-            }
-          end
-
+        getter_proc = build_getter_proc(name:, on:, default:, getter:, type:)
         define_method(name, &getter_proc)
-        if as.present?
-          if as.is_a?(Proc)
-            # Dynamic alias: protect original reader and let instances
-            # compute and define the alias method at runtime.
-            protected name
-          elsif name != as
-            alias_method as, name
-            protected name
+        apply_alias_to_getter(name:, as:)
+      end
+
+      def build_getter_proc(name:, on:, default:, getter:, type:)
+        return -> { instance_exec(&getter) } if getter.present?
+
+        if on.present?
+          build_composition_getter(name:, on:, default:, type:)
+        else
+          build_regular_getter(name:, default:, type:)
+        end
+      end
+
+      def build_composition_getter(name:, on:, default:, type:)
+        -> {
+          # Get composition model
+          model = instance_variable_get(self.class.internal_model_name(on)) || (send(on) rescue nil)
+
+          # Validate model
+          if model.nil?
+            raise "Property '#{name}' refers to unknown composition source '#{on}' in #{self.class}. Ensure the model is provided via from_objects or a reader exists."
           end
+          unless model.respond_to?(name)
+            raise "The instance of '#{model.class}' does not respond to '#{name}'."
+          end
+
+          raw = model.send(name)
+
+          # Return default if raw is nil
+          if raw.nil?
+            return default unless default.nil?
+            return type ? self.class.send(:type_default_value, type) : nil
+          end
+
+          # Process the value
+          # If this is a collection property, wrap elements into the
+          # configured element twin so renamed getters etc. work when
+          # reading via composition (on: ...).
+          begin
+            meta = self.class.respond_to?(:collections) ? self.class.collections[name.to_sym] : nil
+          rescue StandardError
+            meta = nil
+          end
+
+          if meta && (raw.is_a?(Array) || raw.respond_to?(:to_a))
+            elem_klass = meta[:element_twin]
+            arr = self.class.send(:coerce_collection_array, raw)
+            arr.map { |v| self.class.send(:coerce_value_to_twin, v, elem_klass) }
+          else
+            type ? self.class.send(:coerce_with_type, raw, type) : raw
+          end
+        }
+      end
+
+      def build_regular_getter(name:, default:, type:)
+        -> {
+          if !name.end_with?("?") && instance_variable_defined?("@#{name}")
+            val = instance_variable_get("@#{name}")
+            if val.nil?
+              return default unless default.nil?
+              return type ? self.class.send(:type_default_value, type) : nil
+            end
+            type ? self.class.send(:coerce_with_type, val, type) : val
+          else
+            return default unless default.nil?
+            type ? self.class.send(:type_default_value, type) : nil
+          end
+        }
+      end
+
+      def apply_alias_to_getter(name:, as:)
+        return unless as.present?
+
+        if as.is_a?(Proc)
+          # Dynamic alias: protect original reader and let instances
+          # compute and define the alias method at runtime.
+          protected name
+        elsif name != as
+          alias_method as, name
+          protected name
         end
       end
 

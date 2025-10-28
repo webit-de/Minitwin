@@ -29,6 +29,12 @@ loader.setup
 require_relative "mini_twin/version"
 
 class MiniTwin
+  # Constants for internal variable naming
+  INTERNAL_MODEL_PREFIX = "@internal_model__"
+  NESTED_READER_PREFIX = "__nested_read__"
+  DYNAMIC_ALIASES_VAR = "@__dynamic_aliases__"
+  DYNAMIC_ALIASES_REV_VAR = "@__dynamic_aliases_rev__"
+
   include ActiveModel::Model if defined?(ActiveModel::Model)
   include MiniTwin::Initialization
   include MiniTwin::Assignment

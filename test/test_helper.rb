@@ -1,3 +1,13 @@
+# Configure SimpleCov before loading any application code
+require "simplecov"
+SimpleCov.start do
+  add_filter "/test/"
+  add_filter "/vendor/"
+  enable_coverage :branch
+  # Coverage thresholds after optimization and extended testing
+  minimum_coverage line: 93, branch: 74
+end
+
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "minitest/autorun"

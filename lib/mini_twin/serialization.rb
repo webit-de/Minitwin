@@ -4,6 +4,21 @@ class MiniTwin
   # nil). When ActiveModel validations are available, nested errors are
   # surfaced on the parent using dot/bracket notation.
   module Serialization
+    private
+
+    def transform_value_for_serialization(value)
+      case value
+      when MiniTwin
+        value.to_hash
+      when Array
+        value.map { |item| item.respond_to?(:to_hash) ? item.to_hash : item }.compact
+      else
+        value
+      end
+    end
+
+    public
+
     def to_hash(render_nil: false)
       klass = defined?(HashWithIndifferentAccess) ? HashWithIndifferentAccess : Hash
 
@@ -18,23 +33,16 @@ class MiniTwin
           value = send(method)
           next if value.nil? && !render_nil
 
-          hash[method] =
-            case value
-            when MiniTwin
-              value.to_hash
-            when Array
-              value.map { |item| item.respond_to?(:to_hash) ? item.to_hash : item }.compact
-            else
-              value
-            end
+          hash[method] = transform_value_for_serialization(value)
         end
 
         # Include dynamic alias keys (defined per instance via `as: -> { ... }`).
-        if instance_variable_defined?(:@__dynamic_aliases__) && @__dynamic_aliases__ && !@__dynamic_aliases__.empty?
-          @__dynamic_aliases__.each do |target_method, alias_method|
+        dynamic_aliases_var = MiniTwin::DYNAMIC_ALIASES_VAR
+        if instance_variable_defined?(dynamic_aliases_var) && instance_variable_get(dynamic_aliases_var) && !instance_variable_get(dynamic_aliases_var).empty?
+          instance_variable_get(dynamic_aliases_var).each do |target_method, alias_method|
             # Skip nested proxy aliases at the top level; nested groups
             # serialize under their container key only.
-            if target_method.is_a?(Symbol) && target_method.to_s.start_with?("__nested_read__")
+            if target_method.is_a?(Symbol) && target_method.to_s.start_with?(MiniTwin::NESTED_READER_PREFIX)
               next
             end
             # Read the value from the original target method to avoid issues if
@@ -43,15 +51,7 @@ class MiniTwin
             value = send(target_method)
             next if value.nil? && !render_nil
 
-            hash[alias_method] =
-              case value
-              when MiniTwin
-                value.to_hash
-              when Array
-                value.map { |item| item.respond_to?(:to_hash) ? item.to_hash : item }.compact
-              else
-                value
-              end
+            hash[alias_method] = transform_value_for_serialization(value)
           end
         end
       end
