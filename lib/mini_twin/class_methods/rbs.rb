@@ -8,6 +8,9 @@ class MiniTwin
         superclass_name = self.superclass ? " < ::#{self.superclass.name}" : ""
         lines << "class ::#{name}#{superclass_name}"
 
+        # Collect initializer parameters
+        init_params = []
+
         props = properties
         props.each do |prop, meta|
           as_meta = meta[:as]
@@ -19,11 +22,26 @@ class MiniTwin
           if instance_methods(false).include?("#{prop}=".to_sym)
             lines << "  attr_writer #{prop}: #{type}"
           end
+
+          # Add to initializer parameters (all optional)
+          init_params << "?#{prop}: #{type}"
         end
 
         collections.each do |name_sym, meta|
           elem_type = rbs_elem_type_for(meta)
           lines << "  attr_accessor #{name_sym}: ::Array[#{elem_type}]"
+
+          # Add to initializer parameters (all optional, collections accept arrays or individual items)
+          init_params << "?#{name_sym}: ::Array[#{elem_type}]"
+        end
+
+        # Add initializer signature
+        if init_params.any?
+          lines << ""
+          lines << "  def initialize: (#{init_params.join(', ')}, **untyped) -> void"
+        else
+          lines << ""
+          lines << "  def initialize: (**untyped) -> void"
         end
 
         lines << "end"
