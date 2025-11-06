@@ -259,8 +259,17 @@ class MiniTwin
       end
 
       def add_validation(name:, validates:)
-        if validates.any?
-          raise "Validation is not possible, because activemodel is not available" unless self.respond_to?(:validates)
+        return if validates.nil?
+        return if validates.respond_to?(:empty?) && validates.empty?
+
+        raise "Validation is not possible, because activemodel is not available" unless self.respond_to?(:validates)
+
+        if validates.is_a?(Proc)
+          validate do
+            value = send(name)
+            errors.add(name, "is invalid") unless validates.call(value)
+          end
+        else
           validates(name, **validates)
         end
       end

@@ -10,6 +10,13 @@ class ValidationTwin < MiniTwin
   collection :cool_stuff do
     property :property, validates: { presence: true }
   end
+  property(
+    :validate_setter,
+    setter: -> (value) { value * 2 },
+    validates: -> (value) { value > 0 },
+    type: Types::Params::Integer.lax,
+    default: 1
+  )
 end
 
 class ValidationTest < ActiveSupport::TestCase
@@ -32,6 +39,13 @@ class ValidationTest < ActiveSupport::TestCase
     assert obj.cool_stuff.first.valid?
     assert_not obj.cool_stuff.last.valid?
     obj.cool_stuff.last.property = "valid"
+    assert obj.valid?
+  end
+
+  test "should validate setter" do
+    obj = ValidationTwin.new(wrong_runtime: 123, validated_property: 'test', duplo: { brick: 124 }, validate_setter: -1)
+    assert_not obj.valid?
+    obj.validate_setter = 1
     assert obj.valid?
   end
 end
