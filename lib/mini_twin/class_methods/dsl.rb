@@ -1,6 +1,6 @@
 class MiniTwin
   module ClassMethods
-    module DSL
+    module Dsl
       def block_properties
         @block_properties ||= []
       end

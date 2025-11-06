@@ -8,7 +8,7 @@ require_relative "class_methods/coercion"
 class MiniTwin
   # Class-level DSL and public constructors split into focused modules.
   module ClassMethods
-    include MiniTwin::ClassMethods::DSL
+    include MiniTwin::ClassMethods::Dsl
     include MiniTwin::ClassMethods::Constructors
     include MiniTwin::ClassMethods::RBS
     include MiniTwin::ClassMethods::Caches

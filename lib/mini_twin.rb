@@ -6,6 +6,7 @@ require "dry-types"
 require "active_support/core_ext/object/blank"
 require "active_support/core_ext/hash/indifferent_access"
 require "active_support/hash_with_indifferent_access"
+require_relative "mini_twin/version"
 
 begin
   require "active_model"
@@ -25,8 +26,6 @@ loader.inflector.inflect(
   "mini_twin" => "MiniTwin"
 )
 loader.setup
-
-require_relative "mini_twin/version"
 
 class MiniTwin
   # Constants for internal variable naming
