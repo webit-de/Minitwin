@@ -10,7 +10,7 @@ class MiniTwin
   module ClassMethods
     include MiniTwin::ClassMethods::Dsl
     include MiniTwin::ClassMethods::Constructors
-    include MiniTwin::ClassMethods::RBS
+    include MiniTwin::ClassMethods::Rbs
     include MiniTwin::ClassMethods::Caches
     include MiniTwin::ClassMethods::TypesHelper
     include MiniTwin::ClassMethods::Coercion

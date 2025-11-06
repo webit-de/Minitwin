@@ -1,6 +1,6 @@
 class MiniTwin
   module ClassMethods
-    module RBS
+    module Rbs
       def to_rbs
         return "" unless name
 
