@@ -101,5 +101,25 @@ class MiniTwin
         true
       end
     end
+
+    def inspect
+      attrs = to_hash.map { |k, v| "#{k}: #{v.inspect}" }.join(", ")
+      "#<#{self.class.name} #{attrs}>"
+    end
+
+    def pretty_print(q)
+      q.object_group(self) do
+        q.breakable
+        hash = to_hash
+        q.seplist(hash, lambda { q.text(','); q.breakable }) do |k, v|
+          q.group do
+            q.text k.to_s
+            q.text ': '
+            q.pp v
+          end
+        end
+      end
+    end
+
   end
 end

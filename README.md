@@ -164,8 +164,38 @@ Serialization
 - to_h alias
 - to_json forwards to `to_hash.to_json`
 - attributes returns a Hash keyed by base setter names (original property names), even when public getters are aliased via `as:`.
+- pretty_print(q) integrates with Ruby's `pp` library for nicely formatted debug output
 
 Virtual properties are omitted from `to_hash`.
+
+### Pretty Printing
+
+MiniTwin integrates with Ruby's `pp` (pretty print) library for readable debug output:
+
+```ruby
+require "pp"
+
+user = UserTwin.from_hash(
+  id: "42",
+  name: "Alice",
+  profile: { bio: "Developer" },
+  tags: %w[ruby rails]
+)
+
+pp user
+# Output:
+# #<UserTwin
+#  id: 42,
+#  name: "Alice",
+#  profile: {"bio" => "Developer"},
+#  tags: ["ruby", "rails"]>
+```
+
+The `pretty_print` method:
+- Formats output with proper indentation
+- Handles nested twins and collections recursively
+- Shows the class name and all serializable attributes
+- Works seamlessly with Ruby's built-in debugging tools
 
 Validations
 -----------
