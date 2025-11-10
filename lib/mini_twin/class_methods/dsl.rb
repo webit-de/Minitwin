@@ -13,6 +13,10 @@ class MiniTwin
         @virtual_properties ||= []
       end
 
+      def property_order
+        @property_order ||= []
+      end
+
       def collection(name, validates: {}, default: [], as: nil, getter: nil, twin: nil, on: nil, **_opts, &block)
         nested_class = block ? create_nested_class(name:, &block) : nil
         element_klass = twin || nested_class
@@ -32,6 +36,7 @@ class MiniTwin
         invalidate_caches
 
         collections[name.to_sym] = { element_twin: element_klass, as: as }
+        property_order << name.to_sym unless property_order.include?(name.to_sym)
       end
 
       def property(name, validates: {}, default: nil, as: nil, virtual: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
@@ -73,6 +78,7 @@ class MiniTwin
         }
         properties[name.to_sym][:twin] = twin if twin
         properties[name.to_sym][:nested_class] = nested_class if nested_class
+        property_order << name.to_sym unless property_order.include?(name.to_sym)
       end
 
       def nested(name, &block)

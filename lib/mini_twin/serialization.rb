@@ -4,20 +4,6 @@ class MiniTwin
   # nil). When ActiveModel validations are available, nested errors are
   # surfaced on the parent using dot/bracket notation.
   module Serialization
-    private
-
-    def transform_value_for_serialization(value)
-      case value
-      when MiniTwin
-        value.to_hash
-      when Array
-        value.filter_map { |item| item.respond_to?(:to_hash) ? item.to_hash : item }
-      else
-        value
-      end
-    end
-
-    public
 
     def to_hash(render_nil: false)
       klass = defined?(HashWithIndifferentAccess) ? HashWithIndifferentAccess : Hash
@@ -113,44 +99,61 @@ class MiniTwin
     def pretty_print(q)
       q.object_group(self) do
         q.breakable
-
-        # Get methods to serialize (same as to_hash logic)
-        methods_to_serialize = if self.class.respond_to?(:serializable_getters, true)
-          self.class.send(:serializable_getters)
-        else
-          self.class.instance_methods(false).reject { |m| (s = m.to_s).end_with?("=", "?", "_attributes") }
-        end
-
-        # Pretty print each attribute
-        q.seplist(methods_to_serialize, lambda { q.text(','); q.breakable }) do |method|
-          value = send(method)
+        q.seplist(ordered_attributes_for_pp, lambda { q.text(','); q.breakable }) do |(name, value)|
           q.group do
-            q.text method.to_s
+            q.text name.to_s
             q.text ': '
             q.pp value
           end
         end
+      end
+    end
 
-        # Include dynamic aliases if present
-        dynamic_aliases_var = MiniTwin::DYNAMIC_ALIASES_VAR
-        if instance_variable_defined?(dynamic_aliases_var)
-          aliases = instance_variable_get(dynamic_aliases_var)
-          if aliases && !aliases.empty?
-            aliases.each do |target_method, alias_method|
-              # Skip nested proxy aliases
-              next if target_method.is_a?(Symbol) && target_method.to_s.start_with?(MiniTwin::NESTED_READER_PREFIX)
+    private
 
-              value = send(target_method)
-              q.text ','
-              q.breakable
-              q.group do
-                q.text alias_method.to_s
-                q.text ': '
-                q.pp value
-              end
-            end
-          end
-        end
+    def transform_value_for_serialization(value)
+      case value
+      when MiniTwin
+        value.to_hash
+      when Array
+        value.filter_map { |item| item.respond_to?(:to_hash) ? item.to_hash : item }
+      else
+        value
+      end
+    end
+
+    def ordered_attributes_for_pp
+      methods = ordered_methods_for_pp
+      attrs = methods.map { |m| [display_name_for(m), send(m)] }
+      attrs + dynamic_aliases_for_pp
+    end
+
+    def ordered_methods_for_pp
+      ordered = self.class.respond_to?(:property_order, true) ? self.class.send(:property_order) : []
+      all_methods = self.class.respond_to?(:serializable_getters, true) ?
+        self.class.send(:serializable_getters) :
+        self.class.instance_methods(false).reject { |m| m.to_s.end_with?("=", "?", "_attributes") }
+
+      ordered.select { |m| all_methods.include?(m) } + (all_methods - ordered)
+    end
+
+    def display_name_for(method)
+      props = self.class.respond_to?(:properties, true) ? self.class.send(:properties) : {}
+      colls = self.class.respond_to?(:collections, true) ? self.class.send(:collections) : {}
+
+      meta = props[method] || colls[method]
+      (meta && meta[:as] && !meta[:as].is_a?(Proc)) ? meta[:as] : method
+    end
+
+    def dynamic_aliases_for_pp
+      return [] unless instance_variable_defined?(MiniTwin::DYNAMIC_ALIASES_VAR)
+
+      aliases = instance_variable_get(MiniTwin::DYNAMIC_ALIASES_VAR)
+      return [] unless aliases && !aliases.empty?
+
+      aliases.filter_map do |target_method, alias_method|
+        next if target_method.is_a?(Symbol) && target_method.to_s.start_with?(MiniTwin::NESTED_READER_PREFIX)
+        [alias_method, send(target_method)]
       end
     end
 

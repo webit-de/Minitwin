@@ -195,6 +195,7 @@ pp user
 
 The `pretty_print` method:
 - Formats output with proper indentation
+- **Preserves property definition order** - attributes appear in the same order as defined in your class
 - Handles nested twins and collections recursively
 - **Preserves MiniTwin class information** for nested objects (not converted to plain hashes)
 - Shows the class name and all serializable attributes
