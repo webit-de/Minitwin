@@ -5,13 +5,12 @@ class MiniTwin
   module Initialization
     def initialize(**args)
       # Filter only attributes that have corresponding writer methods on this class
-      allowed_keys = (
-        if self.class.respond_to?(:allowed_attribute_keys)
-          self.class.allowed_attribute_keys
-        else
-          self.class.instance_methods(false).grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
-        end
-      )
+      allowed_keys = if self.class.respond_to?(:allowed_attribute_keys)
+        self.class.allowed_attribute_keys
+      else
+        self.class.instance_methods(false).grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
+      end
+
       args.select! { |arg, _| allowed_keys.include?(arg.to_sym) }
 
       getter_defaults =

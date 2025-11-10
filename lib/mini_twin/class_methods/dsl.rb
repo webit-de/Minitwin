@@ -15,12 +15,12 @@ class MiniTwin
 
       def collection(name, validates: {}, default: [], as: nil, getter: nil, twin: nil, on: nil, **_opts, &block)
         nested_class = block ? create_nested_class(name:, &block) : nil
+        element_klass = twin || nested_class
 
         define_method("#{name}=") do |values|
-          element_klass = twin || nested_class
           arr = self.class.send(:coerce_collection_array, values)
-          values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
-          define_instance_variable(name:, value: values)
+          coerced_values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
+          define_instance_variable(name:, value: coerced_values)
           __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
         end
         alias_method "#{name}_attributes=", "#{name}="
@@ -31,38 +31,32 @@ class MiniTwin
         add_collection_property(name:)
         invalidate_caches
 
-        collections[name.to_sym] = {
-          element_twin: (twin || nested_class),
-          as: as
-        }
+        collections[name.to_sym] = { element_twin: element_klass, as: as }
       end
 
       def property(name, validates: {}, default: nil, as: nil, virtual: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
+        nested_class = nil
+
         if block_given?
           raise "setters are not possible in blocks" if setter
-
           nested_class = create_nested_class(name:, &block)
 
           define_method("#{name}=") do |value|
             coerced = self.class.send(:coerce_value_to_twin, value, nested_class)
-            unless coerced.nil? || coerced.is_a?(nested_class)
-              raise "Unprocessable input for property '#{name}'."
-            end
+            raise "Unprocessable input for property '#{name}'." unless coerced.nil? || coerced.is_a?(nested_class)
             define_instance_variable(name:, value: coerced)
             __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
           end
 
           add_block_property(name:)
-          properties[name.to_sym] = { type:, as:, virtual:, twin: nil, nested_class: nested_class }
         else
           define_method("#{name}=") do |value|
-            value =
-              if twin.present?
-                self.class.send(:coerce_value_to_twin, value, twin)
-              else
-                setter ? setter.call(value) : value
-              end
-            define_instance_variable(name:, value:)
+            coerced_value = if twin.present?
+              self.class.send(:coerce_value_to_twin, value, twin)
+            else
+              setter ? setter.call(value) : value
+            end
+            define_instance_variable(name:, value: coerced_value)
             __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
           end
         end
@@ -72,11 +66,13 @@ class MiniTwin
         add_virtual_property(name:, virtual:)
         invalidate_caches
 
-        properties[name.to_sym] ||= {}
-        properties[name.to_sym][:type] = type
-        properties[name.to_sym][:as] = as
-        properties[name.to_sym][:virtual] = virtual
-        properties[name.to_sym][:twin] = twin unless twin.nil?
+        properties[name.to_sym] = {
+          type: type,
+          as: as,
+          virtual: virtual
+        }
+        properties[name.to_sym][:twin] = twin if twin
+        properties[name.to_sym][:nested_class] = nested_class if nested_class
       end
 
       def nested(name, &block)

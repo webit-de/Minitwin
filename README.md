@@ -178,7 +178,7 @@ require "pp"
 user = UserTwin.from_hash(
   id: "42",
   name: "Alice",
-  profile: { bio: "Developer" },
+  profile: { bio: "Developer", contact: { email: "alice@example.com" } },
   tags: %w[ruby rails]
 )
 
@@ -187,15 +187,19 @@ pp user
 # #<UserTwin
 #  id: 42,
 #  name: "Alice",
-#  profile: {"bio" => "Developer"},
+#  profile: #<UserTwin::Profile
+#   bio: "Developer",
+#   contact: #<UserTwin::Profile::Contact email: "alice@example.com">>,
 #  tags: ["ruby", "rails"]>
 ```
 
 The `pretty_print` method:
 - Formats output with proper indentation
 - Handles nested twins and collections recursively
+- **Preserves MiniTwin class information** for nested objects (not converted to plain hashes)
 - Shows the class name and all serializable attributes
-- Works seamlessly with Ruby's built-in debugging tools
+- Works seamlessly with Ruby's built-in debugging tools like `pp`
+- Each nested twin is pretty printed with its own class name, making debugging easier
 
 Validations
 -----------

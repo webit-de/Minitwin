@@ -48,11 +48,12 @@ class MiniTwin
     end
 
     def to_object(model)
-      self.public_methods(false).each do |method|
-        next unless method.to_s.end_with?("=")
-        attr = method[..-2]
+      public_methods(false).each do |method|
+        method_str = method.to_s
+        next unless method_str.end_with?("=")
+        attr = method_str.delete_suffix("=")
         next unless model.respond_to?(attr)
-        self.send(method, model.public_send(attr))
+        send(method, model.public_send(attr))
       end
       self
     end

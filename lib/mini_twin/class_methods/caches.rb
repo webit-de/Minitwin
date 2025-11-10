@@ -14,7 +14,7 @@ class MiniTwin
           prot = protected_instance_methods(false).to_set
           instance_methods(false).reject do |m|
             s = m.to_s
-            s.end_with?("=") || s.end_with?("?") || s.end_with?("_attributes") || virt.include?(m) || prot.include?(m)
+            s.end_with?("=", "?", "_attributes") || virt.include?(m) || prot.include?(m)
           end
         end
       end
