@@ -233,8 +233,10 @@ class MiniTwin
 
       def build_regular_getter(name:, default:, type:)
         -> {
-          if !name.end_with?("?") && instance_variable_defined?("@#{name}")
-            val = instance_variable_get("@#{name}")
+          # Strip '?' suffix for instance variable lookup to match setter behavior
+          ivar_name = "@#{name}".delete_suffix("?")
+          if instance_variable_defined?(ivar_name)
+            val = instance_variable_get(ivar_name)
             if val.nil?
               return default unless default.nil?
               return type ? self.class.send(:type_default_value, type) : nil
