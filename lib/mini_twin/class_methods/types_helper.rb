@@ -22,12 +22,22 @@ class MiniTwin
       end
 
       def infer_default_from_type_string(type)
-        type_description = [type.to_s, (type.inspect rescue nil), type.class.name].compact.join(' ')
+        # Build type description from multiple sources for better inference
+        parts = [type.to_s, type.class.name]
+        begin
+          parts << type.inspect
+        rescue StandardError
+          # Type.inspect may fail for some custom types
+        end
+        type_description = parts.compact.join(' ')
+
         return 0 if type_description.include?('Integer')
         return "" if type_description.include?('String')
         return false if type_description.include?('Bool')
         nil
-      rescue StandardError
+      rescue StandardError => e
+        # Expected: Type introspection may fail for custom or complex types.
+        # Return nil as a safe default.
         nil
       end
 

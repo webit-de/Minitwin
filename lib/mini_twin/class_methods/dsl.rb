@@ -85,8 +85,12 @@ class MiniTwin
         raise ArgumentError, "nested requires a block" unless block_given?
         property(name, &block)
 
-        const_name = name.to_s.split('_').map(&:capitalize).join
-        nested_klass = self.const_get(const_name) rescue nil
+        const_name = constantize_name(name)
+        nested_klass = begin
+          self.const_get(const_name)
+        rescue NameError
+          nil
+        end
 
         # Registry for dynamic nested aliases (as: -> { ... }) on leafs
         @dynamic_nested_aliases ||= []
@@ -156,6 +160,10 @@ class MiniTwin
 
       private
 
+      def constantize_name(name)
+        name.to_s.split('_').map(&:capitalize).join
+      end
+
       def create_nested_class(name:, &block)
         Class.new(MiniTwin).tap do |klass|
           if defined?(ActiveModel::Name)
@@ -166,10 +174,12 @@ class MiniTwin
 
           klass.class_eval(&block) if block.present?
 
-          const_name = name.to_s.split('_').map(&:capitalize).join
+          const_name = constantize_name(name)
           begin
             self.const_set(const_name, klass) unless self.const_defined?(const_name, false)
-          rescue NameError
+          rescue NameError => e
+            # Expected: Constant name may be invalid or already defined in complex scenarios.
+            # The nested class is still accessible via the klass variable.
           end
         end
       end

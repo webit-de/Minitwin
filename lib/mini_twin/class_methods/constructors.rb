@@ -77,8 +77,9 @@ class MiniTwin
           collections.each_key do |key|
             enrich_attribute_from_models(attributes, models, key, is_collection: true)
           end
-        rescue StandardError
-          # Be resilient to unexpected model behavior; proceed with best-effort enrichment
+        rescue StandardError => e
+          # Expected: Model objects may raise in attribute readers or have unexpected
+          # behavior. Be resilient and proceed with best-effort enrichment.
         end
       end
 

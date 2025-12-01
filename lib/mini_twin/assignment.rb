@@ -22,7 +22,9 @@ class MiniTwin
         next unless hash.key?(method)
 
         value = hash[method]
-        current_value = instance_variable_get("@#{method}")
+        # Strip '?' suffix for instance variable lookup to match setter behavior
+        ivar_name = "@#{method}".delete_suffix("?")
+        current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
 
         if current_value.respond_to?(:assign_hash) && value.is_a?(Hash)
           current_value.assign_hash(value)
@@ -48,10 +50,15 @@ class MiniTwin
     end
 
     def to_object(model)
-      public_methods(false).each do |method|
-        method_str = method.to_s
-        next unless method_str.end_with?("=")
-        attr = method_str.delete_suffix("=")
+      # Use cached setter methods if available
+      setter_methods = if self.class.respond_to?(:setter_methods, true)
+        self.class.send(:setter_methods)
+      else
+        public_methods(false).select { |m| m.to_s.end_with?("=") }
+      end
+
+      setter_methods.each do |method|
+        attr = method.to_s.delete_suffix("=")
         next unless model.respond_to?(attr)
         send(method, model.public_send(attr))
       end

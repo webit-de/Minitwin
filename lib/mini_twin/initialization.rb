@@ -105,7 +105,9 @@ class MiniTwin
 
     def __compute_alias_name__(as_proc)
       instance_exec(&as_proc)
-    rescue StandardError
+    rescue StandardError => e
+      # Expected: Dynamic alias proc may fail or return invalid names.
+      # Return nil to skip this alias definition.
       nil
     end
 
@@ -113,20 +115,39 @@ class MiniTwin
       obj = public_send(entry[:group])
       entry[:path][0..-2].each { |seg| obj = obj.public_send(seg) }
       obj.instance_exec(&entry[:as])
-    rescue StandardError
+    rescue StandardError => e
+      # Expected: Nested path traversal or dynamic alias proc may fail.
+      # Return nil to skip this alias definition.
       nil
     end
+
+    # Forbidden method names that should never be aliased for security reasons
+    FORBIDDEN_ALIAS_NAMES = %i[
+      eval instance_eval class_eval module_eval
+      send __send__ public_send
+      method_missing respond_to_missing?
+      define_method remove_method undef_method
+      instance_variable_get instance_variable_set
+      const_get const_set
+      class_variable_get class_variable_set
+    ].freeze
 
     def __apply_dynamic_alias__(target_method, alias_name)
       alias_key = alias_name.to_sym rescue alias_name
       aliases = instance_variable_get(MiniTwin::DYNAMIC_ALIASES_VAR)
       aliases_rev = instance_variable_get(MiniTwin::DYNAMIC_ALIASES_REV_VAR)
 
+      # Security check: prevent aliasing to forbidden method names
+      if FORBIDDEN_ALIAS_NAMES.include?(alias_key)
+        raise ArgumentError, "Cannot define dynamic alias '#{alias_key}': forbidden method name for security reasons"
+      end
+
       prev = aliases[target_method]
       if prev && prev != alias_key
         begin
           singleton_class.send(:remove_method, prev)
         rescue NameError
+          # Expected: method may not exist if previously failed to define
         end
         aliases_rev.delete(prev)
       end

@@ -70,8 +70,9 @@ class MiniTwin
             next if attrs.key?(key)
             attrs[key] = value.public_send(key) if value.respond_to?(key)
           end
-        rescue StandardError
-          # Continue with partial attributes if reflection fails
+        rescue StandardError => e
+          # Expected: Reflection may fail if source object raises in attribute readers
+          # or has unexpected behavior. Continue with partial attributes.
         end
         attrs
       end
@@ -101,15 +102,18 @@ class MiniTwin
               attrs[key] = source.public_send(key)
             end
           end
-        rescue StandardError
-          # Be resilient to unexpected source behavior
+        rescue StandardError => e
+          # Expected: Source object may raise in attribute readers or have
+          # unexpected behavior. Be resilient and proceed with partial attributes.
         end
 
         attrs
       end
 
       def coerce_collection_array(raw)
-        raw.is_a?(Array) ? raw : (raw.respond_to?(:to_a) ? raw.to_a : Array(raw))
+        return raw if raw.is_a?(Array)
+        return raw.to_a if raw.respond_to?(:to_a)
+        Array(raw)
       end
     end
   end

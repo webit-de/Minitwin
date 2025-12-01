@@ -6,6 +6,7 @@ class MiniTwin
       def invalidate_caches
         @serializable_getters_cache = nil
         @allowed_attribute_keys_cache = nil
+        @setter_methods_cache = nil
       end
 
       def serializable_getters
@@ -22,6 +23,12 @@ class MiniTwin
       def allowed_attribute_keys
         @allowed_attribute_keys_cache ||= begin
           instance_methods(false).grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
+        end
+      end
+
+      def setter_methods
+        @setter_methods_cache ||= begin
+          public_instance_methods(false).select { |m| m.to_s.end_with?("=") }
         end
       end
     end

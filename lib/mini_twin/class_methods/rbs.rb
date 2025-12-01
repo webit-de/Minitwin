@@ -96,7 +96,9 @@ class MiniTwin
             v1 = t.call(true)
             v2 = t.call(false)
             return 'bool' if (v1 == true || v1 == false) && (v2 == true || v2 == false)
-          rescue StandardError
+          rescue StandardError => e
+            # Expected: Type coercion may fail for non-boolean types.
+            # Continue to fallback 'untyped'.
           end
           'untyped'
         end
