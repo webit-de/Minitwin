@@ -397,23 +397,6 @@ class EdgeCasesTest < ActiveSupport::TestCase
     refute obj.respond_to?(:unknown)
   end
 
-  test "should handle to_object method" do
-    model = Struct.new(:name, :value).new("from_model", 42)
-
-    klass = Class.new(MiniTwin) do
-      property :name
-      property :value
-    end
-
-    # to_object copies FROM model TO twin
-    obj = klass.new(name: "original", value: 10)
-    obj.to_object(model)
-
-    # Should now have values from model
-    assert_equal "from_model", obj.name
-    assert_equal 42, obj.value
-  end
-
   test "should handle assign_object with model tracking" do
     model = Struct.new(:name, :value).new("test", 42)
 

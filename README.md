@@ -220,6 +220,28 @@ ActiveModel is optional. If it is not installed:
 - Calling `valid?` on a twin returns `true` and does not collect errors.
 - All other features (properties, collections, nested twins, type coercion, serialization, assignment) work as usual.
 
+Syncing Models
+--------------
+
+MiniTwin can copy values back into your domain models via `sync`:
+
+- `sync(model = nil, validate: true)`
+  - When `validate: true` and the twin is invalid, returns `false` and does not modify the model.
+  - When `model` is omitted, `sync` defaults to the stored model captured by `from_object`/`from_objects`.
+  - Returns `true` on success.
+
+Behavior details:
+- Scalars: writes via matching writer methods (e.g., `name=`).
+- Nested twins: if the target model has a nested object (e.g., `profile`) available via reader, `sync` recursively updates it in place; otherwise, it assigns a Hash to the writer.
+- Collections: attempts to deep-sync each element when the target exposes a collection via reader.
+  - Matches by `id` when possible (i.e., target elements respond to `id`), otherwise falls back to index-based sync.
+  - When deep sync is not possible (e.g., missing target collection), assigns an array of Hashes to the writer.
+  - Elements that are twins are converted to Hashes when assigned via the writer.
+
+Notes:
+- `sync` is defensive: it skips attributes where the model lacks a writer and ignores writer exceptions to continue syncing other attributes.
+- For collections, deep-syncing will not replace the collection object when a matching target exists; otherwise, the writer will receive the full array.
+
 Development
 -----------
 
