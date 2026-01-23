@@ -87,6 +87,7 @@ class MiniTwin
 
         errors.empty?
       else
+        # When ActiveModel is not available, consider the twin valid by default.
         true
       end
     end

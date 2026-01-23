@@ -71,4 +71,38 @@ class SyncObjectTest < ActiveSupport::TestCase
     assert_equal 15, model.age
   end
 
+  test "sync falls back to index when no ids and collection responds to each/[] only" do
+    coll = Class.new do
+      def initialize(arr); @arr = arr; end
+      def each(&b); @arr.each(&b); end
+      def [](i); @arr[i]; end
+    end
+
+    item = Struct.new(:value)
+    model = Struct.new(:items).new(coll.new([item.new("a"), item.new("b")]))
+
+    klass = Class.new(MiniTwin) do
+      collection :items do
+        property :value
+      end
+    end
+
+    twin = klass.new(items: [{ value: "A1" }, { value: "B2" }])
+    assert twin.sync(model)
+    assert_equal "A1", model.items[0].value
+    assert_equal "B2", model.items[1].value
+  end
+
+  test "sync picks first stored model when default :model is missing" do
+    model = Struct.new(:name).new("X")
+    klass = Class.new(MiniTwin) do
+      property :name
+    end
+    twin = klass.from_objects(other: model)
+    twin.assign_hash(name: "Y")
+    assert twin.sync
+    assert_equal "Y", model.name
+  end
+
 end
+

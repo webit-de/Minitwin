@@ -11,6 +11,17 @@ class NestedTwin < MiniTwin
 end
 
 class NestedTwinTest < ActiveSupport::TestCase
+  test "nested const lookup rescue path executes" do
+    klass = Class.new(MiniTwin) do
+      nested :group do
+        property :a
+      end
+    end
+    t = klass.new
+    t.group = { a: 1 }
+    assert_equal 1, t.group.a
+  end
+
   test "should handle nested twins" do
     twin = NestedTwin.new(sub_property: "test", this_is_nested: 'nested', rename_me: 'omg')
     result = twin.to_hash

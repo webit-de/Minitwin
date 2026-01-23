@@ -38,6 +38,7 @@ class MiniTwin
   include MiniTwin::Initialization
   include MiniTwin::Assignment
   include MiniTwin::Serialization
+  include MiniTwin::Sync
   extend  MiniTwin::ClassMethods
 
   # Track descendants to allow RBS generation for all loaded twins

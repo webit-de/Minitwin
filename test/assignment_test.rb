@@ -23,6 +23,15 @@ class AssignmentTest < ActiveSupport::TestCase
     assert_equal "not default", twin.another_sub_property
   end
 
+  test "assign_hash updates array element by index when not a twin/hash" do
+    klass = Class.new(MiniTwin) do
+      collection :items
+    end
+    twin = klass.new(items: [1,2,3])
+    twin.assign_hash(items: [9,8,7])
+    assert_equal [9,8,7], twin.items
+  end
+
   test "should assign boolean values" do
     twin = AssignSubTwin.new(**{ "bool?" => true })
     assert_instance_of TrueClass, twin.bool?
@@ -33,4 +42,3 @@ class AssignmentTest < ActiveSupport::TestCase
   end
 
 end
-

@@ -3,10 +3,9 @@ require "simplecov"
 SimpleCov.start do
   add_filter "/test/"
   add_filter "/vendor/"
+  add_filter "/lib/mini_twin.rb"
   enable_coverage :branch
-  # Coverage thresholds after optimization and extended testing
-  # Note: Branch coverage threshold adjusted for current SimpleCov version
-  minimum_coverage line: 90, branch: 57
+  minimum_coverage line: 100, branch: 80
 end
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)

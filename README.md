@@ -235,12 +235,10 @@ Behavior details:
 - Nested twins: if the target model has a nested object (e.g., `profile`) available via reader, `sync` recursively updates it in place; otherwise, it assigns a Hash to the writer.
 - Collections: attempts to deep-sync each element when the target exposes a collection via reader.
   - Matches by `id` when possible (i.e., target elements respond to `id`), otherwise falls back to index-based sync.
-  - When deep sync is not possible (e.g., missing target collection), assigns an array of Hashes to the writer.
-  - Elements that are twins are converted to Hashes when assigned via the writer.
-
-Notes:
-- `sync` is defensive: it skips attributes where the model lacks a writer and ignores writer exceptions to continue syncing other attributes.
-- For collections, deep-syncing will not replace the collection object when a matching target exists; otherwise, the writer will receive the full array.
+    - DSL: `collection :items, match_on: :sku` or `match_on: [:sku, :variant_id]` or `match_on: ->(e) { [e.sku, e.variant_id] }`
+    - Per call: `twin.sync(model, match_on: { items: :sku })` (overrides DSL)
+- Call-time override precedence:
+  - `twin.sync(order, match_on: { lines: :variant_id })`
 
 Development
 -----------
@@ -535,3 +533,4 @@ Notes:
 - For has_one-like `info`, when `attributes` has `nil`, MiniTwin enriches the element twin from the reader method so `info` is still instantiated.
 
 MIT
+

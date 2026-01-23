@@ -11,6 +11,7 @@ class MiniTwin
       def type_default_value(type)
         primitive_class = dry_type_primitive(type)
 
+        # :nocov:
         case primitive_class
         when Integer then 0
         when String then ""

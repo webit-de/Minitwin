@@ -21,6 +21,28 @@ class RbsGenerationTest < ActiveSupport::TestCase
     assert_includes rbs, "?age:"
   end
 
+  test "bool mapping via primitive and untyped fallback type" do
+    bool_klass = Class.new(MiniTwin) do
+      def self.name; "BoolPrimTwin"; end
+      property :flag, type: MiniTwin::Types::Bool
+    end
+    rbs1 = bool_klass.to_rbs
+    assert_includes rbs1, "flag: bool"
+
+    dummy_t = Class.new do
+      def primitive; :weird; end
+      def to_s; "Mystery"; end
+      def inspect; "Mystery"; end
+      def class; Struct; end
+    end.new
+    untyped_klass = Class.new(MiniTwin) do
+      def self.name; "UntypedPrimTwin"; end
+      property :myst, type: dummy_t
+    end
+    rbs2 = untyped_klass.to_rbs
+    assert_includes rbs2, "myst: untyped"
+  end
+
   test "should generate RBS for nested twins" do
     klass = Class.new(MiniTwin) do
       def self.name

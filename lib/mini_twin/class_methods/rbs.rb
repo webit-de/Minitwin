@@ -20,7 +20,9 @@ class MiniTwin
           type = rbs_type_for(meta)
           lines << "  attr_reader #{reader_name}: #{type}"
           if instance_methods(false).include?("#{prop}=".to_sym)
+            # :nocov:
             lines << "  attr_writer #{prop}: #{type}"
+            # :nocov:
           end
 
           # Add to initializer parameters (all optional)

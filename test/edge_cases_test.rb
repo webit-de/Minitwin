@@ -12,6 +12,55 @@ class EdgeCasesTest < ActiveSupport::TestCase
     assert_equal "invalid", obj.age
   end
 
+  test "to_hash dynamic_aliases_for_pp path and pretty_print alias output" do
+    klass = Class.new(MiniTwin) do
+      property :key
+      property :value, as: -> { key }
+    end
+    twin = klass.new(key: "alias", value: 1)
+    pairs = twin.send(:dynamic_aliases_for_pp)
+    assert_includes pairs, [:alias, 1]
+  end
+
+  test "attribute_methods fallback branch without cache" do
+    klass = Class.new(MiniTwin) do
+      # Define a writer-only attribute and a plain reader to exercise respond_to? check
+      def foo=(v); @foo = v; end
+      def foo; @foo; end
+    end
+    def klass.respond_to?(name, include_private=false)
+      return false if name == :allowed_attribute_keys && include_private
+      super
+    end
+    twin = klass.new
+    methods = twin.send(:attribute_methods)
+    assert_includes methods, :foo
+  end
+
+  test "assign_attribute fallback sets ivar when no setter" do
+    klass = Class.new(MiniTwin) do
+      # no setter defined for :bar
+    end
+    twin = klass.new
+    twin.send(:assign_attribute, method: :bar, value: 123)
+    assert_equal 123, twin.instance_variable_get(:@bar)
+  end
+
+  test "dynamic alias collision raises when alias name already exists" do
+    klass = Class.new(MiniTwin) do
+      property :value, as: -> { :to_s }
+    end
+    assert_raises(ArgumentError) { klass.new(value: 1) }
+  end
+
+  test "dynamic alias forbidden names raise specific error" do
+    klass = Class.new(MiniTwin) do
+      property :value, as: -> { :send }
+    end
+    err = assert_raises(ArgumentError) { klass.new(value: 1) }
+    assert_includes err.message, "forbidden"
+  end
+
   test "should handle nil in type_default_value for unknown types" do
     klass = Class.new(MiniTwin) do
       # Use a custom type that doesn't match standard patterns
