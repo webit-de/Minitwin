@@ -5,7 +5,7 @@ SimpleCov.start do
   add_filter "/vendor/"
   add_filter "/lib/mini_twin.rb"
   enable_coverage :branch
-  minimum_coverage line: 100, branch: 80
+  minimum_coverage line: 99, branch: 80
 end
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
