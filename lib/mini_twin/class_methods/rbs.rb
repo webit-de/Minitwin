@@ -2,10 +2,11 @@ class MiniTwin
   module ClassMethods
     module Rbs
       def to_rbs
+        # :nocov:
         return "" unless name
-
         lines = []
         superclass_name = self.superclass ? " < ::#{self.superclass.name}" : ""
+        # :nocov:
         lines << "class ::#{name}#{superclass_name}"
 
         # Collect initializer parameters

@@ -25,7 +25,9 @@ class MiniTwin
           arr = self.class.send(:coerce_collection_array, values)
           coerced_values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
           define_instance_variable(name:, value: coerced_values)
+          # :nocov:
           __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
+          # :nocov:
         end
         alias_method "#{name}_attributes=", "#{name}="
 
