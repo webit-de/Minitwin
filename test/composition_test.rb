@@ -10,6 +10,12 @@ class CompositionTwin < MiniTwin
   property :country, default: "D"
 end
 
+class CompositionWithProc < MiniTwin
+  property :customer, virtual: true
+  property :name, on: :customer
+  property :street, on: -> { customer.address }
+end
+
 class CompositionTest < ActiveSupport::TestCase
   test "should instantiate composition twins from objects" do
     customer = Data.define(:id, :name).new(id: 123, name: "Petra Rodriguez")
@@ -29,6 +35,18 @@ class CompositionTest < ActiveSupport::TestCase
     assert_equal "1234 fake street", hash[:street]
     assert_equal "D", hash[:country]
     assert_nil hash[:latitude]
+  end
+
+  test "should instantiate composition twins from objects with proc" do
+    address = Data.define(:id, :street).new(id: "abc", street: "1234 fake street")
+    customer = Data.define(:id, :name, :address).new(id: 123, name: "Petra Rodriguez", address:)
+
+    obj = CompositionWithProc.new(customer:)
+
+    assert_equal "Petra Rodriguez", obj.name
+    assert_equal "1234 fake street", obj.street
+
+    assert_equal({ "name" => "Petra Rodriguez", "street" => "1234 fake street" }, obj.to_hash)
   end
 end
 

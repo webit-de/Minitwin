@@ -204,8 +204,12 @@ class MiniTwin
 
       def build_composition_getter(name:, on:, default:, type:)
         -> {
-          # Get composition model
-          model = instance_variable_get(self.class.internal_model_name(on)) || (send(on) rescue nil)
+          # Get composition model - handle both symbol and proc cases
+          model = if on.is_a?(Proc)
+            instance_exec(&on)
+          else
+            instance_variable_get(self.class.internal_model_name(on)) || (send(on) rescue nil)
+          end
 
           # Validate model
           if model.nil?
