@@ -3,6 +3,9 @@ class MiniTwin
   # accessors. Filters unknown keys on initialize and seeds nested block
   # properties so that validations on nested twins can run.
   module Initialization
+    # Cache constant references for JIT optimization
+    ALIASES_VAR = MiniTwin::DYNAMIC_ALIASES_VAR
+    ALIASES_REV_VAR = MiniTwin::DYNAMIC_ALIASES_REV_VAR
     def initialize(**args)
       # Filter only attributes that have corresponding writer methods on this class
       allowed_keys = if self.class.respond_to?(:allowed_attribute_keys)
@@ -53,15 +56,15 @@ class MiniTwin
     end
 
     def define_instance_variable(name:, value:)
-      instance_variable_set("@#{name}".delete_suffix("?"), value)
+      instance_variable_set(MiniTwin::Utils.ivar_name(name), value)
     end
 
     # Define or update per-instance alias methods for properties/collections
     # where `as:` was provided as a Proc. The Proc is executed in the context
     # of the instance to compute the alias name.
     def __recompute_dynamic_aliases__
-      instance_variable_set(MiniTwin::DYNAMIC_ALIASES_VAR, {}) unless instance_variable_defined?(MiniTwin::DYNAMIC_ALIASES_VAR)
-      instance_variable_set(MiniTwin::DYNAMIC_ALIASES_REV_VAR, {}) unless instance_variable_defined?(MiniTwin::DYNAMIC_ALIASES_REV_VAR)
+      instance_variable_set(ALIASES_VAR, {}) unless instance_variable_defined?(ALIASES_VAR)
+      instance_variable_set(ALIASES_REV_VAR, {}) unless instance_variable_defined?(ALIASES_REV_VAR)
 
       # Handle scalar properties and collections
       __recompute_aliases_for_collection__(:properties)
@@ -133,9 +136,13 @@ class MiniTwin
     ].freeze
 
     def __apply_dynamic_alias__(target_method, alias_name)
-      alias_key = alias_name.to_sym rescue alias_name
-      aliases = instance_variable_get(MiniTwin::DYNAMIC_ALIASES_VAR)
-      aliases_rev = instance_variable_get(MiniTwin::DYNAMIC_ALIASES_REV_VAR)
+      alias_key = begin
+        alias_name.to_sym
+      rescue NoMethodError
+        alias_name
+      end
+      aliases = instance_variable_get(ALIASES_VAR)
+      aliases_rev = instance_variable_get(ALIASES_REV_VAR)
 
       # Security check: prevent aliasing to forbidden method names
       if FORBIDDEN_ALIAS_NAMES.include?(alias_key)
@@ -157,7 +164,7 @@ class MiniTwin
         raise ArgumentError, "Dynamic alias '#{alias_key}' already defined for '#{aliases_rev[alias_key]}'"
       end
 
-      if (respond_to?(alias_key, true) || respond_to?(alias_key, false)) && aliases_rev[alias_key] != target_method
+      if respond_to?(alias_key, true) && aliases_rev[alias_key] != target_method
         raise ArgumentError, "Cannot define dynamic alias '#{alias_key}': method already exists"
       end
 
@@ -172,9 +179,8 @@ class MiniTwin
 
     # Public: expose current dynamic aliases as a Hash of alias_name => target_method
     def dynamic_aliases
-      rev_var = MiniTwin::DYNAMIC_ALIASES_REV_VAR
-      return {} unless instance_variable_defined?(rev_var) && instance_variable_get(rev_var)
-      instance_variable_get(rev_var).dup
+      return {} unless instance_variable_defined?(ALIASES_REV_VAR) && instance_variable_get(ALIASES_REV_VAR)
+      instance_variable_get(ALIASES_REV_VAR).dup
     end
   end
 end

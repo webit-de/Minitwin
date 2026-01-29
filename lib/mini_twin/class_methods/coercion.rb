@@ -81,8 +81,7 @@ class MiniTwin
         return {} unless value.respond_to?(:instance_variables) && value.instance_variables.any?
 
         value.instance_variables.each_with_object({}) do |var, attrs|
-          key = var.to_s.delete("@").to_sym
-          attrs[key] = value.instance_variable_get(var)
+          attrs[MiniTwin::Utils.ivar_to_key(var)] = value.instance_variable_get(var)
         end
       end
 

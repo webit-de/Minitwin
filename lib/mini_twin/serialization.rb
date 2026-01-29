@@ -4,6 +4,9 @@ class MiniTwin
   # nil). When ActiveModel validations are available, nested errors are
   # surfaced on the parent using dot/bracket notation.
   module Serialization
+    # Cache constant references for JIT optimization
+    ALIASES_VAR = MiniTwin::DYNAMIC_ALIASES_VAR
+    NESTED_PREFIX = MiniTwin::NESTED_READER_PREFIX
 
     def to_hash(render_nil: false)
       klass = defined?(HashWithIndifferentAccess) ? HashWithIndifferentAccess : Hash
@@ -23,14 +26,13 @@ class MiniTwin
       end
 
       # Include dynamic alias keys (defined per instance via `as: -> { ... }`).
-      dynamic_aliases_var = MiniTwin::DYNAMIC_ALIASES_VAR
-      if instance_variable_defined?(dynamic_aliases_var)
-        aliases = instance_variable_get(dynamic_aliases_var)
+      if instance_variable_defined?(ALIASES_VAR)
+        aliases = instance_variable_get(ALIASES_VAR)
         if aliases && !aliases.empty?
           aliases.each do |target_method, alias_method|
             # Skip nested proxy aliases at the top level; nested groups
             # serialize under their container key only.
-            next if target_method.is_a?(Symbol) && target_method.to_s.start_with?(MiniTwin::NESTED_READER_PREFIX)
+            next if target_method.is_a?(Symbol) && target_method.to_s.start_with?(NESTED_PREFIX)
 
             # Read the value from the original target method to avoid issues if
             # the alias method is overridden. Apply the same transformation rules
@@ -147,13 +149,13 @@ class MiniTwin
     end
 
     def dynamic_aliases_for_pp
-      return [] unless instance_variable_defined?(MiniTwin::DYNAMIC_ALIASES_VAR)
+      return [] unless instance_variable_defined?(ALIASES_VAR)
 
-      aliases = instance_variable_get(MiniTwin::DYNAMIC_ALIASES_VAR)
+      aliases = instance_variable_get(ALIASES_VAR)
       return [] unless aliases && !aliases.empty?
 
       aliases.filter_map do |target_method, alias_method|
-        next if target_method.is_a?(Symbol) && target_method.to_s.start_with?(MiniTwin::NESTED_READER_PREFIX)
+        next if target_method.is_a?(Symbol) && target_method.to_s.start_with?(NESTED_PREFIX)
         [alias_method, send(target_method)]
       end
     end

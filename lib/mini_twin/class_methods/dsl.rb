@@ -38,7 +38,7 @@ class MiniTwin
         invalidate_caches
 
         collections[name.to_sym] = { element_twin: element_klass, as: as }
-        property_order << name.to_sym unless property_order.include?(name.to_sym)
+        add_to_property_order(name)
       end
 
       def property(name, validates: {}, default: nil, as: nil, virtual: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
@@ -80,7 +80,7 @@ class MiniTwin
         }
         properties[name.to_sym][:twin] = twin if twin
         properties[name.to_sym][:nested_class] = nested_class if nested_class
-        property_order << name.to_sym unless property_order.include?(name.to_sym)
+        add_to_property_order(name)
       end
 
       def nested(name, &block)
@@ -208,7 +208,11 @@ class MiniTwin
           model = if on.is_a?(Proc)
             instance_exec(&on)
           else
-            instance_variable_get(self.class.internal_model_name(on)) || (send(on) rescue nil)
+            instance_variable_get(self.class.internal_model_name(on)) || begin
+              send(on)
+            rescue NoMethodError
+              nil
+            end
           end
 
           # Validate model
@@ -222,10 +226,7 @@ class MiniTwin
           raw = model.send(name)
 
           # Return default if raw is nil
-          if raw.nil?
-            return default unless default.nil?
-            return type ? self.class.send(:type_default_value, type) : nil
-          end
+          return self.class.send(:resolve_default_value, default, type) if raw.nil?
 
           # Process the value
           # If this is a collection property, wrap elements into the
@@ -248,19 +249,15 @@ class MiniTwin
       end
 
       def build_regular_getter(name:, default:, type:)
+        # Compute ivar_name at definition time for JIT optimization
+        ivar = MiniTwin::Utils.ivar_name(name)
         -> {
-          # Strip '?' suffix for instance variable lookup to match setter behavior
-          ivar_name = "@#{name}".delete_suffix("?")
-          if instance_variable_defined?(ivar_name)
-            val = instance_variable_get(ivar_name)
-            if val.nil?
-              return default unless default.nil?
-              return type ? self.class.send(:type_default_value, type) : nil
-            end
+          if instance_variable_defined?(ivar)
+            val = instance_variable_get(ivar)
+            return self.class.send(:resolve_default_value, default, type) if val.nil?
             type ? self.class.send(:coerce_with_type, val, type) : val
           else
-            return default unless default.nil?
-            type ? self.class.send(:type_default_value, type) : nil
+            self.class.send(:resolve_default_value, default, type)
           end
         }
       end
@@ -304,6 +301,16 @@ class MiniTwin
 
       def add_collection_property(name:)
         collection_properties << name
+      end
+
+      def add_to_property_order(name)
+        key = name.to_sym
+        property_order << key unless property_order.include?(key)
+      end
+
+      def resolve_default_value(default, type)
+        return default unless default.nil?
+        type ? type_default_value(type) : nil
       end
     end
   end

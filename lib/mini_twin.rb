@@ -34,6 +34,27 @@ class MiniTwin
   DYNAMIC_ALIASES_VAR = "@__dynamic_aliases__"
   DYNAMIC_ALIASES_REV_VAR = "@__dynamic_aliases_rev__"
 
+  # Shared utility methods
+  module Utils
+    module_function
+
+    # Normalize property name to instance variable name (handles ? suffix)
+    def ivar_name(name)
+      "@#{name}".delete_suffix("?")
+    end
+
+    # Convert instance variable to attribute key symbol
+    def ivar_to_key(ivar)
+      ivar.to_s.delete_prefix("@").to_sym
+    end
+
+    # Traverse a nested path on an object
+    def traverse_path(obj, path)
+      path.each { |seg| obj = obj.public_send(seg) }
+      obj
+    end
+  end
+
   include ActiveModel::Model if defined?(ActiveModel::Model)
   include MiniTwin::Initialization
   include MiniTwin::Assignment
@@ -47,7 +68,11 @@ class MiniTwin
     attr_reader :__descendants__
 
     def inherited(sub)
-      (__descendants__ << sub) rescue nil
+      begin
+        __descendants__ << sub
+      rescue FrozenError
+        # Ignore if descendants array is frozen
+      end
       super
     end
   end

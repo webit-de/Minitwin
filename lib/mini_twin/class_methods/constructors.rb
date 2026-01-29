@@ -43,8 +43,7 @@ class MiniTwin
               model.attributes
             else
               model.instance_variables.each_with_object({}) do |var, hash|
-                key = var.to_s.delete("@").to_sym
-                hash[key] = model.instance_variable_get(var)
+                hash[MiniTwin::Utils.ivar_to_key(var)] = model.instance_variable_get(var)
               end
             end
           end.reduce({}, :merge)

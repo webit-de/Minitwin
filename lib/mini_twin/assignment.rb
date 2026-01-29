@@ -32,8 +32,7 @@ class MiniTwin
         next unless hash.key?(method)
 
         value = hash[method]
-        # Strip '?' suffix for instance variable lookup to match setter behavior
-        ivar_name = "@#{method}".delete_suffix("?")
+        ivar_name = MiniTwin::Utils.ivar_name(method)
         current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
 
         if current_value.respond_to?(:assign_hash) && value.is_a?(Hash)

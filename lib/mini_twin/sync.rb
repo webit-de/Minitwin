@@ -1,5 +1,8 @@
 class MiniTwin
   module Sync
+    # Cache constant reference for JIT optimization
+    MODEL_PREFIX = MiniTwin::INTERNAL_MODEL_PREFIX
+
     def sync(model = nil, validate: true)
       # Resolve target model
       target_model = model
@@ -7,7 +10,7 @@ class MiniTwin
         ivar = self.class.internal_model_name("model")
         target_model = instance_variable_defined?(ivar) ? instance_variable_get(ivar) : nil
         if target_model.nil?
-          any_ivar = instance_variables.find { |v| v.to_s.start_with?(MiniTwin::INTERNAL_MODEL_PREFIX) }
+          any_ivar = instance_variables.find { |v| v.to_s.start_with?(MODEL_PREFIX) }
           target_model = instance_variable_get(any_ivar) if any_ivar
         end
       end
@@ -116,7 +119,12 @@ class MiniTwin
       return nil unless ary
 
       ary.each_with_object({}) do |m, h|
-        key = (m.respond_to?(:id) ? (m.public_send(:id) rescue nil) : nil)
+        next unless m.respond_to?(:id)
+        key = begin
+          m.public_send(:id)
+        rescue StandardError
+          nil
+        end
         h[key] = m if key
       end
     end
