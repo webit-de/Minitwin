@@ -69,7 +69,7 @@ class MiniTwin
 
     def inherited(sub)
       begin
-        __descendants__ << sub
+        MiniTwin.__descendants__ << sub
       rescue FrozenError
         # Ignore if descendants array is frozen
       end

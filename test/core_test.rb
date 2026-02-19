@@ -50,4 +50,22 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
     assert_includes s, "a: 1"
     assert_includes s, "b: 2"
   end
+
+  test "inherited hook tracks descendants of MiniTwin subclasses" do
+    # Create a direct subclass of MiniTwin
+    parent_klass = Class.new(MiniTwin) do
+      property :id
+    end
+
+    # Create a subclass of the subclass (not directly from MiniTwin)
+    child_klass = Class.new(parent_klass) do
+      property :name
+    end
+
+    # Both should be tracked in MiniTwin.__descendants__
+    assert_includes MiniTwin.__descendants__, parent_klass,
+      "Direct MiniTwin subclass should be tracked"
+    assert_includes MiniTwin.__descendants__, child_klass,
+      "Subclass of MiniTwin subclass should also be tracked in MiniTwin.__descendants__"
+  end
 end
