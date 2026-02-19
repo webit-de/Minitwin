@@ -23,7 +23,7 @@ class MiniTwin
           select { |method| allowed_keys.include?(method) }.
           index_with { {} }
 
-      super(**getter_defaults.merge(args))
+      super(getter_defaults.merge(args))
 
       # Establish any dynamic alias methods after initialization
       __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)

@@ -87,4 +87,22 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
     assert_includes allowed_keys, :child_prop,
       "Child's own property should be in allowed_attribute_keys"
   end
+
+  test "initialize passes attributes as positional hash to ActiveModel" do
+    # This test verifies that attributes are properly passed through
+    # ActiveModel::API#initialize (which expects a positional hash, not kwargs)
+    klass = Class.new(MiniTwin) do
+      property :name
+      property :value
+    end
+
+    # Create instance with multiple attributes
+    obj = klass.new(name: "test", value: 42)
+
+    # Verify attributes were properly assigned via ActiveModel's assign_attributes
+    assert_equal "test", obj.name,
+      "Attributes should be assigned via ActiveModel::API#initialize"
+    assert_equal 42, obj.value,
+      "Multiple attributes should all be assigned correctly"
+  end
 end

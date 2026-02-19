@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    mini-twin (0.3.13)
+    mini-twin (0.3.15)
       activesupport (>= 8.0)
       dry-types (>= 1.7)
       zeitwerk (>= 2.6)
