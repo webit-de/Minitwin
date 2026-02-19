@@ -8,8 +8,8 @@ class MiniTwin
     ALIASES_REV_VAR = MiniTwin::DYNAMIC_ALIASES_REV_VAR
     def initialize(**args)
       # Filter only attributes that have corresponding writer methods on this class
-      allowed_keys = if self.class.respond_to?(:allowed_attribute_keys)
-        self.class.allowed_attribute_keys
+      allowed_keys = if self.class.respond_to?(:allowed_attribute_keys, true)
+        self.class.send(:allowed_attribute_keys)
       else
         self.class.instance_methods(false).grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
       end

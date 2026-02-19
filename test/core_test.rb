@@ -105,4 +105,26 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
     assert_equal 42, obj.value,
       "Multiple attributes should all be assigned correctly"
   end
+
+  test "initialize uses private allowed_attribute_keys method" do
+    # This test verifies that initialize correctly calls the private
+    # allowed_attribute_keys method using respond_to?(name, true) and send()
+    klass = Class.new(MiniTwin) do
+      property :name
+      property :age
+    end
+
+    # Verify allowed_attribute_keys is private (not public)
+    assert_not klass.respond_to?(:allowed_attribute_keys),
+      "allowed_attribute_keys should not be a public method"
+    assert klass.respond_to?(:allowed_attribute_keys, true),
+      "allowed_attribute_keys should be accessible as a private method"
+
+    # Verify initialization works correctly despite the method being private
+    obj = klass.new(name: "Alice", age: 30)
+    assert_equal "Alice", obj.name,
+      "Private allowed_attribute_keys should be called during initialization"
+    assert_equal 30, obj.age,
+      "All allowed attributes should be assigned correctly"
+  end
 end
