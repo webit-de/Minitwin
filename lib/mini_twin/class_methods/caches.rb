@@ -22,7 +22,10 @@ class MiniTwin
 
       def allowed_attribute_keys
         @allowed_attribute_keys_cache ||= begin
-          instance_methods(false).grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
+          # Include methods from this class and parent MiniTwin subclasses,
+          # but not from MiniTwin itself or its ancestors (Object, etc.)
+          own_and_inherited = instance_methods - MiniTwin.instance_methods
+          own_and_inherited.grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
         end
       end
 

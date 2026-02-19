@@ -68,4 +68,23 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
     assert_includes MiniTwin.__descendants__, child_klass,
       "Subclass of MiniTwin subclass should also be tracked in MiniTwin.__descendants__"
   end
+
+  test "allowed_attribute_keys includes inherited properties" do
+    # Create a parent class with a property
+    parent_klass = Class.new(MiniTwin) do
+      property :inherited_prop
+    end
+
+    # Create a child class that adds its own property
+    child_klass = Class.new(parent_klass) do
+      property :child_prop
+    end
+
+    # Child class should have both its own and inherited properties as allowed keys
+    allowed_keys = child_klass.send(:allowed_attribute_keys)
+    assert_includes allowed_keys, :inherited_prop,
+      "Inherited property should be in allowed_attribute_keys"
+    assert_includes allowed_keys, :child_prop,
+      "Child's own property should be in allowed_attribute_keys"
+  end
 end
