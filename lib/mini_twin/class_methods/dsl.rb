@@ -309,7 +309,9 @@ class MiniTwin
       end
 
       def resolve_default_value(default, type)
-        return default unless default.nil?
+        unless default.nil?
+          return default.respond_to?(:call) ? default.call : default
+        end
         type ? type_default_value(type) : nil
       end
     end
