@@ -8,17 +8,17 @@ class RbsOutputExampleTest < ActiveSupport::TestCase
         "UserTwin"
       end
 
-      property :name, type: MiniTwin::Types::String
-      property :age, type: MiniTwin::Types::Integer
-      property :email, type: MiniTwin::Types::String
+      property :name, type: Types::String
+      property :age, type: Types::Integer
+      property :email, type: Types::String
 
       property :profile do
-        property :bio, type: MiniTwin::Types::String
-        property :avatar_url, type: MiniTwin::Types::String
+        property :bio, type: Types::String
+        property :avatar_url, type: Types::String
       end
 
       collection :tags do
-        property :label, type: MiniTwin::Types::String
+        property :label, type: Types::String
       end
     end
 
@@ -54,10 +54,10 @@ class RbsOutputExampleTest < ActiveSupport::TestCase
         "ProductTwin"
       end
 
-      property :id, type: MiniTwin::Types::Integer
-      property :title, type: MiniTwin::Types::String
-      property :price, type: MiniTwin::Types::Float
-      property :available, type: MiniTwin::Types::Bool
+      property :id, type: Types::Integer
+      property :title, type: Types::String
+      property :price, type: Types::Float
+      property :available, type: Types::Bool
     end
 
     rbs = klass.to_rbs

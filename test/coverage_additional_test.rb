@@ -29,7 +29,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
     model = Struct.new(:name, :age).new(nil, nil)
     twin = Class.new(MiniTwin) do
       property :name, on: :model, default: "x"
-      property :age, on: :model, type: MiniTwin::Types::Integer
+      property :age, on: :model, type: Types::Integer
     end.from_object(model)
     assert_equal "x", twin.name
     assert_equal 0, twin.age

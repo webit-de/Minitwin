@@ -85,7 +85,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
 
   test "should handle property with explicit default taking precedence" do
     klass = Class.new(MiniTwin) do
-      property :count, type: MiniTwin::Types::Integer, default: 42
+      property :count, type: Types::Integer, default: 42
     end
 
     obj = klass.new

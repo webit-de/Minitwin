@@ -23,6 +23,13 @@ require "action_controller"
 # Ensure ActiveModel is loaded so validations are available
 require "active_model"
 
+# Provide Types shorthand for dry-types in tests
+# (MiniTwin no longer ships its own Types module)
+require "mini_twin"
+module Types
+  include Dry.Types()
+end
+
 class ActiveSupport::TestCase
   # Global test setup can go here
 end

@@ -57,8 +57,14 @@ class MiniTwin
       def attempt_type_coercion(raw_value, type)
         return raw_value unless type
         type.call(raw_value)
-      rescue ::Dry::Types::CoercionError, TypeError, ArgumentError
+      rescue *self.coercion_error_classes
         raw_value
+      end
+
+      def coercion_error_classes
+        classes = [TypeError, ArgumentError]
+        classes.unshift(::Dry::Types::CoercionError) if defined?(::Dry::Types::CoercionError)
+        classes
       end
     end
   end

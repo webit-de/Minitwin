@@ -4,7 +4,7 @@ require "mini_twin"
 class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle type coercion errors gracefully" do
     klass = Class.new(MiniTwin) do
-      property :age, type: MiniTwin::Types::Strict::Integer
+      property :age, type: Types::Strict::Integer
     end
 
     # Should not raise, but keep original value when coercion fails
@@ -64,7 +64,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle nil in type_default_value for unknown types" do
     klass = Class.new(MiniTwin) do
       # Use a custom type that doesn't match standard patterns
-      custom_type = MiniTwin::Types::Nominal::Any
+      custom_type = Types::Nominal::Any
       property :custom, type: custom_type, default: nil
     end
 
@@ -151,7 +151,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should handle string coercion when dry-types doesn't return string" do
     klass = Class.new(MiniTwin) do
-      property :text, type: MiniTwin::Types::Coercible::String
+      property :text, type: Types::Coercible::String
     end
 
     obj = klass.new(text: 123)
@@ -258,7 +258,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should handle boolean type defaults" do
     # Create a custom boolean type that returns TrueClass as primitive
-    bool_type = MiniTwin::Types::Nominal::Bool
+    bool_type = Types::Nominal::Bool
 
     klass = Class.new(MiniTwin) do
       property :active, type: bool_type
@@ -272,7 +272,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should handle integer type defaults" do
     klass = Class.new(MiniTwin) do
-      property :count, type: MiniTwin::Types::Integer
+      property :count, type: Types::Integer
     end
 
     obj = klass.new
@@ -282,7 +282,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should handle string type defaults" do
     klass = Class.new(MiniTwin) do
-      property :text, type: MiniTwin::Types::String
+      property :text, type: Types::String
     end
 
     obj = klass.new
@@ -292,7 +292,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should handle type inference from string representation" do
     # Create a type without a clear primitive
-    custom_int_type = MiniTwin::Types.Constructor(Integer) { |v| v.to_i }
+    custom_int_type = Types.Constructor(Integer) { |v| v.to_i }
 
     klass = Class.new(MiniTwin) do
       property :number, type: custom_int_type

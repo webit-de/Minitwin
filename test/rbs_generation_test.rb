@@ -24,7 +24,7 @@ class RbsGenerationTest < ActiveSupport::TestCase
   test "bool mapping via primitive and untyped fallback type" do
     bool_klass = Class.new(MiniTwin) do
       def self.name; "BoolPrimTwin"; end
-      property :flag, type: MiniTwin::Types::Bool
+      property :flag, type: Types::Bool
     end
     rbs1 = bool_klass.to_rbs
     assert_includes rbs1, "flag: bool"
@@ -101,9 +101,9 @@ class RbsGenerationTest < ActiveSupport::TestCase
         "TypedTwin"
       end
 
-      property :name, type: MiniTwin::Types::String
-      property :age, type: MiniTwin::Types::Integer
-      property :active, type: MiniTwin::Types::Bool
+      property :name, type: Types::String
+      property :age, type: Types::Integer
+      property :active, type: Types::Bool
     end
 
     rbs = klass.to_rbs

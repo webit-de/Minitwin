@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://www.webit.de'
 
   spec.summary = "Tiny presenter/twin with ActiveModel-style validations"
-  spec.description = "A minimal twin/presenter object with nested/collection properties, type coercion via dry-types, and optional ActiveModel validations."
+  spec.description = "A minimal twin/presenter object with nested/collection properties, optional type coercion, and optional ActiveModel validations."
 
   spec.required_ruby_version = ">= 3.4"
 
@@ -16,11 +16,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = [ "lib" ]
 
   # Runtime dependencies
-  spec.add_dependency "dry-types", ">= 1.7"
   spec.add_dependency "activesupport", ">= 8.0"
   spec.add_dependency "zeitwerk", ">= 2.6"
 
   # Development/test dependencies
+  spec.add_development_dependency "dry-types", ">= 1.7"
   spec.add_development_dependency "rake", ">= 13.0"
   spec.add_development_dependency "minitest", ">= 5.18"
   spec.add_development_dependency "actionpack", ">= 6.1"
