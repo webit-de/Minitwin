@@ -26,7 +26,7 @@ class MiniTwin
           coerced_values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
           define_instance_variable(name:, value: coerced_values)
           # :nocov:
-          __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
+          __recompute_dynamic_aliases__ unless @__skip_alias_recompute__
           # :nocov:
         end
         alias_method "#{name}_attributes=", "#{name}="
@@ -52,7 +52,7 @@ class MiniTwin
             coerced = self.class.send(:coerce_value_to_twin, value, nested_class)
             raise "Unprocessable input for property '#{name}'." unless coerced.nil? || coerced.is_a?(nested_class)
             define_instance_variable(name:, value: coerced)
-            __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
+            __recompute_dynamic_aliases__ unless @__skip_alias_recompute__
           end
 
           add_block_property(name:)
@@ -64,7 +64,7 @@ class MiniTwin
               setter ? setter.call(value) : value
             end
             define_instance_variable(name:, value: coerced_value)
-            __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
+            __recompute_dynamic_aliases__ unless @__skip_alias_recompute__
           end
         end
 
@@ -137,7 +137,7 @@ class MiniTwin
             obj = public_send(name)
             path[0..-2].each { |seg| obj = obj.public_send(seg) }
             obj.public_send("#{prop}=", value)
-            __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
+            __recompute_dynamic_aliases__ unless @__skip_alias_recompute__
           end
 
           # Static alias: define a public getter method with the alias name
@@ -203,12 +203,19 @@ class MiniTwin
       end
 
       def build_composition_getter(name:, on:, default:, type:)
+        # Resolve model ivar name at definition time when on is a symbol
+        model_ivar = on.is_a?(Proc) ? nil : internal_model_name(on)
+        # Collection metadata will be resolved after property registration
+        # via a lazy lookup on first access, then cached in the closure.
+        col_meta = nil
+        col_meta_resolved = false
+
         -> {
           # Get composition model - handle both symbol and proc cases
           model = if on.is_a?(Proc)
             instance_exec(&on)
           else
-            instance_variable_get(self.class.internal_model_name(on)) || begin
+            instance_variable_get(model_ivar) || begin
               send(on)
             rescue NoMethodError
               nil
@@ -228,18 +235,18 @@ class MiniTwin
           # Return default if raw is nil
           return self.class.send(:resolve_default_value, default, type) if raw.nil?
 
-          # Process the value
-          # If this is a collection property, wrap elements into the
-          # configured element twin so renamed getters etc. work when
-          # reading via composition (on: ...).
-          begin
-            meta = self.class.respond_to?(:collections) ? self.class.collections[name.to_sym] : nil
-          rescue StandardError
-            meta = nil
+          # Resolve collection metadata once and cache in closure
+          unless col_meta_resolved
+            col_meta = begin
+              self.class.collections[name.to_sym]
+            rescue StandardError
+              nil
+            end
+            col_meta_resolved = true
           end
 
-          if meta && (raw.is_a?(Array) || raw.respond_to?(:to_a))
-            elem_klass = meta[:element_twin]
+          if col_meta && (raw.is_a?(Array) || raw.respond_to?(:to_a))
+            elem_klass = col_meta[:element_twin]
             arr = self.class.send(:coerce_collection_array, raw)
             arr.map { |v| self.class.send(:coerce_value_to_twin, v, elem_klass) }
           else

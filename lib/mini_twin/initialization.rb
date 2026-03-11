@@ -7,12 +7,7 @@ class MiniTwin
     ALIASES_VAR = MiniTwin::DYNAMIC_ALIASES_VAR
     ALIASES_REV_VAR = MiniTwin::DYNAMIC_ALIASES_REV_VAR
     def initialize(**args)
-      # Filter only attributes that have corresponding writer methods on this class
-      allowed_keys = if self.class.respond_to?(:allowed_attribute_keys, true)
-        self.class.send(:allowed_attribute_keys)
-      else
-        self.class.instance_methods(false).grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
-      end
+      allowed_keys = self.class.send(:allowed_attribute_keys)
 
       args.select! { |arg, _| allowed_keys.include?(arg.to_sym) }
 
@@ -23,10 +18,12 @@ class MiniTwin
           select { |method| allowed_keys.include?(method) }.
           index_with { {} }
 
+      # Skip per-setter alias recomputation during bulk init; recompute once after
+      @__skip_alias_recompute__ = true
       super(getter_defaults.merge(args))
+      @__skip_alias_recompute__ = false
 
-      # Establish any dynamic alias methods after initialization
-      __recompute_dynamic_aliases__ if respond_to?(:__recompute_dynamic_aliases__, true)
+      __recompute_dynamic_aliases__
     end
 
     private
@@ -40,19 +37,7 @@ class MiniTwin
     end
 
     def attribute_methods
-      # Prefer class-level cache of allowed attribute keys (setter names
-      # without the trailing '='). This ensures aliased properties (where the
-      # original reader is protected) are still considered assignable.
-      if self.class.respond_to?(:allowed_attribute_keys, true)
-        self.class.send(:allowed_attribute_keys).to_a
-      else
-        public_methods(false).select do |method|
-          method_name = method.to_s
-          next false if method_name.end_with?("=", "?", "!")
-
-          respond_to?(:"#{method}=")
-        end
-      end
+      self.class.send(:allowed_attribute_keys_array)
     end
 
     def define_instance_variable(name:, value:)

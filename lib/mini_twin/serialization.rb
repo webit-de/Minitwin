@@ -12,11 +12,7 @@ class MiniTwin
       klass = defined?(HashWithIndifferentAccess) ? HashWithIndifferentAccess : Hash
       hash = klass.new
 
-      methods_to_serialize = if self.class.respond_to?(:serializable_getters, true)
-        self.class.send(:serializable_getters)
-      else
-        self.class.instance_methods(false).reject { |m| (s = m.to_s).end_with?("=", "?", "_attributes") }
-      end
+      methods_to_serialize = self.class.send(:serializable_getters)
 
       methods_to_serialize.each do |method|
         value = send(method)
@@ -132,19 +128,13 @@ class MiniTwin
     end
 
     def ordered_methods_for_pp
-      ordered = self.class.respond_to?(:property_order, true) ? self.class.send(:property_order) : []
-      all_methods = self.class.respond_to?(:serializable_getters, true) ?
-        self.class.send(:serializable_getters) :
-        self.class.instance_methods(false).reject { |m| m.to_s.end_with?("=", "?", "_attributes") }
-
+      ordered = self.class.send(:property_order)
+      all_methods = self.class.send(:serializable_getters)
       ordered.select { |m| all_methods.include?(m) } + (all_methods - ordered)
     end
 
     def display_name_for(method)
-      props = self.class.respond_to?(:properties, true) ? self.class.send(:properties) : {}
-      colls = self.class.respond_to?(:collections, true) ? self.class.send(:collections) : {}
-
-      meta = props[method] || colls[method]
+      meta = self.class.properties[method] || self.class.collections[method]
       (meta && meta[:as] && !meta[:as].is_a?(Proc)) ? meta[:as] : method
     end
 

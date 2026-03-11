@@ -7,18 +7,9 @@ class MiniTwin
       # for a target class, yielding each key to the block
       def iterate_attribute_sources(target_klass, &block)
         return unless target_klass
+        return unless target_klass.respond_to?(:allowed_attribute_keys, true)
 
-        if target_klass.respond_to?(:properties)
-          target_klass.properties.each_key(&block)
-        end
-
-        if target_klass.respond_to?(:collections)
-          target_klass.collections.each_key(&block)
-        end
-
-        if target_klass.respond_to?(:allowed_attribute_keys, true)
-          target_klass.send(:allowed_attribute_keys).each(&block)
-        end
+        target_klass.send(:allowed_attribute_keys).each(&block)
       end
 
       def coerce_value_to_twin(value, target_klass)

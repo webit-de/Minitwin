@@ -16,11 +16,7 @@ class MiniTwin
     end
 
     def assign_object(model)
-      attribute_methods.each do |method|
-        next unless model.respond_to?(method)
-        value = model.public_send(method)
-        send("#{method}=", value) if respond_to?("#{method}=", true)
-      end
+      to_object(model)
       instance_variable_set(self.class.internal_model_name("model"), model)
       self
     end

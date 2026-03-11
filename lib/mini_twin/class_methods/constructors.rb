@@ -42,9 +42,7 @@ class MiniTwin
             elsif model.respond_to?(:attributes)
               model.attributes
             else
-              model.instance_variables.each_with_object({}) do |var, hash|
-                hash[MiniTwin::Utils.ivar_to_key(var)] = model.instance_variable_get(var)
-              end
+              extract_instance_variables(model)
             end
           end.reduce({}, :merge)
 
