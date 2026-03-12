@@ -6,9 +6,6 @@ begin
   require "dry-types"
 rescue LoadError
 end
-require "active_support/core_ext/object/blank"
-require "active_support/core_ext/hash/indifferent_access"
-require "active_support/hash_with_indifferent_access"
 require_relative "mini_twin/version"
 
 begin
@@ -82,7 +79,7 @@ class MiniTwin
 end
 
 # Optional: Generate RBS on exit when configured via ENV.
-if ENV["MINI_TWIN_RBS_OUT"].present?
+if ENV["MINI_TWIN_RBS_OUT"] && !ENV["MINI_TWIN_RBS_OUT"].empty?
   at_exit do
     path = ENV["MINI_TWIN_RBS_OUT"]
     begin

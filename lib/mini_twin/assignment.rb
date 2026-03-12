@@ -22,7 +22,7 @@ class MiniTwin
     end
 
     def assign_hash(hash = {})
-      hash = hash.to_h.with_indifferent_access
+      hash = hash.to_h.transform_keys(&:to_sym)
 
       attribute_methods.each do |method|
         next unless hash.key?(method)

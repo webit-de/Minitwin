@@ -58,7 +58,7 @@ class MiniTwin
           add_block_property(name:)
         else
           define_method("#{name}=") do |value|
-            coerced_value = if twin.present?
+            coerced_value = if twin
               self.class.send(:coerce_value_to_twin, value, twin)
             else
               setter ? setter.call(value) : value
@@ -174,7 +174,7 @@ class MiniTwin
             end
           end
 
-          klass.class_eval(&block) if block.present?
+          klass.class_eval(&block) if block
 
           const_name = constantize_name(name)
           begin
@@ -193,9 +193,9 @@ class MiniTwin
       end
 
       def build_getter_proc(name:, on:, default:, getter:, type:)
-        return -> { instance_exec(&getter) } if getter.present?
+        return -> { instance_exec(&getter) } if getter
 
-        if on.present?
+        if on
           build_composition_getter(name:, on:, default:, type:)
         else
           build_regular_getter(name:, default:, type:)
@@ -270,7 +270,7 @@ class MiniTwin
       end
 
       def apply_alias_to_getter(name:, as:)
-        return unless as.present?
+        return if as.nil?
 
         if as.is_a?(Proc)
           # Dynamic alias: protect original reader and let instances

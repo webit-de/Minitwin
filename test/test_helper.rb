@@ -16,6 +16,9 @@ require "minitest/autorun"
 require "active_support/test_case"
 require "active_support/time"
 require "active_support/core_ext/array/access"
+require "active_support/core_ext/hash/indifferent_access"
+require "active_support/hash_with_indifferent_access"
+require "active_support/core_ext/object/blank"
 
 # ActionController::Parameters used by assign_params
 require "action_controller"

@@ -62,7 +62,7 @@ class MiniTwin
       end
 
       def internal_model_name(name)
-        "#{MiniTwin::INTERNAL_MODEL_PREFIX}#{name}" if name.present?
+        "#{MiniTwin::INTERNAL_MODEL_PREFIX}#{name}" unless name.nil?
       end
 
       def enrich_attributes_from_models!(attributes, models)

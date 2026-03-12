@@ -1,9 +1,7 @@
 PATH
   remote: .
   specs:
-    mini-twin (0.4.0)
-      activesupport (>= 8.0)
-      dry-types (>= 1.7)
+    mini-twin (0.5.0)
       zeitwerk (>= 2.6)
 
 GEM
@@ -131,6 +129,7 @@ PLATFORMS
 DEPENDENCIES
   actionpack (>= 6.1)
   activemodel (>= 6.1)
+  dry-types (>= 1.7)
   mini-twin!
   minitest (>= 5.18)
   rake (>= 13.0)
