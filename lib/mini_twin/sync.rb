@@ -19,16 +19,20 @@ class MiniTwin
       return false if target_model.nil?
 
       attribute_methods.each do |method|
-        writer = :"#{method}="
-        next unless target_model.respond_to?(writer) || target_model.respond_to?(method)
+        prop_meta = self.class.properties[method] || self.class.collections[method]
+        as_name = prop_meta&.[](:as)
+        target_name = (as_name.is_a?(Symbol) || as_name.is_a?(String)) ? as_name.to_sym : method
+
+        writer = :"#{target_name}="
+        next unless target_model.respond_to?(writer) || target_model.respond_to?(target_name)
 
         value = respond_to?(method, true) ? send(method) : nil
 
         # Nested twins
         if value.is_a?(MiniTwin)
-          if target_model.respond_to?(method)
+          if target_model.respond_to?(target_name)
             begin
-              child_model = target_model.public_send(method)
+              child_model = target_model.public_send(target_name)
               if child_model
                 value.sync(child_model, validate: false)
                 next
@@ -38,9 +42,9 @@ class MiniTwin
             end
           end
         elsif value.is_a?(Array)
-          if target_model.respond_to?(method)
+          if target_model.respond_to?(target_name)
             begin
-              coll = target_model.public_send(method)
+              coll = target_model.public_send(target_name)
               if coll && coll.respond_to?(:each)
                 deep_synced_any = false
 
