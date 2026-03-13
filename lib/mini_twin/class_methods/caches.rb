@@ -31,7 +31,12 @@ class MiniTwin
       end
 
       def allowed_attribute_keys_array
-        @allowed_attribute_keys_array_cache ||= allowed_attribute_keys.to_a.freeze
+        @allowed_attribute_keys_array_cache ||= begin
+          allowed = allowed_attribute_keys
+          ordered = property_order.select { |k| allowed.include?(k) }
+          remaining = allowed.to_a - ordered
+          (ordered + remaining).freeze
+        end
       end
 
       def setter_methods

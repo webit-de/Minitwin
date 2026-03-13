@@ -106,6 +106,35 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
       "Multiple attributes should all be assigned correctly"
   end
 
+  test "allowed_attribute_keys_array preserves property definition order" do
+    klass = Class.new(MiniTwin) do
+      property :charlie
+      property :alpha
+      property :bravo
+    end
+
+    assert_equal [:charlie, :alpha, :bravo], klass.send(:allowed_attribute_keys_array)
+  end
+
+  test "allowed_attribute_keys_array appends inherited keys not in property_order at the end" do
+    parent_klass = Class.new(MiniTwin) do
+      property :parent_prop
+    end
+
+    child_klass = Class.new(parent_klass) do
+      property :child_prop
+    end
+
+    ordered = child_klass.send(:allowed_attribute_keys_array)
+    child_index = ordered.index(:child_prop)
+    parent_index = ordered.index(:parent_prop)
+
+    assert child_index, "child_prop should be present"
+    assert parent_index, "parent_prop should be present"
+    assert child_index < parent_index,
+      "child_prop (in property_order) should come before inherited parent_prop"
+  end
+
   test "initialize uses private allowed_attribute_keys method" do
     # This test verifies that initialize correctly calls the private
     # allowed_attribute_keys method using respond_to?(name, true) and send()
