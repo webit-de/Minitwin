@@ -147,6 +147,12 @@ class MiniTwin
               send(target_reader)
             end
             virtual_properties << alias_name
+
+            # Define protected getter with original name so sync can read the value,
+            # and register in properties so sync resolves the as: alias.
+            define_method(prop) { send(target_reader) }
+            protected prop
+            properties[prop.to_sym] = { type: nil, as: as_meta, virtual: false, nested_proxy: true }
           else
             # Dynamic alias: register for instance-level aliasing and rely on
             # __recompute_dynamic_aliases__ to create the per-instance method.
