@@ -41,4 +41,80 @@ class AssignmentTest < ActiveSupport::TestCase
     assert_not twin.bool?
   end
 
+  test "should not assign read-only value as hash" do
+    klass = Class.new(MiniTwin) do
+      property :my_usual_prop
+      property :my_readonly_prop, readonly: true
+      property :my_nested do
+        property :my_sub_readonly, readonly: true
+      end
+      property :my_readonly_nested, readonly: true do
+        property :my_sub_prop
+      end
+    end
+
+    twin =
+      klass.new(
+        my_usual_prop: "usual",
+        my_readonly_prop: "ro",
+        my_nested: { my_sub_readonly: "sub ro" },
+        my_readonly_nested: { my_sub_prop: "sub prop" }
+      )
+    assert_equal "usual", twin.my_usual_prop
+    assert_equal "ro", twin.my_readonly_prop
+    assert_equal "sub ro", twin.my_nested.my_sub_readonly
+    assert_equal "sub prop", twin.my_readonly_nested.my_sub_prop
+
+    twin.assign_hash(
+      my_usual_prop: "new usual",
+      my_readonly_prop: "new ro",
+      my_nested: { my_sub_readonly: "new sub ro" },
+      my_readonly_nested: { my_sub_prop: "new sub prop" }
+    )
+    assert_equal "new usual", twin.my_usual_prop
+    assert_equal "ro", twin.my_readonly_prop
+    assert_equal "sub ro", twin.my_nested.my_sub_readonly
+    assert_equal "sub prop", twin.my_readonly_nested.my_sub_prop
+  end
+
+  test "should not assign read-only value from object" do
+    sub_model = Data.define(:my_sub_prop)
+    model =
+      Data.define(
+        :my_usual_prop,
+        :my_readonly_prop,
+        :my_nested,
+        :my_readonly_nested
+      ).new("new usual", "new ro", sub_model.new("new sub ro"), sub_model.new("new sub prop"))
+
+    klass = Class.new(MiniTwin) do
+      property :my_usual_prop
+      property :my_readonly_prop, readonly: true
+      property :my_nested do
+        property :my_sub_readonly, readonly: true
+      end
+      property :my_readonly_nested, readonly: true do
+        property :my_sub_prop
+      end
+    end
+
+    twin =
+      klass.new(
+        my_usual_prop: "usual",
+        my_readonly_prop: "ro",
+        my_nested: { my_sub_readonly: "sub ro" },
+        my_readonly_nested: { my_sub_prop: "sub prop" }
+      )
+    assert_equal "usual", twin.my_usual_prop
+    assert_equal "ro", twin.my_readonly_prop
+    assert_equal "sub ro", twin.my_nested.my_sub_readonly
+    assert_equal "sub prop", twin.my_readonly_nested.my_sub_prop
+
+    twin.assign_object(model)
+    assert_equal "new usual", twin.my_usual_prop
+    assert_equal "ro", twin.my_readonly_prop
+    assert_equal "sub ro", twin.my_nested.my_sub_readonly
+    assert_equal "sub prop", twin.my_readonly_nested.my_sub_prop
+  end
+
 end

@@ -41,7 +41,7 @@ class MiniTwin
         add_to_property_order(name)
       end
 
-      def property(name, validates: {}, default: nil, as: nil, virtual: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
+      def property(name, validates: {}, default: nil, as: nil, virtual: false, readonly: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
         nested_class = nil
 
         if block_given?
@@ -76,7 +76,8 @@ class MiniTwin
         properties[name.to_sym] = {
           type: type,
           as: as,
-          virtual: virtual
+          virtual: virtual,
+          readonly: readonly
         }
         properties[name.to_sym][:twin] = twin if twin
         properties[name.to_sym][:nested_class] = nested_class if nested_class

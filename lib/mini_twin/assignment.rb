@@ -6,25 +6,36 @@ class MiniTwin
   module Assignment
 
     # Mirror values from a model's getters into this twin's setters
+    #: (untyped) -> instance
     def to_object(model)
-      attribute_methods.each do |method|
+      assignable_attribute_methods.each do |method|
         next unless model.respond_to?(method)
         value = model.public_send(method)
-        send("#{method}=", value) if respond_to?("#{method}=", true)
+
+        ivar_name = MiniTwin::Utils.ivar_name(method)
+        current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
+
+        if current_value.is_a?(MiniTwin) && !value.nil? && !value.is_a?(Hash)
+          current_value.to_object(value)
+        else
+          send("#{method}=", value) if respond_to?("#{method}=", true)
+        end
       end
       self
     end
 
+    #: (untyped) -> instance
     def assign_object(model)
       to_object(model)
       instance_variable_set(self.class.internal_model_name("model"), model)
       self
     end
 
+    #: (Hash[Symbol | String, untyped]) -> instance
     def assign_hash(hash = {})
       hash = hash.to_h.transform_keys(&:to_sym)
 
-      attribute_methods.each do |method|
+      assignable_attribute_methods.each do |method|
         next unless hash.key?(method)
 
         value = hash[method]
@@ -49,9 +60,22 @@ class MiniTwin
       self
     end
 
+    # DEBT: This will fail in type checks in projects without rails, because
+    # argument type is unknown in plain ruby.
+    #
+    #: (ActionController::Parameters) -> instance
     def assign_params(params = {})
       params = params.to_unsafe_h if params.respond_to?(:to_unsafe_h)
       assign_hash(params)
+    end
+
+    # Gets the non-readonly methods, which can be assigned with new values.
+    #: () -> Array[Symbol]
+    def assignable_attribute_methods
+      attribute_methods.reject do |method|
+        prop_meta = self.class.properties[method]
+        prop_meta && prop_meta[:readonly]
+      end
     end
   end
 end
