@@ -34,3 +34,6 @@
 
 # Test status caches
 /.rspec_status
+
+docs
+*.local.json
