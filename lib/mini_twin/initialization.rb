@@ -11,19 +11,25 @@ class MiniTwin
 
       args.select! { |arg, _| allowed_keys.include?(arg.to_sym) }
 
-      getter_defaults =
-        self.
-          class.
-          block_properties.
-          select { |method| allowed_keys.include?(method) }.
-          index_with { {} }
+      getter_defaults = {}
+      self.class.block_properties.each do |method|
+        getter_defaults[method] = {} if allowed_keys.include?(method)
+      end
+
+      attrs = getter_defaults.merge(args)
 
       # Skip per-setter alias recomputation during bulk init; recompute once after
       @__skip_alias_recompute__ = true
-      super(getter_defaults.merge(args))
+      if MiniTwin.send(:active_model_initialized?, self.class)
+        super(attrs)
+      else
+        # :nocov: (exercised only without ActiveModel; covered by subprocess test)
+        attrs.each { |k, v| assign_attribute(method: k, value: v) }
+        # :nocov:
+      end
       @__skip_alias_recompute__ = false
 
-      __recompute_dynamic_aliases__
+      __recompute_dynamic_aliases__ if self.class.has_dynamic_aliases?
     end
 
     private
@@ -101,9 +107,9 @@ class MiniTwin
 
     def __compute_nested_alias_name__(entry)
       obj = public_send(entry[:group])
-      entry[:path][0..-2].each { |seg| obj = obj.public_send(seg) }
+      obj = MiniTwin::Utils.traverse_path(obj, entry[:path][0..-2])
       obj.instance_exec(&entry[:as])
-    rescue StandardError => e
+    rescue StandardError
       # Expected: Nested path traversal or dynamic alias proc may fail.
       # Return nil to skip this alias definition.
       nil
@@ -116,8 +122,12 @@ class MiniTwin
       method_missing respond_to_missing?
       define_method remove_method undef_method
       instance_variable_get instance_variable_set
+      instance_variables instance_variable_defined?
       const_get const_set
       class_variable_get class_variable_set
+      binding tap then yield_self to_proc
+      freeze __id__ object_id
+      == equal? eql? hash <=>
     ].freeze
 
     def __apply_dynamic_alias__(target_method, alias_name)

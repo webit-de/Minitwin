@@ -13,3 +13,26 @@ class AliasProtectionTest < ActiveSupport::TestCase
   end
 end
 
+class AliasProtectionExtendedTest < ActiveSupport::TestCase
+  test "binding cannot be used as dynamic alias" do
+    klass = Class.new(MiniTwin) do
+      property :x, as: -> { :binding }
+    end
+    assert_raises(ArgumentError) { klass.new(x: 1) }
+  end
+
+  test "to_proc cannot be used as dynamic alias" do
+    klass = Class.new(MiniTwin) do
+      property :x, as: -> { :to_proc }
+    end
+    assert_raises(ArgumentError) { klass.new(x: 1) }
+  end
+
+  test "freeze cannot be used as dynamic alias" do
+    klass = Class.new(MiniTwin) do
+      property :x, as: -> { :freeze }
+    end
+    assert_raises(ArgumentError) { klass.new(x: 1) }
+  end
+end
+

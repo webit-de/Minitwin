@@ -36,27 +36,37 @@ class MiniTwin
     #: (Hash[ String | Symbol, untyped ] hash) -> instance
     def assign_hash(hash = {})
       hash = hash.to_h.transform_keys(&:to_sym)
+      allowed = assignable_attribute_methods
 
-      assignable_attribute_methods.each do |method|
-        next unless hash.key?(method)
+      was_skipping = @__skip_alias_recompute__
+      @__skip_alias_recompute__ = true
+      begin
+        hash.each do |method, value|
+          next unless allowed.include?(method)
 
-        value = hash[method]
-        ivar_name = MiniTwin::Utils.ivar_name(method)
-        current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
+          ivar_name = MiniTwin::Utils.ivar_name(method)
+          current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
 
-        if current_value.respond_to?(:assign_hash) && value.is_a?(Hash)
-          current_value.assign_hash(value)
-        elsif value.is_a?(Array) && current_value.is_a?(Array)
-          value.each_with_index do |item, idx|
-            if item.is_a?(Hash) && current_value.size > idx && current_value[idx].respond_to?(:assign_hash)
-              current_value[idx].assign_hash(item)
-            else
-              current_value[idx] = item
+          if current_value.respond_to?(:assign_hash) && value.is_a?(Hash)
+            current_value.assign_hash(value)
+          elsif value.is_a?(Array) && current_value.is_a?(Array)
+            value.each_with_index do |item, idx|
+              if item.is_a?(Hash) && current_value.size > idx && current_value[idx].respond_to?(:assign_hash)
+                current_value[idx].assign_hash(item)
+              else
+                current_value[idx] = item
+              end
             end
+          else
+            send("#{method}=", value) if respond_to?("#{method}=", true)
           end
-        else
-          send("#{method}=", value) if respond_to?("#{method}=", true)
         end
+      ensure
+        @__skip_alias_recompute__ = was_skipping
+      end
+
+      if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+        __recompute_dynamic_aliases__
       end
 
       self

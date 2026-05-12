@@ -9,8 +9,7 @@ class MiniTwin
     NESTED_PREFIX = MiniTwin::NESTED_READER_PREFIX
 
     def to_hash(render_nil: false)
-      klass = defined?(HashWithIndifferentAccess) ? HashWithIndifferentAccess : Hash
-      hash = klass.new
+      hash = MiniTwin.hash_klass.new
 
       methods_to_serialize = self.class.send(:serializable_getters)
 

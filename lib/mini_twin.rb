@@ -1,6 +1,4 @@
 require "json"
-require "set"
-require "fileutils"
 require "zeitwerk"
 begin
   require "dry-types"
@@ -62,17 +60,43 @@ class MiniTwin
   include MiniTwin::Sync
   extend  MiniTwin::ClassMethods
 
-  # Track descendants to allow RBS generation for all loaded twins
-  @__descendants__ = []
+  # Lazy-memoized lookups for late-loaded optional deps (Dry::Types,
+  # ActiveSupport's HashWithIndifferentAccess). Resolved on first call so
+  # boot-order between mini-twin and the deps does not matter.
   class << self
-    attr_reader :__descendants__
+    def hash_klass
+      @hash_klass ||= defined?(HashWithIndifferentAccess) ? HashWithIndifferentAccess : Hash
+    end
+
+    private
+
+    def coercion_error_classes
+      @coercion_error_classes ||= begin
+        arr = [TypeError, ArgumentError]
+        arr.unshift(::Dry::Types::CoercionError) if defined?(::Dry::Types::CoercionError)
+        arr.freeze
+      end
+    end
+
+    def active_model_initialized?(klass)
+      return false unless defined?(ActiveModel::API) || defined?(ActiveModel::Model)
+      ancestors = klass.ancestors
+      (defined?(ActiveModel::API) && ancestors.include?(ActiveModel::API)) ||
+        (defined?(ActiveModel::Model) && ancestors.include?(ActiveModel::Model))
+    end
+  end
+
+  # Track descendants via WeakMap so anonymous subclasses can be GC'd.
+  # The map lives only on MiniTwin itself; subclasses' inherited hooks
+  # delegate up so that deep hierarchies still register on the root.
+  @__descendants_map__ = ObjectSpace::WeakMap.new
+  class << self
+    def __descendants__
+      MiniTwin.instance_variable_get(:@__descendants_map__).keys
+    end
 
     def inherited(sub)
-      begin
-        MiniTwin.__descendants__ << sub
-      rescue FrozenError
-        # Ignore if descendants array is frozen
-      end
+      MiniTwin.instance_variable_get(:@__descendants_map__)[sub] = true
       super
     end
   end
@@ -81,6 +105,7 @@ end
 # Optional: Generate RBS on exit when configured via ENV.
 if ENV["MINI_TWIN_RBS_OUT"] && !ENV["MINI_TWIN_RBS_OUT"].empty?
   at_exit do
+    require "fileutils"
     path = ENV["MINI_TWIN_RBS_OUT"]
     begin
       twins = MiniTwin.__descendants__.select { |k| k.name }

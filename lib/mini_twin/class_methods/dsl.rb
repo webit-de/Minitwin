@@ -17,6 +17,10 @@ class MiniTwin
         @property_order ||= []
       end
 
+      def dynamic_nested_aliases
+        @dynamic_nested_aliases ||= []
+      end
+
       def collection(name, validates: {}, default: [], as: nil, getter: nil, twin: nil, on: nil, **_opts, &block)
         nested_class = block ? create_nested_class(name:, &block) : nil
         element_klass = twin || nested_class
@@ -26,7 +30,9 @@ class MiniTwin
           coerced_values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
           define_instance_variable(name:, value: coerced_values)
           # :nocov:
-          __recompute_dynamic_aliases__ unless @__skip_alias_recompute__
+          if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+            __recompute_dynamic_aliases__
+          end
           # :nocov:
         end
         alias_method "#{name}_attributes=", "#{name}="
@@ -52,19 +58,28 @@ class MiniTwin
             coerced = self.class.send(:coerce_value_to_twin, value, nested_class)
             raise "Unprocessable input for property '#{name}'." unless coerced.nil? || coerced.is_a?(nested_class)
             define_instance_variable(name:, value: coerced)
-            __recompute_dynamic_aliases__ unless @__skip_alias_recompute__
+            if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+              __recompute_dynamic_aliases__
+            end
           end
 
           add_block_property(name:)
         else
           define_method("#{name}=") do |value|
-            coerced_value = if twin
-              self.class.send(:coerce_value_to_twin, value, twin)
-            else
-              setter ? setter.call(value) : value
-            end
+            coerced_value =
+              if twin
+                self.class.send(:coerce_value_to_twin, value, twin)
+              elsif setter
+                setter.call(value)
+              elsif type && !value.nil?
+                self.class.send(:coerce_with_type, value, type)
+              else
+                value
+              end
             define_instance_variable(name:, value: coerced_value)
-            __recompute_dynamic_aliases__ unless @__skip_alias_recompute__
+            if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+              __recompute_dynamic_aliases__
+            end
           end
         end
 
@@ -88,17 +103,12 @@ class MiniTwin
         raise ArgumentError, "nested requires a block" unless block_given?
         property(name, &block)
 
-        const_name = constantize_name(name)
-        nested_klass = begin
-          self.const_get(const_name)
-        rescue NameError
-          nil
-        end
+        # Pull the nested class directly from the registration `property`
+        # just performed instead of round-tripping through `const_get`.
+        nested_klass = properties[name.to_sym]&.[](:nested_class)
 
-        # Registry for dynamic nested aliases (as: -> { ... }) on leafs
-        @dynamic_nested_aliases ||= []
-        def self.dynamic_nested_aliases; @dynamic_nested_aliases ||= []; end
-
+        # Registry for dynamic nested aliases (as: -> { ... }) on leafs.
+        # Reader defined once in the module body above.
         leafs = []
         if nested_klass && nested_klass.respond_to?(:properties)
           extract_leaf_properties = ->(klass, path) do
@@ -122,7 +132,7 @@ class MiniTwin
           target_reader = "#{MiniTwin::NESTED_READER_PREFIX}#{([name] + path).join('__')}"
           define_method(target_reader) do
             obj = public_send(name)
-            path[0..-2].each { |seg| obj = obj.public_send(seg) }
+            obj = MiniTwin::Utils.traverse_path(obj, path[0..-2])
             if as_meta.is_a?(Proc)
               # When inner property has a dynamic alias, original reader may be protected.
               obj.send(prop)
@@ -136,9 +146,11 @@ class MiniTwin
           # Setter uses original base name to call the nested twin's writer.
           define_method("#{prop}=") do |value|
             obj = public_send(name)
-            path[0..-2].each { |seg| obj = obj.public_send(seg) }
+            obj = MiniTwin::Utils.traverse_path(obj, path[0..-2])
             obj.public_send("#{prop}=", value)
-            __recompute_dynamic_aliases__ unless @__skip_alias_recompute__
+            if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+              __recompute_dynamic_aliases__
+            end
           end
 
           # Static alias: define a public getter method with the alias name
@@ -263,13 +275,14 @@ class MiniTwin
       end
 
       def build_regular_getter(name:, default:, type:)
-        # Compute ivar_name at definition time for JIT optimization
+        # Compute ivar_name at definition time for JIT optimization.
+        # Type coercion happens on assignment (setter) so the getter just reads.
         ivar = MiniTwin::Utils.ivar_name(name)
         -> {
           if instance_variable_defined?(ivar)
             val = instance_variable_get(ivar)
             return self.class.send(:resolve_default_value, default, type) if val.nil?
-            type ? self.class.send(:coerce_with_type, val, type) : val
+            val
           else
             self.class.send(:resolve_default_value, default, type)
           end

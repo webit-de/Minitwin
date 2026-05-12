@@ -1,6 +1,17 @@
 class MiniTwin
   module ClassMethods
     module Caches
+      def has_dynamic_aliases?
+        return @has_dynamic_aliases_cache unless @has_dynamic_aliases_cache.nil?
+
+        @has_dynamic_aliases_cache = begin
+          procs = properties.any? { |_, m| m[:as].is_a?(Proc) } ||
+                  collections.any? { |_, m| m[:as].is_a?(Proc) }
+          nested = respond_to?(:dynamic_nested_aliases) && dynamic_nested_aliases.any?
+          procs || nested
+        end
+      end
+
       private
 
       def invalidate_caches
@@ -8,13 +19,15 @@ class MiniTwin
         @allowed_attribute_keys_cache = nil
         @allowed_attribute_keys_array_cache = nil
         @setter_methods_cache = nil
+        @has_dynamic_aliases_cache = nil
       end
 
       def serializable_getters
         @serializable_getters_cache ||= begin
           virt = virtual_properties.to_set
-          prot = protected_instance_methods(false).to_set
-          instance_methods(false).reject do |m|
+          prot = (protected_instance_methods - MiniTwin.protected_instance_methods).to_set
+          own_and_inherited = instance_methods - MiniTwin.instance_methods
+          own_and_inherited.reject do |m|
             s = m.to_s
             s.end_with?("=", "?", "_attributes") || virt.include?(m) || prot.include?(m)
           end
