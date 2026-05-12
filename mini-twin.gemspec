@@ -3,14 +3,14 @@ require_relative "lib/mini_twin/version"
 Gem::Specification.new do |spec|
   spec.name = "mini-twin"
   spec.version = MiniTwin::VERSION
-  spec.authors = [ 'The webit! e-Team' ]
+  spec.authors = [ 'Johannes Balk' ]
   spec.email = [ 'eteam@webit.de' ]
   spec.homepage = 'https://www.webit.de'
 
-  spec.summary = "Tiny presenter/twin with ActiveModel-style validations"
+  spec.summary = "Tiny presenter/twin"
   spec.description = "A minimal twin/presenter object with nested/collection properties, optional type coercion, and optional ActiveModel validations."
 
-  spec.required_ruby_version = ">= 3.4"
+  spec.required_ruby_version = ">= 3.3"
 
   spec.files = Dir["lib/**/*", "README.md", "LICENSE*"].select { |f| File.file?(f) }
   spec.require_paths = [ "lib" ]

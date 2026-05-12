@@ -27,6 +27,7 @@ class CompositionTest < ActiveSupport::TestCase
     assert_equal "Petra Rodriguez", obj.name
     assert_equal "1234 fake street", obj.street
     assert_equal "D", obj.country
+    assert_equal 55.76, obj.latitude
 
     hash = obj.to_hash
     assert_equal "abc", hash[:address_id]

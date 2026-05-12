@@ -9,9 +9,13 @@ variables:
 
 test:
   stage: test
-  image: ruby:3.4-slim-trixie
+  image: ruby:${RUBY_VERSION}-slim
   interruptible: true
+  parallel:
+    matrix:
+      - RUBY_VERSION: ["3.3", "3.4", "4.0"]
   cache:
+    key: ruby-${RUBY_VERSION}
     paths:
       - vendor/bundle
   before_script:
