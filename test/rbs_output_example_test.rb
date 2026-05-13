@@ -24,28 +24,23 @@ class RbsOutputExampleTest < ActiveSupport::TestCase
 
     rbs = klass.to_rbs
 
-    # Print for manual verification during development
-    puts "\n" + "="*80
-    puts "Generated RBS for UserTwin:"
-    puts "="*80
-    puts rbs
-    puts "="*80 + "\n"
-
     # Verify structure
-    assert_includes rbs, "class ::UserTwin < ::MiniTwin"
-    assert_includes rbs, "attr_reader name: ::String"
-    assert_includes rbs, "attr_writer name: ::String"
-    assert_includes rbs, "attr_reader age: ::Integer"
-    assert_includes rbs, "attr_writer age: ::Integer"
-    assert_includes rbs, "attr_reader email: ::String"
-    assert_includes rbs, "attr_writer email: ::String"
-    assert_includes rbs, "attr_reader profile:"
-    assert_includes rbs, "attr_writer profile:"
-    assert_includes rbs, "attr_accessor tags: ::Array"
-    assert_includes rbs, "def initialize: (?name: ::String, ?age: ::Integer, ?email: ::String, ?profile:"
-    assert_includes rbs, "?tags: ::Array"
-    assert_includes rbs, "**untyped) -> void"
-    assert_includes rbs, "end"
+    rbs_lines = rbs.split("\n")
+    assert_equal rbs_lines[0], "class ::UserTwin < ::MiniTwin"
+    assert_equal rbs_lines[1], "  attr_reader name: ::String"
+    assert_equal rbs_lines[2], "  attr_writer name: ::String"
+    assert_equal rbs_lines[3], "  attr_reader age: ::Integer"
+    assert_equal rbs_lines[4], "  attr_writer age: ::Integer"
+    assert_equal rbs_lines[5], "  attr_reader email: ::String"
+    assert_equal rbs_lines[6], "  attr_writer email: ::String"
+    assert_match(/^  attr_reader profile: ::#<Class:0x.*?>::Profile$/, rbs_lines[7])
+    assert_match(/^  attr_writer profile: ::#<Class:0x.*?>::Profile$/, rbs_lines[8])
+    assert_match(/^  attr_accessor tags: ::Array\[::#<Class:0x.*?>::Tags\]$/, rbs_lines[9])
+    assert_match(
+      /^  def initialize: \(\?name: ::String, \?age: ::Integer, \?email: ::String, \?profile: ::#<Class:0x.*?>::Profile, \?tags: ::Array\[::#<Class:0x.*?>::Tags\], \*\*untyped\) -> void$/,
+      rbs_lines[11]
+    )
+    assert_equal rbs_lines[12], "end"
   end
 
   test "should generate RBS with proper formatting for multiple properties" do

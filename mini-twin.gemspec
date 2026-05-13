@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "dry-types", ">= 1.7"
   spec.add_development_dependency "rake", ">= 13.0"
   spec.add_development_dependency "minitest", ">= 5.18"
+  spec.add_development_dependency "m", ">= 1.6"
   spec.add_development_dependency "actionpack", ">= 6.1"
   spec.add_development_dependency "activemodel", ">= 6.1"
   spec.add_development_dependency "simplecov", ">= 0.22"
