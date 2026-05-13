@@ -99,6 +99,8 @@ if ENV["MINI_TWIN_RBS_OUT"] && !ENV["MINI_TWIN_RBS_OUT"].empty?
     end
   end
 end
+
+require "mini_twin/railtie" if defined?(Rails::Railtie)
 # MiniTwin
 # --------
 # Entry point that wires together the core modules and conditionally enables
