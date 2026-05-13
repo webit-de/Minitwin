@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 class MiniTwin
   # Assign/update helpers to merge incoming data into an existing twin.
   # - assign_object: copy readable attributes from an object and remember it
@@ -31,7 +33,7 @@ class MiniTwin
       self
     end
 
-    #: (Hash[Symbol | String, untyped]) -> instance
+    #: (Hash[ String | Symbol, untyped ] hash) -> instance
     def assign_hash(hash = {})
       hash = hash.to_h.transform_keys(&:to_sym)
 
@@ -63,7 +65,7 @@ class MiniTwin
     # DEBT: This will fail in type checks in projects without rails, because
     # argument type is unknown in plain ruby.
     #
-    #: (ActionController::Parameters) -> instance
+    #: (ActionController::Parameters params) -> instance
     def assign_params(params = {})
       params = params.to_unsafe_h if params.respond_to?(:to_unsafe_h)
       assign_hash(params)

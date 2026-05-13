@@ -17,6 +17,14 @@ Or build and install locally:
 
 `gem build mini-twin.gemspec && gem install mini-twin-*.gem`
 
+If you want to use the rbs signature files in your project, you have to declare the dependency
+explicitly in your `rbs_collection.yaml` like so:
+
+```yaml
+  gems:
+    - name: mini-twin
+```
+
 Quick Start
 -----------
 

@@ -1,0 +1,22 @@
+# Generated from lib/mini_twin/assignment.rb with RBS::Inline
+
+class MiniTwin
+  # Assign/update helpers to merge incoming data into an existing twin.
+  # - assign_object: copy readable attributes from an object and remember it
+  # - assign_hash / assign_params: update only known attributes, recursing into
+  #   nested twins and collection items when possible
+  module Assignment
+    # Mirror values from a model's getters into this twin's setters
+    # : (untyped) -> instance
+    def to_object: (untyped) -> instance
+
+    # : (untyped) -> instance
+    def assign_object: (untyped) -> instance
+
+    # : (Hash[ String | Symbol, untyped ] hash) -> instance
+    def assign_hash: (Hash[String | Symbol, untyped] hash) -> instance
+
+    # : (Hash[ String | Symbol, untyped ] params) -> instance
+    def assign_params: (Hash[String | Symbol, untyped] params) -> instance
+  end
+end
