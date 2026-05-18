@@ -17,6 +17,45 @@ Or build and install locally:
 
 `gem build mini-twin.gemspec && gem install mini-twin-*.gem`
 
+If you want to use the rbs signature files in your project, you have to declare the dependency
+explicitly in your `rbs_collection.yaml` like so:
+
+```yaml
+  gems:
+    - name: mini-twin
+```
+
+RBS files for your twins
+------------------------
+
+The gem provides a rake task, which generates the signature files for all your classes inheriting
+from `MiniTwin`.
+
+If you use Rails, the task is automatically loaded. Just run:
+```bash
+rails mini_twin:generate_rbs
+```
+
+If you work with plain Ruby, you have to load the task in your `Rakefile`:
+
+```ruby
+load Gem.find_files("tasks/mini_twin.rake").first
+```
+
+Then run the task:
+```bash
+rake mini_twin:generate_rbs
+```
+
+By default, the task will output the rbs files in `sig/generated/`. You can adjust this by setting
+a task argument or an ENV var `MINI_TWIN_RBS_DIR`. If both is set, the argument will be used.
+
+```bash
+rake mini_twin:generate_rbs[sig/custom_path]
+
+MINI_TWIN_RBS_DIR=sig/custom_path rake mini_twin:generate_rbs
+```
+
 Quick Start
 -----------
 
