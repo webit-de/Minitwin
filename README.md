@@ -1,575 +1,94 @@
-mini-twin
-=========
+# Minitwin
 
-A tiny “twin/presenter” with a small DSL to define properties, nested blocks, collections, light type coercion via dry-types, and optional ActiveModel validations. It’s designed to be framework-friendly but not framework-bound.
+![Minitwin Logo](logo.png){width=20%}
 
-- Ruby: >= 3.4
-- Runtime deps: dry-types, activesupport, activemodel (optional but enables validations)
+## What is Minitwin?
 
-Installation
-------------
+It is a tiny presentation layer with a small DSL to define properties, collections, light type coercion via dry-types, and optional ActiveModel validations. It's designed to be framework-friendly but not framework-bound.
+
+
+## Dependencies
+
+- **Ruby** `>= 3.3`
+- **[dry-types](https://dry-rb.org/gems/dry-types)** _(optional)_ — enables the `type:` coercion option on properties
+- **[activesupport](https://github.com/rails/rails/tree/main/activesupport)** _(optional)_ — `to_hash` returns `HashWithIndifferentAccess` when available, otherwise a plain Hash
+- **[activemodel](https://github.com/rails/rails/tree/main/activemodel)** _(optional)_ — enables the `validates:` DSL and `valid?`; without it, twins are always considered valid
+
+
+## Getting Started
 
 Add to your Gemfile:
 
-`gem "mini-twin", github: "your-org/mini-twin"`
+`gem "minitwin"`
 
 Or build and install locally:
 
-`gem build mini-twin.gemspec && gem install mini-twin-*.gem`
+`gem build minitwin.gemspec && gem install minitwin-*.gem`
 
-If you want to use the rbs signature files in your project, you have to declare the dependency
-explicitly in your `rbs_collection.yaml` like so:
+Then define your first Twin:
+
+```ruby
+class UserTwin < Minitwin
+  property :id, type: Types::Params::Integer.lax
+  property :name, validates: { presence: true }
+  property :active, type: Types::Params::Bool.lax
+end
+
+user = UserTwin.from_hash(
+  id: "42",
+  name: "Alex",
+  active: "1"
+)
+user.id     #=> 42 (coerced)
+user.name   #=> "Alex"
+user.active #=> true (coerced)
+
+user.to_json
+#=> '{"id":42,"name":"Alex","active":true}'
+```
+
+See [USAGE](./USAGE.md) for further examples.
+
+
+## RBS
+
+Minitwin comes with basic RBS signature files for its public interface. If you want to use them in
+your project, you have to declare the dependency explicitly in your `rbs_collection.yaml` like so:
 
 ```yaml
   gems:
-    - name: mini-twin
+    - name: minitwin
 ```
 
-RBS files for your twins
-------------------------
-
-The gem provides a rake task, which generates the signature files for all your classes inheriting
-from `Minitwin`.
+Furthermore, Minitwin ships with a rake task, which generates the RBS signature files for all your
+classes inheriting from `Minitwin`.
 
 If you use Rails, the task is automatically loaded. Just run:
 ```bash
-rails mini_twin:generate_rbs
+rails minitwin:generate_rbs
 ```
 
 If you work with plain Ruby, you have to load the task in your `Rakefile`:
 
 ```ruby
-load Gem.find_files("tasks/mini_twin.rake").first
+load Gem.find_files("tasks/minitwin.rake").first
 ```
 
 Then run the task:
 ```bash
-rake mini_twin:generate_rbs
+rake minitwin:generate_rbs
 ```
 
 By default, the task will output the rbs files in `sig/generated/`. You can adjust this by setting
 a task argument or an ENV var `MINITWIN_RBS_DIR`. If both is set, the argument will be used.
 
 ```bash
-rake mini_twin:generate_rbs[sig/custom_path]
+rake minitwin:generate_rbs[sig/custom_path]
 
-MINITWIN_RBS_DIR=sig/custom_path rake mini_twin:generate_rbs
+MINITWIN_RBS_DIR=sig/custom_path rake minitwin:generate_rbs
 ```
 
-Quick Start
------------
 
-```
-require "mini_twin"
+## License
 
-class AddressTwin < Minitwin
-  property :street
-  property :city
-end
-
-class UserTwin < Minitwin
-  property :id, type: Types::Params::Integer.lax
-  property :name, validates: { presence: true }
-  property :active, type: Types::Params::Bool.lax
-  property :profile do
-    property :bio
-  end
-  collection :tags
-  property :address, twin: AddressTwin
-end
-
-user = UserTwin.from_hash(
-  id: "42",
-  name: "Alex",
-  active: "1",
-  profile: { bio: "Builder of tiny things" },
-  tags: %w[ruby gems],
-  address: { street: "123 Ruby St", city: "Sinatra" }
-)
-
-user.id    #=> 42 (coerced)
-user.active #=> true (coerced)
-user.profile.bio #=> "Builder of tiny things"
-user.address.city #=> "Sinatra"
-user.to_hash #=> ActiveSupport::HashWithIndifferentAccess
-```
-
-DSL Reference
--------------
-
-- property
-  - Options: `as:`, `default:`, `virtual:`, `type:`, `getter: -> { ... }`, `setter: ->(value) { ... }`, `twin:`, `on:` (composition)
-  - Block form creates a nested twin class.
-- collection
-  - Options: `as:`, `default: []`, `getter:`, `twin:`, `on:`
-  - Also defines Rails-style `name_attributes` getter/setter aliases.
-- nested
-  - Usage: `nested :container do ... end`
-  - Groups inner properties under a container key in serialization while exposing them as top-level setters/getters on the parent.
-  - Inner properties are omitted at the top level in `to_hash`/`to_json` and appear only under the container.
-  - Supports deeper nesting via nested blocks within the group.
-
-Notes:
-- The DSL methods (`property`, `collection`, `nested`) are private class methods intended for use inside twin class bodies (e.g., `class MyTwin < Minitwin; property :x; end`). They are not part of the public class API and aren’t callable as `MyTwin.property` from the outside.
-
-Public Class API
-----------------
-
-The following class methods are public and supported:
-
-- `from_hash`, `from_json`, `from_params`
-- `from_object`, `from_objects`, `from_collection`
-- `to_rbs` (RBS generation for the class)
-
-Types are provided via `Types` from dry-types:
-
-`property :count, type: Types::Params::Integer.lax`
-`property :enabled, type: Types::Params::Bool.lax`
-
-Composition (on:)
------------------
-
-```
-class OrderTwin < Minitwin
-  property :id, on: :order
-  property :customer_name, on: :customer, as: :name
-end
-
-order = Data.define(:id).new(id: 7)
-customer = Data.define(:customer_name).new(customer_name: "Dana")
-obj = OrderTwin.from_objects(order:, customer:)
-obj.id   #=> 7
-obj.name #=> "Dana"
-```
-
-Notes on collections with `on:`:
-- When a `collection` is defined with `on: :source`, the getter wraps each raw element coming from the source into the configured element twin (either the block-defined twin or the `twin:` class). This ensures aliases (`as:`), nested properties, and validations behave as expected when reading from composed objects.
-- Example:
-
-```
-class ContractTwin < Minitwin
-  collection :items, on: :contract do
-    property :sub, as: :renamed
-  end
-end
-
-contract = Data.define(:items).new(items: [ Data.define(:sub).new(sub: "x") ])
-t = ContractTwin.from_objects(contract: contract)
-t.items.first.renamed #=> "x"  # element is a twin instance
-```
-
-- Elements without `to_h`/`attributes` (e.g., plain Ruby or ActiveModel objects) are also supported: the getter reflects values using the element twin's property names (falling back to instance variables) and instantiates element twins accordingly.
- - Elements without `to_h`/`attributes` (e.g., plain Ruby or ActiveModel objects) are also supported: the getter reflects values using the element twin's property names (falling back to instance variables) and instantiates element twins accordingly.
- - For has_many relations (e.g., ActiveRecord CollectionProxy), the getter treats any array-like value that responds to `to_a` as a list and wraps each element into the element twin. The raw relation object is not exposed to callers.
-
-Assignment helpers
-------------------
-
-- assign_hash(Hash)
-- assign_params(ActionController::Parameters)
-- assign_object(Object)
-
-Notes for `assign_object`:
-- Uses the twin's defined setter names to copy values, so attributes aliased via `as:` are populated correctly.
-- For collections defined with a block or `twin:`, incoming elements are wrapped into the element twin, enabling aliased getters and nested behavior on read.
-
-Example:
-
-```
-class AliasTwin < Minitwin
-  property :sub_property, as: :renamed
-end
-
-class AliasCollectionTwin < Minitwin
-  collection :items do
-    property :sub_property, as: :renamed
-  end
-end
-
-model1 = Data.define(:sub_property).new(sub_property: "x")
-t1 = AliasTwin.new.assign_object(model1)
-t1.renamed #=> "x"
-
-elem = Data.define(:sub_property)
-model2 = Data.define(:items).new(items: [ elem.new(sub_property: "a") ])
-t2 = AliasCollectionTwin.new.assign_object(model2)
-t2.items.first.renamed #=> "a"  # element is wrapped as a twin
-```
-
-Serialization
--------------
-
-- to_hash(render_nil: false) → ActiveSupport::HashWithIndifferentAccess (if AS is available)
-- to_h alias
-- to_json forwards to `to_hash.to_json`
-- attributes returns a Hash keyed by base setter names (original property names), even when public getters are aliased via `as:`.
-- pretty_print(q) integrates with Ruby's `pp` library for nicely formatted debug output
-
-Virtual properties are omitted from `to_hash`.
-
-### Pretty Printing
-
-Minitwin integrates with Ruby's `pp` (pretty print) library for readable debug output:
-
-```ruby
-require "pp"
-
-user = UserTwin.from_hash(
-  id: "42",
-  name: "Alice",
-  profile: { bio: "Developer", contact: { email: "alice@example.com" } },
-  tags: %w[ruby rails]
-)
-
-pp user
-# Output:
-# #<UserTwin
-#  id: 42,
-#  name: "Alice",
-#  profile: #<UserTwin::Profile
-#   bio: "Developer",
-#   contact: #<UserTwin::Profile::Contact email: "alice@example.com">>,
-#  tags: ["ruby", "rails"]>
-```
-
-The `pretty_print` method:
-- Formats output with proper indentation
-- **Preserves property definition order** - attributes appear in the same order as defined in your class
-- Handles nested twins and collections recursively
-- **Preserves Minitwin class information** for nested objects (not converted to plain hashes)
-- Shows the class name and all serializable attributes
-- Works seamlessly with Ruby's built-in debugging tools like `pp`
-- Each nested twin is pretty printed with its own class name, making debugging easier
-
-Validations
------------
-
-When ActiveModel is available, validations declared in the DSL are enforced:
-
-`property :name, validates: { presence: true }`
-
-Nested blocks and collections propagate validation errors into the parent twin with dot/bracket paths.
-
-Using Without ActiveModel
--------------------------
-
-ActiveModel is optional. If it is not installed:
-
-- Validation DSL calls are ignored (no `validates` method is available).
-- Calling `valid?` on a twin returns `true` and does not collect errors.
-- All other features (properties, collections, nested twins, type coercion, serialization, assignment) work as usual.
-
-Syncing Models
---------------
-
-Minitwin can copy values back into your domain models via `sync`:
-
-- `sync(model = nil, validate: true)`
-  - When `validate: true` and the twin is invalid, returns `false` and does not modify the model.
-  - When `model` is omitted, `sync` defaults to the stored model captured by `from_object`/`from_objects`.
-  - Returns `true` on success.
-
-Behavior details:
-- Scalars: writes via matching writer methods (e.g., `name=`).
-- Nested twins: if the target model has a nested object (e.g., `profile`) available via reader, `sync` recursively updates it in place; otherwise, it assigns a Hash to the writer.
-- Collections: attempts to deep-sync each element when the target exposes a collection via reader.
-  - Matches by `id` when possible (i.e., target elements respond to `id`), otherwise falls back to index-based sync.
-    - DSL: `collection :items, match_on: :sku` or `match_on: [:sku, :variant_id]` or `match_on: ->(e) { [e.sku, e.variant_id] }`
-    - Per call: `twin.sync(model, match_on: { items: :sku })` (overrides DSL)
-- Call-time override precedence:
-  - `twin.sync(order, match_on: { lines: :variant_id })`
-
-Development
------------
-
-- Run tests: `bundle exec rake test`
-- Ruby version: `>= 3.4`
-
-RBS Types
----------
-
-Minitwin can generate RBS signatures for your twins so type checkers (e.g., Steep) know your attribute types.
-
-- Types come from the DSL:
-  - `type:` (Dry::Types) on a property determines its RBS type (e.g., `Types::Params::Integer.lax` → `Integer`, `Types::Params::Bool` → `bool`).
-  - `twin:` or a nested block defines a nested twin class, which is referenced as the property type.
-  - Collections become `Array[ElementType]`.
-
-- Generate RBS on exit by setting an environment variable:
-
-```
-MINITWIN_RBS_OUT=sig/minitwin_generated.rbs bundle exec rake test
-```
-
-This writes RBS for all loaded twins (with names) to `sig/minitwin_generated.rbs`.
-
-- Programmatic API:
-
-```
-class UserTwin < Minitwin
-  property :id, type: Types::Params::Integer.lax
-  property :name
-  property :profile do
-    property :bio
-  end
-end
-
-File.write("sig/user_twin.rbs", UserTwin.to_rbs)
-```
-
-Notes:
-- Nested block twins are assigned a stable constant under the parent (e.g., `UserTwin::Profile`) to allow RBS to reference them.
-- Properties without a `type:` are emitted as `untyped`.
-- Aliased getters (`as:`) are reflected with the alias as reader and the original as writer.
-
-Project Layout
---------------
-
-- lib/mini_twin.rb – loader and wiring
-- lib/mini_twin/version.rb – version constant
-- lib/mini_twin/types.rb – dry-types integration
-- lib/mini_twin/initialization.rb – instance setup and helpers
-- lib/mini_twin/assignment.rb – assignment helpers
-- lib/mini_twin/serialization.rb – to_hash/to_json/valid?/attributes
-- lib/mini_twin/class_methods.rb – includes the following internal modules:
-  - lib/mini_twin/class_methods/dsl.rb – DSL for `property`, `collection`, `nested`
-  - lib/mini_twin/class_methods/constructors.rb – `from_*`, registries
-  - lib/mini_twin/class_methods/rbs.rb – RBS generation helpers
-  - lib/mini_twin/class_methods/caches.rb – small caches and invalidation
-  - lib/mini_twin/class_methods/types_helper.rb – type defaults and coercion helpers
-
-Design Overview
----------------
-
-Minitwin is a plain-Ruby, framework-light “twin” object. It exposes a simple DSL for defining:
-
-- Properties: scalar or nested (via a block), with optional type coercion and validations.
-- Collections: arrays of scalars or nested twins.
-- Nested groups: group related properties under a container key while keeping a flat write API.
-- Composition: map read access to external objects via `on:` without copying data.
-
-At runtime, a twin is just a Ruby object with generated getters/setters. The modules under `lib/mini_twin` compose these responsibilities:
-
-- `ClassMethods`: the DSL (`property`, `collection`) and constructors (`from_*`).
-- `Initialization`: filters constructor args to known attributes, builds nested twins.
-- `Assignment`: assign/update from objects, hashes, or params.
-- `Serialization`: convert a twin back to a hash/JSON; aggregate validations.
-- `Types`: `Dry::Types` integration via a convenient `Types` module.
-
-How It Works
-------------
-
-- Defining properties
-  - `property :name` defines a writer (`name=`) and a getter (`name`).
-  - `as:` creates a public alias for the getter and protects the original name.
-  - `type:` (Dry::Types) coerces on write; invalid coercions return the raw value.
-  - `default:` is used when the getter returns `nil` or when not set via constructor.
-  - Block form builds a nested anonymous twin class and wires `name=` to construct it.
-  - `twin:` embeds another twin class, accepting a hash, an instance, or an object with `to_h`/`attributes`.
-
-- Defining collections
-  - `collection :items` behaves like an array; `items=` converts each element.
-  - Block form or `twin:` ensures each element is a nested twin instance.
-  - Adds Rails-style `items_attributes` getter/setter aliases for form helpers.
-
-- Constructors
-  - `from_hash`, `from_json`, `from_params(ActionController::Parameters)`,
-    `from_object`, and `from_objects(order:, customer:)`.
-  - `from_objects` merges attribute hashes from multiple sources; last one wins on key conflicts.
-  - When composing via `on:`, the referenced external objects are stored internally and read on demand.
-  - Enrichment: if a property or collection is missing OR has a `nil` value in a model's `attributes` hash, `from_objects` will attempt to populate it by calling a same-named reader on the provided models (even when the `attributes` hash contains the key set to `nil`). This covers typical ORM associations:
-    - has_one: nested block/twin properties are initialized from the reader value.
-    - has_many: collections accept relation proxies and normalize via `to_a`, wrapping elements into the configured element twin.
-  - `from_collection` accepts arrays of hashes, objects with `to_h`/`attributes`, ActiveModel objects, or plain Ruby objects. It reuses `from_objects` semantics for each element, including alias handling and enrichment of missing/nil properties or collections from readers (has_one/has_many). For non-hash elements it reflects values by calling readers matching the element twin's properties (or instance variables) and instantiates the element twin.
-
-- Assignment
-  - `assign_hash` and `assign_params` update only known attributes.
-  - Nested hashes update nested twins in place; collections update existing elements by index.
-  - `assign_object` copies matching attributes from a plain object and stores it internally for composition.
-  - `to_object(model)` copies values from a model’s getters into the twin via setters (for mirroring state).
-
-- Serialization
-  - `to_hash(render_nil: false)` returns a `HashWithIndifferentAccess` when ActiveSupport is present; otherwise a plain Hash.
-  - Nested twins serialize recursively; arrays preserve elements and drop only `nil`.
-  - Virtual properties are omitted.
-
-- Validations
-  - If ActiveModel is loaded, `validates:` options on properties are applied.
-  - Errors from nested twins and collections are aggregated using dot/bracket notation (e.g., `duplo.brick`, `items[0].name`).
-  - ActiveModel is optional; without it, twins are always considered valid.
-
-Edge Cases & Behavior Notes
----------------------------
-
-- Type coercion: Coercion errors (`Dry::Types::CoercionError`, `TypeError`, `ArgumentError`) fall back to the raw input instead of raising.
-- `twin:` handling: accepts `nil`, a twin instance, a Hash, or an object with `attributes`/`to_h`. Arrays shaped like Rails param pairs (`["0", {...}]`) are also supported.
-- Block properties: `prop = {}` initializes an empty nested twin; `prop = nil` clears it.
-- Composition: When using `on:`, the source object must be available either via `from_objects(source: ...)` or via a reader method. A helpful error is raised if the source is missing.
-- Aliases: When using `as:`, the original name is protected so only the alias is public. Predicate methods (`?`) are not double-aliased.
-- Attributes export: `attributes` uses base setter names (e.g., `secret_value`) for keys and reads values even when the original reader is protected by aliasing.
-
-Dynamic Aliases (as: -> { ... })
---------------------------------
-
-You can compute the public reader name dynamically using a lambda. The lambda runs in the instance context, so it can access other attributes or ivars.
-
-Example:
-
-```
-class DynamicAliasTwin < Minitwin
-  property :key
-  property :value, as: -> { key }
-end
-
-t = DynamicAliasTwin.from_hash(key: "x", value: 1)
-t.x        #=> 1
-t.to_hash  #=> { x: 1 }
-
-# Renaming updates the public reader and serialization
-t.key = "y"
-t.value = 2
-t.y        #=> 2
-t.to_hash  #=> { y: 2 }
-```
-
-Notes:
-- The original property reader is protected when using a dynamic alias, just like static aliases.
-- Dynamic alias names should be symbols or strings; `as:` coercion uses `to_sym`.
-- Serialization (`to_hash`/`to_json`) includes dynamic alias keys. Base property names are omitted when aliased.
-- Works inside collection elements as well; each element computes its own alias.
-
-Collection Name Dynamic Alias
------------------------------
-
-You can also compute the collection reader name dynamically:
-
-```
-class BagTwin < Minitwin
-  property :alias_key
-  collection :items, as: -> { alias_key } do
-    property :value
-  end
-end
-
-t = BagTwin.from_hash(alias_key: "things", items: [{ value: 1 }, { value: 2 }])
-t.things.map(&:value) #=> [1, 2]
-t.to_hash             #=> { alias_key: "things", things: [{ value: 1 }, { value: 2 }] }
-
-t.alias_key = "stuff"
-t.to_hash             #=> { alias_key: "stuff", stuff: [{ value: 1 }, { value: 2 }] }
-```
-
-Collision handling:
-- If two dynamic aliases resolve to the same name on an instance (e.g., two different properties both compute "x"), an ArgumentError is raised.
-- If a dynamic alias resolves to a method name that already exists on the instance, an ArgumentError is raised.
-
-Introspection:
-- `t.dynamic_aliases` returns a hash of `alias_name => target_method` for the current instance.
-
-Performance Notes
------------------
-
-- Reflection caching: Twins cache the list of serializable getters and allowed attribute keys to reduce reflection during `initialize` and `to_hash`. Caches are invalidated when new properties/collections are defined.
-
-Contributing
-------------
-
-- Run tests: `bundle exec rake test`
-- Coding style: keep changes minimal and focused; prefer improving core behavior over adding new surface area.
-- Docs: see `docs/ARCHITECTURE.md` for internals.
-
-Developer Notes
----------------
-
-- Coercion helpers: Internally, conversion of incoming values into twins is centralized.
-  - `coerce_value_to_twin(value, klass)`: Wraps hashes, ActiveModel objects (`attributes`), objects with `to_h`, Rails param-pair arrays (e.g., `["0", {...}]`), and plain objects (by reflecting property readers or instance variables) into `klass`.
-  - `coerce_collection_array(raw)`: Treats any array-like (e.g., ActiveRecord `CollectionProxy`) as an array using `to_a`.
-  - Used by: collection setters, block property setters, `twin:` property setters, and composition getters for collections.
-  - Benefit: consistent behavior and fewer code paths to maintain.
-
-- Enrichment on constructors: `from_objects` (and therefore `from_object` and `from_collection`) will populate missing or `nil` attributes by calling same-named readers on source objects. Collections normalize via `to_a`.
-
-- Serialization: Uses cached `serializable_getters` to avoid repeated reflection. Virtual and protected readers are excluded; aliases are respected.
-
-License
--------
-
-Nested Grouping
-----------------
-
-Expose a clean input API while serializing under a nested key:
-
-```
-class ProfileTwin < Minitwin
-  nested :profile do
-    property :bio
-    property :website
-  end
-end
-
-t = ProfileTwin.new(bio: "Hello", website: "https://example.com")
-t.to_hash
-#=> { profile: { bio: "Hello", website: "https://example.com" } }
-```
-
-Notes:
-- You can nest groups: `nested :outer { property :a; nested :inner { property :b } }`.
-- Top-level proxy methods for inner properties are virtual (not serialized at the top level).
-
-Nested Grouping Inside Collections
-----------------------------------
-
-You can also use `nested` inside collection elements, and combine it with has_one-style enrichment where the source object’s `attributes` omits the association but a reader method returns it.
-
-Example:
-
-```
-class CategoryInfo < Minitwin; end
-
-class CategoryTwin < Minitwin
-  property :name
-  property :info do
-    property :label
-  end
-  nested :extra do
-    property :tag
-  end
-end
-
-class ServiceTwin < Minitwin
-  property :title
-  collection :categories, twin: CategoryTwin
-end
-
-# Source objects (e.g., ActiveRecord/Plain Ruby) where `attributes` has `info: nil`
-Category = Data.define(:name, :info, :tag) do
-  def attributes
-    { name: name, info: nil, tag: tag } # has_one-like: info omitted/nil in attributes
-  end
-end
-
-service = OpenStruct.new(
-  title: "My Service",
-  categories: [
-    Category.new("C1", OpenStruct.new(label: "L1"), "T1"),
-    Category.new("C2", OpenStruct.new(label: "L2"), "T2")
-  ]
-)
-
-t = ServiceTwin.from_object(service)
-t.to_hash
-# => {
-#   title: "My Service",
-#   categories: [
-#     { name: "C1", info: { label: "L1" }, extra: { tag: "T1" } },
-#     { name: "C2", info: { label: "L2" }, extra: { tag: "T2" } }
-#   ]
-# }
-```
-
-Notes:
-- Collections accept array-like values (e.g., AR CollectionProxy via `to_a`).
-- For has_one-like `info`, when `attributes` has `nil`, Minitwin enriches the element twin from the reader method so `info` is still instantiated.
-
-MIT
-
+Minitwin is licensed under the MIT License. See [LICENSE](./LICENSE) for more details.

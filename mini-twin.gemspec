@@ -6,13 +6,14 @@ Gem::Specification.new do |spec|
   spec.authors = [ 'Johannes Balk', 'Roland Schwarzer' ]
   spec.email = [ 'eteam@webit.de' ]
   spec.homepage = 'https://www.webit.de'
+  spec.license = "MIT"
 
   spec.summary = "Tiny presenter/twin"
   spec.description = "A minimal twin/presenter object with nested/collection properties, optional type coercion, and optional ActiveModel validations."
 
   spec.required_ruby_version = ">= 3.3"
 
-  spec.files = Dir["lib/**/*", "README.md", "LICENSE*"].select { |f| File.file?(f) }
+  spec.files = Dir["lib/**/*", "README.md", "USAGE.md", "LICENSE*"].select { |f| File.file?(f) }
   spec.require_paths = [ "lib" ]
 
   # Runtime dependencies
