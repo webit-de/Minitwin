@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class CompositionTwin < MiniTwin
+class CompositionTwin < Minitwin
   property :id, as: :customer_id, on: :customer
   property :id, as: :address_id, on: :address
   property :name, on: :customer
@@ -10,7 +10,7 @@ class CompositionTwin < MiniTwin
   property :country, default: "D"
 end
 
-class CompositionWithProc < MiniTwin
+class CompositionWithProc < Minitwin
   property :customer, virtual: true
   property :name, on: :customer
   property :street, on: -> { customer.address }

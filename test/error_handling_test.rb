@@ -4,7 +4,7 @@ require "mini_twin"
 class ErrorHandlingTest < ActiveSupport::TestCase
   test "should handle nested creation without block" do
     error = assert_raises(ArgumentError) do
-      Class.new(MiniTwin) do
+      Class.new(Minitwin) do
         nested :invalid
       end
     end
@@ -14,7 +14,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   test "should handle composition property when model doesn't respond to property" do
     model = Struct.new(:other).new("value")
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, on: :model
     end
 
@@ -26,7 +26,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle missing composition model error" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, on: :missing
     end
 
@@ -38,7 +38,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle assign_params with non-ActionController params" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -49,7 +49,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle collection attribute suffix access" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       collection :items do
         property :name
       end
@@ -62,7 +62,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle nested groups with protected readers" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       nested :metadata do
         property :created_at, as: :timestamp
       end
@@ -75,7 +75,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle property without type that returns nil" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :optional
     end
 
@@ -84,7 +84,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle property with explicit default taking precedence" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :count, type: Types::Integer, default: 42
     end
 
@@ -94,7 +94,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle boolean property with question mark" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :active?
     end
 
@@ -109,7 +109,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
     # Temporarily hide HashWithIndifferentAccess
     original_const = Object.const_get(:HashWithIndifferentAccess) rescue nil
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -121,7 +121,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle assign_hash with nested objects" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :profile do
         property :bio
       end
@@ -134,7 +134,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle assign_hash with collection items" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       collection :items do
         property :name
       end
@@ -147,7 +147,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle from_collection with empty array" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -156,7 +156,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle from_json with nested structures" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :profile do
         property :bio
       end
@@ -168,11 +168,11 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle twin property with nil value" do
-    inner = Class.new(MiniTwin) do
+    inner = Class.new(Minitwin) do
       property :value
     end
 
-    outer = Class.new(MiniTwin) do
+    outer = Class.new(Minitwin) do
       property :inner, twin: inner
     end
 
@@ -182,7 +182,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
 
   test "should handle validation on property without activemodel validations" do
     # When valid? is called on a twin without nested properties
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -192,7 +192,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "should handle dynamic alias removal and replacement" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, as: -> { "first_alias" }
     end
 

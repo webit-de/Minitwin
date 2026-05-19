@@ -1,4 +1,4 @@
-class MiniTwin
+class Minitwin
   module ClassMethods
     module Caches
       def has_dynamic_aliases?
@@ -25,8 +25,8 @@ class MiniTwin
       def serializable_getters
         @serializable_getters_cache ||= begin
           virt = virtual_properties.to_set
-          prot = (protected_instance_methods - MiniTwin.protected_instance_methods).to_set
-          own_and_inherited = instance_methods - MiniTwin.instance_methods
+          prot = (protected_instance_methods - Minitwin.protected_instance_methods).to_set
+          own_and_inherited = instance_methods - Minitwin.instance_methods
           own_and_inherited.reject do |m|
             s = m.to_s
             s.end_with?("=", "?", "_attributes") || virt.include?(m) || prot.include?(m)
@@ -36,9 +36,9 @@ class MiniTwin
 
       def allowed_attribute_keys
         @allowed_attribute_keys_cache ||= begin
-          # Include methods from this class and parent MiniTwin subclasses,
-          # but not from MiniTwin itself or its ancestors (Object, etc.)
-          own_and_inherited = instance_methods - MiniTwin.instance_methods
+          # Include methods from this class and parent Minitwin subclasses,
+          # but not from Minitwin itself or its ancestors (Object, etc.)
+          own_and_inherited = instance_methods - Minitwin.instance_methods
           own_and_inherited.grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
         end
       end

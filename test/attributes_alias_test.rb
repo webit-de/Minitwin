@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class AttrAliasTwin < MiniTwin
+class AttrAliasTwin < Minitwin
   property :secret_value, as: :public_value, default: 10
 end
 

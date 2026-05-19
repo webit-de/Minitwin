@@ -6,7 +6,7 @@ class ToObjectNestedTest < ActiveSupport::TestCase
   Profile = Struct.new(:bio, :contact)
   User = Struct.new(:name, :profile)
 
-  class UserTwin < MiniTwin
+  class UserTwin < Minitwin
     property :name
     property :profile do
       property :bio

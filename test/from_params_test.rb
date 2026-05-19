@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class FromParamsTwin < MiniTwin
+class FromParamsTwin < Minitwin
   property :x, type: Types::Params::Integer.lax
   property :y
   property :string, type: Types::Params::String.lax

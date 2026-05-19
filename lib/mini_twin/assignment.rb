@@ -1,6 +1,6 @@
 # rbs_inline: enabled
 
-class MiniTwin
+class Minitwin
   # Assign/update helpers to merge incoming data into an existing twin.
   # - assign_object: copy readable attributes from an object and remember it
   # - assign_hash / assign_params: update only known attributes, recursing into
@@ -14,10 +14,10 @@ class MiniTwin
         next unless model.respond_to?(method)
         value = model.public_send(method)
 
-        ivar_name = MiniTwin::Utils.ivar_name(method)
+        ivar_name = Minitwin::Utils.ivar_name(method)
         current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
 
-        if current_value.is_a?(MiniTwin) && !value.nil? && !value.is_a?(Hash)
+        if current_value.is_a?(Minitwin) && !value.nil? && !value.is_a?(Hash)
           current_value.to_object(value)
         else
           send("#{method}=", value) if respond_to?("#{method}=", true)
@@ -44,7 +44,7 @@ class MiniTwin
         hash.each do |method, value|
           next unless allowed.include?(method)
 
-          ivar_name = MiniTwin::Utils.ivar_name(method)
+          ivar_name = Minitwin::Utils.ivar_name(method)
           current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
 
           if current_value.respond_to?(:assign_hash) && value.is_a?(Hash)

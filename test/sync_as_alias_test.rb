@@ -5,7 +5,7 @@ class SyncAsAliasTest < ActiveSupport::TestCase
   test "sync writes to aliased attribute on target model" do
     model = Struct.new(:draft_reference).new(nil)
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :orderno, as: :draft_reference
     end
 
@@ -17,7 +17,7 @@ class SyncAsAliasTest < ActiveSupport::TestCase
   test "sync uses alias for respond_to check on target model" do
     model = Struct.new(:mapped_name).new("old")
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, as: :mapped_name
     end
 
@@ -29,7 +29,7 @@ class SyncAsAliasTest < ActiveSupport::TestCase
   test "sync skips property when aliased writer is not available on target" do
     model = Struct.new(:unrelated).new("original")
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :foo, as: :nonexistent_attr
     end
 
@@ -42,7 +42,7 @@ class SyncAsAliasTest < ActiveSupport::TestCase
     child_model = Struct.new(:bio).new("old bio")
     parent_model = Struct.new(:detail).new(child_model)
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :profile, as: :detail do
         property :bio
       end
@@ -58,7 +58,7 @@ class SyncAsAliasTest < ActiveSupport::TestCase
     item_model = Struct.new(:value)
     parent_model = Struct.new(:entries).new([item_model.new("a"), item_model.new("b")])
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       collection :items, as: :entries do
         property :value
       end
@@ -73,7 +73,7 @@ class SyncAsAliasTest < ActiveSupport::TestCase
   test "sync ignores Proc as: and uses original method name" do
     model = Struct.new(:code).new("old")
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :code, as: -> { "dynamic" }
     end
 
@@ -85,7 +85,7 @@ class SyncAsAliasTest < ActiveSupport::TestCase
   test "sync works with string as: value" do
     model = Struct.new(:target_field).new(nil)
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :source, as: "target_field"
     end
 
@@ -97,7 +97,7 @@ class SyncAsAliasTest < ActiveSupport::TestCase
   test "sync without as: still uses original property name" do
     model = Struct.new(:name).new("old")
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 

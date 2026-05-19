@@ -29,7 +29,7 @@ RBS files for your twins
 ------------------------
 
 The gem provides a rake task, which generates the signature files for all your classes inheriting
-from `MiniTwin`.
+from `Minitwin`.
 
 If you use Rails, the task is automatically loaded. Just run:
 ```bash
@@ -48,12 +48,12 @@ rake mini_twin:generate_rbs
 ```
 
 By default, the task will output the rbs files in `sig/generated/`. You can adjust this by setting
-a task argument or an ENV var `MINI_TWIN_RBS_DIR`. If both is set, the argument will be used.
+a task argument or an ENV var `MINITWIN_RBS_DIR`. If both is set, the argument will be used.
 
 ```bash
 rake mini_twin:generate_rbs[sig/custom_path]
 
-MINI_TWIN_RBS_DIR=sig/custom_path rake mini_twin:generate_rbs
+MINITWIN_RBS_DIR=sig/custom_path rake mini_twin:generate_rbs
 ```
 
 Quick Start
@@ -62,12 +62,12 @@ Quick Start
 ```
 require "mini_twin"
 
-class AddressTwin < MiniTwin
+class AddressTwin < Minitwin
   property :street
   property :city
 end
 
-class UserTwin < MiniTwin
+class UserTwin < Minitwin
   property :id, type: Types::Params::Integer.lax
   property :name, validates: { presence: true }
   property :active, type: Types::Params::Bool.lax
@@ -110,7 +110,7 @@ DSL Reference
   - Supports deeper nesting via nested blocks within the group.
 
 Notes:
-- The DSL methods (`property`, `collection`, `nested`) are private class methods intended for use inside twin class bodies (e.g., `class MyTwin < MiniTwin; property :x; end`). They are not part of the public class API and aren’t callable as `MyTwin.property` from the outside.
+- The DSL methods (`property`, `collection`, `nested`) are private class methods intended for use inside twin class bodies (e.g., `class MyTwin < Minitwin; property :x; end`). They are not part of the public class API and aren’t callable as `MyTwin.property` from the outside.
 
 Public Class API
 ----------------
@@ -130,7 +130,7 @@ Composition (on:)
 -----------------
 
 ```
-class OrderTwin < MiniTwin
+class OrderTwin < Minitwin
   property :id, on: :order
   property :customer_name, on: :customer, as: :name
 end
@@ -147,7 +147,7 @@ Notes on collections with `on:`:
 - Example:
 
 ```
-class ContractTwin < MiniTwin
+class ContractTwin < Minitwin
   collection :items, on: :contract do
     property :sub, as: :renamed
   end
@@ -176,11 +176,11 @@ Notes for `assign_object`:
 Example:
 
 ```
-class AliasTwin < MiniTwin
+class AliasTwin < Minitwin
   property :sub_property, as: :renamed
 end
 
-class AliasCollectionTwin < MiniTwin
+class AliasCollectionTwin < Minitwin
   collection :items do
     property :sub_property, as: :renamed
   end
@@ -209,7 +209,7 @@ Virtual properties are omitted from `to_hash`.
 
 ### Pretty Printing
 
-MiniTwin integrates with Ruby's `pp` (pretty print) library for readable debug output:
+Minitwin integrates with Ruby's `pp` (pretty print) library for readable debug output:
 
 ```ruby
 require "pp"
@@ -236,7 +236,7 @@ The `pretty_print` method:
 - Formats output with proper indentation
 - **Preserves property definition order** - attributes appear in the same order as defined in your class
 - Handles nested twins and collections recursively
-- **Preserves MiniTwin class information** for nested objects (not converted to plain hashes)
+- **Preserves Minitwin class information** for nested objects (not converted to plain hashes)
 - Shows the class name and all serializable attributes
 - Works seamlessly with Ruby's built-in debugging tools like `pp`
 - Each nested twin is pretty printed with its own class name, making debugging easier
@@ -262,7 +262,7 @@ ActiveModel is optional. If it is not installed:
 Syncing Models
 --------------
 
-MiniTwin can copy values back into your domain models via `sync`:
+Minitwin can copy values back into your domain models via `sync`:
 
 - `sync(model = nil, validate: true)`
   - When `validate: true` and the twin is invalid, returns `false` and does not modify the model.
@@ -288,7 +288,7 @@ Development
 RBS Types
 ---------
 
-MiniTwin can generate RBS signatures for your twins so type checkers (e.g., Steep) know your attribute types.
+Minitwin can generate RBS signatures for your twins so type checkers (e.g., Steep) know your attribute types.
 
 - Types come from the DSL:
   - `type:` (Dry::Types) on a property determines its RBS type (e.g., `Types::Params::Integer.lax` → `Integer`, `Types::Params::Bool` → `bool`).
@@ -298,15 +298,15 @@ MiniTwin can generate RBS signatures for your twins so type checkers (e.g., Stee
 - Generate RBS on exit by setting an environment variable:
 
 ```
-MINI_TWIN_RBS_OUT=sig/mini_twin_generated.rbs bundle exec rake test
+MINITWIN_RBS_OUT=sig/minitwin_generated.rbs bundle exec rake test
 ```
 
-This writes RBS for all loaded twins (with names) to `sig/mini_twin_generated.rbs`.
+This writes RBS for all loaded twins (with names) to `sig/minitwin_generated.rbs`.
 
 - Programmatic API:
 
 ```
-class UserTwin < MiniTwin
+class UserTwin < Minitwin
   property :id, type: Types::Params::Integer.lax
   property :name
   property :profile do
@@ -341,7 +341,7 @@ Project Layout
 Design Overview
 ---------------
 
-MiniTwin is a plain-Ruby, framework-light “twin” object. It exposes a simple DSL for defining:
+Minitwin is a plain-Ruby, framework-light “twin” object. It exposes a simple DSL for defining:
 
 - Properties: scalar or nested (via a block), with optional type coercion and validations.
 - Collections: arrays of scalars or nested twins.
@@ -416,7 +416,7 @@ You can compute the public reader name dynamically using a lambda. The lambda ru
 Example:
 
 ```
-class DynamicAliasTwin < MiniTwin
+class DynamicAliasTwin < Minitwin
   property :key
   property :value, as: -> { key }
 end
@@ -444,7 +444,7 @@ Collection Name Dynamic Alias
 You can also compute the collection reader name dynamically:
 
 ```
-class BagTwin < MiniTwin
+class BagTwin < Minitwin
   property :alias_key
   collection :items, as: -> { alias_key } do
     property :value
@@ -500,7 +500,7 @@ Nested Grouping
 Expose a clean input API while serializing under a nested key:
 
 ```
-class ProfileTwin < MiniTwin
+class ProfileTwin < Minitwin
   nested :profile do
     property :bio
     property :website
@@ -524,9 +524,9 @@ You can also use `nested` inside collection elements, and combine it with has_on
 Example:
 
 ```
-class CategoryInfo < MiniTwin; end
+class CategoryInfo < Minitwin; end
 
-class CategoryTwin < MiniTwin
+class CategoryTwin < Minitwin
   property :name
   property :info do
     property :label
@@ -536,7 +536,7 @@ class CategoryTwin < MiniTwin
   end
 end
 
-class ServiceTwin < MiniTwin
+class ServiceTwin < Minitwin
   property :title
   collection :categories, twin: CategoryTwin
 end
@@ -569,7 +569,7 @@ t.to_hash
 
 Notes:
 - Collections accept array-like values (e.g., AR CollectionProxy via `to_a`).
-- For has_one-like `info`, when `attributes` has `nil`, MiniTwin enriches the element twin from the reader method so `info` is still instantiated.
+- For has_one-like `info`, when `attributes` has `nil`, Minitwin enriches the element twin from the reader method so `info` is still instantiated.
 
 MIT
 

@@ -1,11 +1,11 @@
 require "test_helper"
 require "mini_twin"
 
-class CollectionTwin < MiniTwin
+class CollectionTwin < Minitwin
   collection :values
 end
 
-class ValueTwin < MiniTwin
+class ValueTwin < Minitwin
   property :my_value
 end
 

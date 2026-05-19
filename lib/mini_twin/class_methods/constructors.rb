@@ -1,4 +1,4 @@
-class MiniTwin
+class Minitwin
   module ClassMethods
     module Constructors
       def properties
@@ -24,7 +24,7 @@ class MiniTwin
       end
 
       def from_object(model)
-        raise "Input is not an object. If you want to instantiate a MiniTwin with multiple objects, then use the pluralized 'from_objects'-method." if model.is_a?(Hash)
+        raise "Input is not an object. If you want to instantiate a Minitwin with multiple objects, then use the pluralized 'from_objects'-method." if model.is_a?(Hash)
         from_objects(model:)
       end
 
@@ -62,7 +62,7 @@ class MiniTwin
       end
 
       def internal_model_name(name)
-        "#{MiniTwin::INTERNAL_MODEL_PREFIX}#{name}" unless name.nil?
+        "#{Minitwin::INTERNAL_MODEL_PREFIX}#{name}" unless name.nil?
       end
 
       def enrich_attributes_from_models!(attributes, models)

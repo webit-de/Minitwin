@@ -5,7 +5,7 @@ class SyncCollectionByIdTest < ActiveSupport::TestCase
   ItemModel = Struct.new(:id, :value)
   OrderModel = Struct.new(:items)
 
-  class OrderTwin < MiniTwin
+  class OrderTwin < Minitwin
     collection :items do
       property :id
       property :value

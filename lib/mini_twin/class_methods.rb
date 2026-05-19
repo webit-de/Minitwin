@@ -5,15 +5,15 @@ require_relative "class_methods/caches"
 require_relative "class_methods/types_helper"
 require_relative "class_methods/coercion"
 
-class MiniTwin
+class Minitwin
   # Class-level DSL and public constructors split into focused modules.
   module ClassMethods
-    include MiniTwin::ClassMethods::Dsl
-    include MiniTwin::ClassMethods::Constructors
-    include MiniTwin::ClassMethods::Rbs
-    include MiniTwin::ClassMethods::Caches
-    include MiniTwin::ClassMethods::TypesHelper
-    include MiniTwin::ClassMethods::Coercion
+    include Minitwin::ClassMethods::Dsl
+    include Minitwin::ClassMethods::Constructors
+    include Minitwin::ClassMethods::Rbs
+    include Minitwin::ClassMethods::Caches
+    include Minitwin::ClassMethods::TypesHelper
+    include Minitwin::ClassMethods::Coercion
 
     # Limit DSL surface to class body usage
     private :property, :collection, :nested

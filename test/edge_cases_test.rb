@@ -3,7 +3,7 @@ require "mini_twin"
 
 class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle type coercion errors gracefully" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :age, type: Types::Strict::Integer
     end
 
@@ -13,7 +13,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "to_hash dynamic_aliases_for_pp path and pretty_print alias output" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :key
       property :value, as: -> { key }
     end
@@ -23,7 +23,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "attribute_methods fallback branch without cache" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       # Define a writer-only attribute and a plain reader to exercise respond_to? check
       def foo=(v); @foo = v; end
       def foo; @foo; end
@@ -38,7 +38,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "assign_attribute fallback sets ivar when no setter" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       # no setter defined for :bar
     end
     twin = klass.new
@@ -47,14 +47,14 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "dynamic alias collision raises when alias name already exists" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :value, as: -> { :to_s }
     end
     assert_raises(ArgumentError) { klass.new(value: 1) }
   end
 
   test "dynamic alias forbidden names raise specific error" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :value, as: -> { :send }
     end
     err = assert_raises(ArgumentError) { klass.new(value: 1) }
@@ -62,7 +62,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle nil in type_default_value for unknown types" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       # Use a custom type that doesn't match standard patterns
       custom_type = Types::Nominal::Any
       property :custom, type: custom_type, default: nil
@@ -78,7 +78,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
     simple_object.instance_variable_set(:@name, "test")
     simple_object.instance_variable_set(:@value, 42)
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :value
     end
@@ -92,7 +92,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle empty instance variables in coercion fallback" do
     simple_object = Object.new
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -102,7 +102,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle nested class creation with invalid constant name" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       # Using a name that might cause issues with constant naming
       property :my_nested_prop do
         property :value
@@ -114,11 +114,11 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle array pair format in coercion" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
-    nested_klass = Class.new(MiniTwin) do
+    nested_klass = Class.new(Minitwin) do
       property :item, twin: klass
     end
 
@@ -140,7 +140,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
       super
     end
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -150,7 +150,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle string coercion when dry-types doesn't return string" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :text, type: Types::Coercible::String
     end
 
@@ -159,7 +159,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle protected methods in dynamic alias computation" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, as: -> { "computed_name" }
     end
 
@@ -172,7 +172,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should handle dynamic alias collision detection" do
     # This tests that dynamic aliases with same name cause collision error
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :first, as: -> { "same" }
       property :second, as: -> { "same" }
     end
@@ -184,7 +184,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle existing method collision in dynamic aliases" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
 
       def existing_method
@@ -201,7 +201,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle StandardError in nested alias computation" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       nested :group do
         property :tag, as: -> { raise StandardError, "computation failed" }
       end
@@ -217,7 +217,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle collection coercion from non-array objects" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       collection :items do
         property :name
       end
@@ -235,7 +235,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
       raise "enrichment failed"
     end
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -245,7 +245,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle collections metadata lookup failure" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :items, on: :model
     end
 
@@ -260,7 +260,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
     # Create a custom boolean type that returns TrueClass as primitive
     bool_type = Types::Nominal::Bool
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :active, type: bool_type
     end
 
@@ -271,7 +271,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle integer type defaults" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :count, type: Types::Integer
     end
 
@@ -281,7 +281,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle string type defaults" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :text, type: Types::String
     end
 
@@ -294,7 +294,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
     # Create a type without a clear primitive
     custom_int_type = Types.Constructor(Integer) { |v| v.to_i }
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :number, type: custom_int_type
     end
 
@@ -304,7 +304,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle model composition with missing model" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, on: :missing_model
     end
 
@@ -317,7 +317,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle model composition with model not responding to property" do
     model = Struct.new(:other_field).new("value")
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, on: :model
     end
 
@@ -327,7 +327,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle property getter with custom getter proc" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :computed, getter: -> { "computed_value" }
     end
 
@@ -336,7 +336,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle property setter with custom setter proc" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :upcased, setter: ->(v) { v.to_s.upcase }
     end
 
@@ -345,11 +345,11 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle twin property coercion" do
-    inner = Class.new(MiniTwin) do
+    inner = Class.new(Minitwin) do
       property :value
     end
 
-    outer = Class.new(MiniTwin) do
+    outer = Class.new(Minitwin) do
       property :inner, twin: inner
     end
 
@@ -360,7 +360,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should raise when setter provided with block property" do
     # Need to instantiate to trigger the setter logic check
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       begin
         property :invalid, setter: ->(v) { v } do
           property :name
@@ -381,7 +381,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle validation errors without activemodel" do
     # Create a twin class without ActiveModel
     base = Class.new do
-      extend MiniTwin::ClassMethods
+      extend Minitwin::ClassMethods
 
       def self.name
         "TestTwin"
@@ -398,7 +398,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle cache invalidation" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :first
     end
 
@@ -416,7 +416,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle dynamic aliases reverse lookup" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, as: -> { "alias_name" }
     end
 
@@ -426,7 +426,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle dynamic aliases when not defined" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -436,7 +436,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should filter unknown keys on initialization" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -449,7 +449,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle assign_object with model tracking" do
     model = Struct.new(:name, :value).new("test", 42)
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :value
     end
@@ -466,7 +466,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle from_params with unsafe hash conversion" do
     params = ActionController::Parameters.new(name: "test", value: 42)
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :value
     end
@@ -477,7 +477,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle from_object with hash input error" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
 
@@ -500,7 +500,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
     model = model_class.new("test", "old")
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :new_name
     end
@@ -511,7 +511,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle virtual properties exclusion from serialization" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :internal, virtual: true
     end
@@ -524,7 +524,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle serialization with render_nil option" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :value
     end
@@ -537,7 +537,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle to_json serialization" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :value
     end
@@ -550,7 +550,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
   end
 
   test "should handle attributes method with protected readers" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name, as: :full_name
     end
 
@@ -563,7 +563,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should handle validation without activemodel" do
     klass = Class.new do
-      include MiniTwin::Serialization
+      include Minitwin::Serialization
       def self.block_properties
         []
       end

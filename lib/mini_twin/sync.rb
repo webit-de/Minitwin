@@ -1,7 +1,7 @@
-class MiniTwin
+class Minitwin
   module Sync
     # Cache constant reference for JIT optimization
-    MODEL_PREFIX = MiniTwin::INTERNAL_MODEL_PREFIX
+    MODEL_PREFIX = Minitwin::INTERNAL_MODEL_PREFIX
 
     def sync(model = nil, validate: true)
       # Resolve target model
@@ -29,7 +29,7 @@ class MiniTwin
         value = respond_to?(method, true) ? send(method) : nil
 
         # Nested twins
-        if value.is_a?(MiniTwin)
+        if value.is_a?(Minitwin)
           if target_model.respond_to?(target_name)
             begin
               child_model = target_model.public_send(target_name)
@@ -51,7 +51,7 @@ class MiniTwin
                 id_map = build_target_id_lookup(coll)
 
                 value.each_with_index do |elem, idx|
-                  next unless elem.is_a?(MiniTwin)
+                  next unless elem.is_a?(Minitwin)
                   target = nil
 
                   # Try id-based match first
@@ -86,10 +86,10 @@ class MiniTwin
         end
 
         assignable = case value
-        when MiniTwin
+        when Minitwin
           value.to_hash
         when Array
-          value.map { |v| v.is_a?(MiniTwin) ? v.to_hash : v }
+          value.map { |v| v.is_a?(Minitwin) ? v.to_hash : v }
         else
           value
         end

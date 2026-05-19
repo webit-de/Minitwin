@@ -1,4 +1,4 @@
-class MiniTwin
+class Minitwin
   module ClassMethods
     module Dsl
       def block_properties
@@ -129,10 +129,10 @@ class MiniTwin
           as_meta = leaf[:as]
 
           # Define a stable internal reader for this leaf to support dynamic aliasing
-          target_reader = "#{MiniTwin::NESTED_READER_PREFIX}#{([name] + path).join('__')}"
+          target_reader = "#{Minitwin::NESTED_READER_PREFIX}#{([name] + path).join('__')}"
           define_method(target_reader) do
             obj = public_send(name)
-            obj = MiniTwin::Utils.traverse_path(obj, path[0..-2])
+            obj = Minitwin::Utils.traverse_path(obj, path[0..-2])
             if as_meta.is_a?(Proc)
               # When inner property has a dynamic alias, original reader may be protected.
               obj.send(prop)
@@ -146,7 +146,7 @@ class MiniTwin
           # Setter uses original base name to call the nested twin's writer.
           define_method("#{prop}=") do |value|
             obj = public_send(name)
-            obj = MiniTwin::Utils.traverse_path(obj, path[0..-2])
+            obj = Minitwin::Utils.traverse_path(obj, path[0..-2])
             obj.public_send("#{prop}=", value)
             if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
               __recompute_dynamic_aliases__
@@ -186,7 +186,7 @@ class MiniTwin
       end
 
       def create_nested_class(name:, &block)
-        Class.new(MiniTwin).tap do |klass|
+        Class.new(Minitwin).tap do |klass|
           if defined?(ActiveModel::Name)
             klass.define_singleton_method(:model_name) do
               ActiveModel::Name.new(self, nil, name.to_s)
@@ -277,7 +277,7 @@ class MiniTwin
       def build_regular_getter(name:, default:, type:)
         # Compute ivar_name at definition time for JIT optimization.
         # Type coercion happens on assignment (setter) so the getter just reads.
-        ivar = MiniTwin::Utils.ivar_name(name)
+        ivar = Minitwin::Utils.ivar_name(name)
         -> {
           if instance_variable_defined?(ivar)
             val = instance_variable_get(ivar)

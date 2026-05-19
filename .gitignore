@@ -37,3 +37,6 @@
 
 docs
 *.local.json
+
+# Generated aggregate RBS file (run with MINITWIN_RBS_OUT to regenerate locally)
+sig/minitwin_generated.rbs

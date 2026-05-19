@@ -1,12 +1,12 @@
 require "test_helper"
 
 class DynamicAliasesSkipTest < ActiveSupport::TestCase
-  class NoAliases < MiniTwin
+  class NoAliases < Minitwin
     property :name
     property :age
   end
 
-  class WithDynamicAlias < MiniTwin
+  class WithDynamicAlias < Minitwin
     property :name, as: -> { "n_#{age}" }
     property :age
   end

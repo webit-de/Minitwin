@@ -6,7 +6,7 @@ class SyncNestedTest < ActiveSupport::TestCase
   ProfileModel = Struct.new(:bio, :contact)
   UserModel = Struct.new(:name, :profile)
 
-  class UserTwin < MiniTwin
+  class UserTwin < Minitwin
     property :name
     property :profile do
       property :bio

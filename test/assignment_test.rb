@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class AssignSubTwin < MiniTwin
+class AssignSubTwin < Minitwin
   property :sub_property
   property :another_sub_property, default: "default"
   property :bool?, type: Types::Params::Bool.lax
@@ -24,7 +24,7 @@ class AssignmentTest < ActiveSupport::TestCase
   end
 
   test "assign_hash updates array element by index when not a twin/hash" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       collection :items
     end
     twin = klass.new(items: [1,2,3])
@@ -42,7 +42,7 @@ class AssignmentTest < ActiveSupport::TestCase
   end
 
   test "should not assign read-only value as hash" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :my_usual_prop
       property :my_readonly_prop, readonly: true
       property :my_nested do
@@ -87,7 +87,7 @@ class AssignmentTest < ActiveSupport::TestCase
         :my_readonly_nested
       ).new("new usual", "new ro", sub_model.new("new sub ro"), sub_model.new("new sub prop"))
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :my_usual_prop
       property :my_readonly_prop, readonly: true
       property :my_nested do

@@ -3,7 +3,7 @@ require "mini_twin"
 
 class TypesIntegrationTest < ActiveSupport::TestCase
   test "getter uses type_default_value for Integer/String/Bool" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :i, type: Types::Integer
       property :s, type: Types::String
     end
@@ -13,7 +13,7 @@ class TypesIntegrationTest < ActiveSupport::TestCase
   end
 
   test "infer_default_from_type_string method-level rescue executes" do
-    helper = Class.new { extend MiniTwin::ClassMethods }
+    helper = Class.new { extend Minitwin::ClassMethods }
     bomb = Object.new
     def bomb.to_s; raise "boom"; end
     # Should rescue and return nil
@@ -21,7 +21,7 @@ class TypesIntegrationTest < ActiveSupport::TestCase
   end
 end
 
-class LambdaTypeTwin < MiniTwin
+class LambdaTypeTwin < Minitwin
   property :count, type: ->(v) { Integer(v) }, default: 0
   property :label, type: ->(v) { v.to_s.strip }
 end

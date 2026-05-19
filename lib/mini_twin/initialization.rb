@@ -1,11 +1,11 @@
-class MiniTwin
+class Minitwin
   # Instance construction and low-level helpers used by the DSL-generated
   # accessors. Filters unknown keys on initialize and seeds nested block
   # properties so that validations on nested twins can run.
   module Initialization
     # Cache constant references for JIT optimization
-    ALIASES_VAR = MiniTwin::DYNAMIC_ALIASES_VAR
-    ALIASES_REV_VAR = MiniTwin::DYNAMIC_ALIASES_REV_VAR
+    ALIASES_VAR = Minitwin::DYNAMIC_ALIASES_VAR
+    ALIASES_REV_VAR = Minitwin::DYNAMIC_ALIASES_REV_VAR
     def initialize(**args)
       allowed_keys = self.class.send(:allowed_attribute_keys)
 
@@ -20,7 +20,7 @@ class MiniTwin
 
       # Skip per-setter alias recomputation during bulk init; recompute once after
       @__skip_alias_recompute__ = true
-      if MiniTwin.send(:active_model_initialized?, self.class)
+      if Minitwin.send(:active_model_initialized?, self.class)
         super(attrs)
       else
         # :nocov: (exercised only without ActiveModel; covered by subprocess test)
@@ -47,7 +47,7 @@ class MiniTwin
     end
 
     def define_instance_variable(name:, value:)
-      instance_variable_set(MiniTwin::Utils.ivar_name(name), value)
+      instance_variable_set(Minitwin::Utils.ivar_name(name), value)
     end
 
     # Define or update per-instance alias methods for properties/collections
@@ -107,7 +107,7 @@ class MiniTwin
 
     def __compute_nested_alias_name__(entry)
       obj = public_send(entry[:group])
-      obj = MiniTwin::Utils.traverse_path(obj, entry[:path][0..-2])
+      obj = Minitwin::Utils.traverse_path(obj, entry[:path][0..-2])
       obj.instance_exec(&entry[:as])
     rescue StandardError
       # Expected: Nested path traversal or dynamic alias proc may fail.

@@ -4,7 +4,7 @@ require "mini_twin"
 class ToObjectTest < ActiveSupport::TestCase
   Person = Struct.new(:name, :age)
 
-  class PersonTwin < MiniTwin
+  class PersonTwin < Minitwin
     property :name
     property :age
   end

@@ -3,7 +3,7 @@ require "mini_twin"
 
 class TypesTest < ActiveSupport::TestCase
   test "type_default_value covers Integer, String, Bool branches" do
-    helper = Class.new(MiniTwin)
+    helper = Class.new(Minitwin)
     int_t = Object.new
     def int_t.primitive; Integer; end
     def int_t.to_s; "Integer"; end
@@ -24,7 +24,7 @@ class TypesTest < ActiveSupport::TestCase
   end
 
   test "infer_default_from_type_string rescue path" do
-    helper = Class.new(MiniTwin)
+    helper = Class.new(Minitwin)
     weird = WeirdType.new
     assert_equal 0, helper.send(:infer_default_from_type_string, weird)
   end

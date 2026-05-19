@@ -11,7 +11,7 @@ class AMContract
   attr_accessor :property, :with_collection
 end
 
-class SubTwinFromCollection < MiniTwin
+class SubTwinFromCollection < Minitwin
   property :property
   collection :with_collection do
     property :sub_property, as: :renamed
@@ -38,7 +38,7 @@ class FromCollectionActiveModelTest < ActiveSupport::TestCase
     assert_equal 2, twin.with_collection.size
     first = twin.with_collection.first
     second = twin.with_collection.last
-    assert_kind_of MiniTwin, first
+    assert_kind_of Minitwin, first
     assert_equal "x", first.renamed
     assert_equal "y", first.another_sub_property
     assert_equal "u", second.renamed

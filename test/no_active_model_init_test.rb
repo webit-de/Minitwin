@@ -6,7 +6,7 @@ class NoActiveModelInitTest < ActiveSupport::TestCase
     script = <<~RUBY
       $LOAD_PATH.unshift(#{lib_path.inspect})
 
-      # Stub require to skip active_model so MiniTwin loads without it.
+      # Stub require to skip active_model so Minitwin loads without it.
       module Kernel
         alias_method :__orig_require__, :require
         def require(path)
@@ -18,7 +18,7 @@ class NoActiveModelInitTest < ActiveSupport::TestCase
       require "mini_twin"
       raise "ActiveModel leaked" if defined?(ActiveModel::Model)
 
-      class T < MiniTwin
+      class T < Minitwin
         property :name
       end
 

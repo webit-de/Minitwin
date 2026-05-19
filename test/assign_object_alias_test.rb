@@ -1,31 +1,31 @@
 require "test_helper"
 require "mini_twin"
 
-class AssignAliasTwin < MiniTwin
+class AssignAliasTwin < Minitwin
   property :sub_property, as: :renamed
   property :another_sub_property, default: "default"
 end
 
-class AssignAliasWithCollectionTwin < MiniTwin
+class AssignAliasWithCollectionTwin < Minitwin
   collection :items do
     property :sub_property, as: :renamed
     property :another_sub_property
   end
 end
 
-class AssignAliasAsLambdaTwin < MiniTwin
+class AssignAliasAsLambdaTwin < Minitwin
   property :sub_property
   property :another_sub_property, as: -> { @sub_property }
 end
 
-class NestedAssignAliasAsLambdaTwin < MiniTwin
+class NestedAssignAliasAsLambdaTwin < Minitwin
   nested :some_nesting do
     property :sub_property
     property :another_sub_property, as: -> { @sub_property }
   end
 end
 
-class CollectionDynamicAliasTwin < MiniTwin
+class CollectionDynamicAliasTwin < Minitwin
   collection :items do
     property :sub_property
     property :another_sub_property, as: -> { @sub_property }
@@ -116,7 +116,7 @@ class AssignObjectAliasTest < ActiveSupport::TestCase
     refute h2[:items][0].key?(:k1)
   end
 
-  class CollectionNameDynamicAliasTwin < MiniTwin
+  class CollectionNameDynamicAliasTwin < Minitwin
     property :alias_key
     collection :items, as: -> { alias_key } do
       property :value

@@ -1,7 +1,7 @@
 require "test_helper"
 
 class AssignHashPerfTest < ActiveSupport::TestCase
-  class T < MiniTwin
+  class T < Minitwin
     property :name, as: -> { "n_#{name}" }
     property :age
     property :email

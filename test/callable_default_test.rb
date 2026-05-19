@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class CallableDefaultTwin < MiniTwin
+class CallableDefaultTwin < Minitwin
   property :created_at, default: -> { Time.now }
   property :static_value, default: "hello"
 end

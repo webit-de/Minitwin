@@ -1,12 +1,12 @@
 require "test_helper"
 require "mini_twin"
 
-class InitSubTwin < MiniTwin
+class InitSubTwin < Minitwin
   property :sub_property
   property :another_sub_property, default: "default"
 end
 
-class InitTestTwin < MiniTwin
+class InitTestTwin < Minitwin
   property :wrong_runtime, as: :runtime, type: Types::Params::Integer.lax, default: 0, validates: { presence: true }
 
   property :wrong_lego, as: :lego do

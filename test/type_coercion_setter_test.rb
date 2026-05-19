@@ -14,7 +14,7 @@ class TypeCoercionSetterTest < ActiveSupport::TestCase
 
   CT = CountingType.new
 
-  class T < MiniTwin
+  class T < Minitwin
     property :n, type: CT
   end
 
@@ -39,7 +39,7 @@ class TypeCoercionSetterTest < ActiveSupport::TestCase
   end
 
   test "dry-types Integer still works" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :i, type: Types::Coercible::Integer
     end
     t = klass.new(i: "42")

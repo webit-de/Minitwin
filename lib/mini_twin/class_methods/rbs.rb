@@ -1,4 +1,4 @@
-class MiniTwin
+class Minitwin
   module ClassMethods
     module Rbs
       def to_rbs

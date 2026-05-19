@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class ValidationTwin < MiniTwin
+class ValidationTwin < Minitwin
   property :wrong_runtime, as: :runtime, type: Types::Params::Integer.lax, default: 0
   property :validated_property, validates: { presence: true }
   property :duplo do

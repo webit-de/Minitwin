@@ -4,7 +4,7 @@ require "mini_twin"
 class DslRescueCompositionTest < ActiveSupport::TestCase
   test "composition getter rescues collections meta lookup errors" do
     src = Struct.new(:foo).new("value")
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :foo, on: :src
     end
     t = klass.from_objects(src: src)

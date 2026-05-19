@@ -1,12 +1,12 @@
 require "test_helper"
 require "mini_twin"
 
-class TwinFromObject < MiniTwin
+class TwinFromObject < Minitwin
   property :sub_property, as: :renamed
   property :another_sub_property, default: "default"
 end
 
-class NestedTwinFromObject < MiniTwin
+class NestedTwinFromObject < Minitwin
   property :sub_property, as: :renamed
   property :another_sub_property do
     property :name
@@ -14,7 +14,7 @@ class NestedTwinFromObject < MiniTwin
   end
 end
 
-class SubTwinFromObject < MiniTwin
+class SubTwinFromObject < Minitwin
   property :property, on: :contract
   collection :with_collection, on: :contract do
     property :sub_property, as: :renamed

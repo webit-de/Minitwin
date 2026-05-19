@@ -3,7 +3,7 @@ require "mini_twin"
 
 class CoverageAdditionalTest < ActiveSupport::TestCase
   test "initialize uses allowed_attribute_keys when provided" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.allowed_attribute_keys; Set[:foo]; end
       def foo=(v); @foo = v; end
       def foo; @foo; end
@@ -16,7 +16,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
   end
 
   test "assign_attribute uses setter branch when available" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def foo=(v); @foo = v; end
       def foo; @foo; end
     end
@@ -27,7 +27,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
 
   test "composition getter returns default and type default when raw is nil" do
     model = Struct.new(:name, :age).new(nil, nil)
-    twin = Class.new(MiniTwin) do
+    twin = Class.new(Minitwin) do
       property :name, on: :model, default: "x"
       property :age, on: :model, type: Types::Integer
     end.from_object(model)
@@ -40,7 +40,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
       attr_reader :written
       def missing_getter=(v); @written = true; end
     end.new
-    twin = Class.new(MiniTwin) do
+    twin = Class.new(Minitwin) do
       def self.allowed_attribute_keys; Set[:missing_getter]; end
       def missing_getter=(v); @missing = v; end
     end.new
@@ -62,7 +62,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
       def items=(v); @assigned = v; end
     end.new(coll.new([item.new("a"), item.new("b")]))
 
-    twin = Class.new(MiniTwin) do
+    twin = Class.new(Minitwin) do
       collection :items do
         property :val
       end
@@ -82,7 +82,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
 
     m = Struct.new(:items).new(array)
 
-    twin = Class.new(MiniTwin) do
+    twin = Class.new(Minitwin) do
       collection :items do
         property :id
         property :value
@@ -103,7 +103,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
       def call(x); raise "nope"; end
     end.new
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name; "UntypedTwin"; end
       property :myst, type: dummy_t
       collection :stuff
@@ -114,7 +114,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
   end
 
   test "caches setter_methods builds cache" do
-    k = Class.new(MiniTwin) do
+    k = Class.new(Minitwin) do
       property :a
       property :b
     end
@@ -127,10 +127,10 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
     val = Class.new do
       def initialize; @foo = 9; end
     end.new
-    inner = Class.new(MiniTwin) do
+    inner = Class.new(Minitwin) do
       property :foo
     end
-    outer = Class.new(MiniTwin) do
+    outer = Class.new(Minitwin) do
       property :child, twin: inner
     end
     obj = outer.new
@@ -143,7 +143,7 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
       def attributes; {}; end
       def items; Object.new; end
     end.new
-    container = Class.new(MiniTwin) do
+    container = Class.new(Minitwin) do
       collection :items
     end
     res = container.send(:coerce_value_to_twin, src, container)

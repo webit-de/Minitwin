@@ -36,7 +36,7 @@ class FakeContract
   end
 end
 
-class ManagedServiceTwin < MiniTwin
+class ManagedServiceTwin < Minitwin
   property :id
   property :productname, as: :product_name
   property :productno, as: :product_no

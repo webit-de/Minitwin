@@ -19,7 +19,7 @@ class AliasModel2
   end
 end
 
-class FromCollectionAliasTwin < MiniTwin
+class FromCollectionAliasTwin < Minitwin
   property :alias_name
 end
 

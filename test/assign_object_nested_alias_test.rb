@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class AssignNestedTwin < MiniTwin
+class AssignNestedTwin < Minitwin
   nested :nested do
     property :rename_me, as: :nested_renamed
     property :plain

@@ -2,8 +2,8 @@ require_relative "lib/mini_twin/version"
 
 Gem::Specification.new do |spec|
   spec.name = "mini-twin"
-  spec.version = MiniTwin::VERSION
-  spec.authors = [ 'Johannes Balk' ]
+  spec.version = Minitwin::VERSION
+  spec.authors = [ 'Johannes Balk', 'Roland Schwarzer' ]
   spec.email = [ 'eteam@webit.de' ]
   spec.homepage = 'https://www.webit.de'
 

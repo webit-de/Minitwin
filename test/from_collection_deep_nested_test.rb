@@ -34,7 +34,7 @@ end
 
 # Deeply nested twin with a block property containing a collection, which
 # itself contains a further nested collection.
-class DeepCollectionTwin < MiniTwin
+class DeepCollectionTwin < Minitwin
   property :id
   property :managed_service do
     property :title
@@ -87,7 +87,7 @@ class FromCollectionDeepNestedTest < ActiveSupport::TestCase
     assert_equal 1, first.id
     assert_equal "MS-A", first.managed_service.title
     assert_equal 2, first.managed_service.categories.size
-    assert_kind_of MiniTwin, first.managed_service.categories.first
+    assert_kind_of Minitwin, first.managed_service.categories.first
     assert_equal "C1", first.managed_service.categories.first.name
     assert_equal ["s1", "s2"], first.managed_service.categories.first.subcategories.map(&:code)
     assert_equal ["I1", "I2"], first.managed_service.categories.map { |c| c.info.label }

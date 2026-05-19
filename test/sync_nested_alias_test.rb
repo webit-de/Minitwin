@@ -5,7 +5,7 @@ class SyncNestedAliasTest < ActiveSupport::TestCase
   # Flat model (like ActiveRecord) — no nested structure, just attributes
   FlatModel = Struct.new(:customer_from, :extcusref, :draft_reference, :orderdate, :orderno)
 
-  class NestedAliasedTwin < MiniTwin
+  class NestedAliasedTwin < Minitwin
     nested :order do
       property :customer_from
       property :extcusref
@@ -48,7 +48,7 @@ class SyncNestedAliasTest < ActiveSupport::TestCase
   # Regression: nested property with as: + type coercion
   TypedModel = Struct.new(:activation_date)
 
-  class TypedNestedTwin < MiniTwin
+  class TypedNestedTwin < Minitwin
     nested :settings do
       property :start_date, as: :activation_date, type: Types::Params::Date.lax
     end
@@ -65,7 +65,7 @@ class SyncNestedAliasTest < ActiveSupport::TestCase
   # Multiple nested blocks syncing to same flat model
   MultiModel = Struct.new(:name, :mapped_code, :target_date)
 
-  class MultiNestedTwin < MiniTwin
+  class MultiNestedTwin < Minitwin
     nested :identity do
       property :name
       property :code, as: :mapped_code

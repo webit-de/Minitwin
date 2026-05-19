@@ -32,7 +32,7 @@ class ContractWithRelation
   end
 end
 
-class ContractCompTwin < MiniTwin
+class ContractCompTwin < Minitwin
   collection :items, on: :contract do
     property :sub, as: :renamed
   end
@@ -45,7 +45,7 @@ class CompositionHasManyTest < ActiveSupport::TestCase
     twin = ContractCompTwin.from_objects(contract: contract)
 
     assert_equal 2, twin.items.size
-    assert_kind_of MiniTwin, twin.items.first
+    assert_kind_of Minitwin, twin.items.first
     assert_equal "x", twin.items.first.renamed
     assert_equal "y", twin.items.last.renamed
   end

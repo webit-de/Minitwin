@@ -1,11 +1,11 @@
 require "test_helper"
 require "mini_twin"
 
-class RbsInnerTwin < MiniTwin
+class RbsInnerTwin < Minitwin
   property :x, type: Types::Params::Integer.lax
 end
 
-class RbsTwin < MiniTwin
+class RbsTwin < Minitwin
   property :id, type: Types::Params::Integer.lax
   property :enabled, type: Types::Params::Bool.lax
   property :name
@@ -18,7 +18,7 @@ end
 
 class RbsTest < ActiveSupport::TestCase
   test "rbs_type_for covers nested and untyped branches" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name; "RbsBranchTwin"; end
       property :simple
       property :nested do

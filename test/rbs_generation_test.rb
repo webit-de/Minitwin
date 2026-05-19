@@ -3,7 +3,7 @@ require "mini_twin"
 
 class RbsGenerationTest < ActiveSupport::TestCase
   test "should generate RBS for simple twin" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name
         "SimpleTwin"
       end
@@ -22,7 +22,7 @@ class RbsGenerationTest < ActiveSupport::TestCase
   end
 
   test "bool mapping via primitive and untyped fallback type" do
-    bool_klass = Class.new(MiniTwin) do
+    bool_klass = Class.new(Minitwin) do
       def self.name; "BoolPrimTwin"; end
       property :flag, type: Types::Bool
     end
@@ -35,7 +35,7 @@ class RbsGenerationTest < ActiveSupport::TestCase
       def inspect; "Mystery"; end
       def class; Struct; end
     end.new
-    untyped_klass = Class.new(MiniTwin) do
+    untyped_klass = Class.new(Minitwin) do
       def self.name; "UntypedPrimTwin"; end
       property :myst, type: dummy_t
     end
@@ -44,7 +44,7 @@ class RbsGenerationTest < ActiveSupport::TestCase
   end
 
   test "should generate RBS for nested twins" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name
         "NestedTwin"
       end
@@ -62,7 +62,7 @@ class RbsGenerationTest < ActiveSupport::TestCase
   end
 
   test "should generate RBS for collections" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name
         "CollectionTwin"
       end
@@ -80,7 +80,7 @@ class RbsGenerationTest < ActiveSupport::TestCase
   end
 
   test "should handle RBS generation for twins with aliases" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name
         "AliasedTwin"
       end
@@ -96,7 +96,7 @@ class RbsGenerationTest < ActiveSupport::TestCase
   end
 
   test "should generate RBS with typed properties" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name
         "TypedTwin"
       end
@@ -118,7 +118,7 @@ class RbsGenerationTest < ActiveSupport::TestCase
   end
 
   test "should generate RBS for twin without properties" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name
         "EmptyTwin"
       end

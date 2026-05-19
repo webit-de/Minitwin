@@ -1,12 +1,12 @@
 require "test_helper"
 require "mini_twin"
 
-class EmbSubTwin < MiniTwin
+class EmbSubTwin < Minitwin
   property :sub_property
   property :another_sub_property, default: "default"
 end
 
-class EmbeddingTwin < MiniTwin
+class EmbeddingTwin < Minitwin
   property :sub_twin, twin: EmbSubTwin
   collection :sub_twins, twin: EmbSubTwin
 end

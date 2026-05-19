@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class FromCollectionTwin < MiniTwin
+class FromCollectionTwin < Minitwin
   property :name
 end
 

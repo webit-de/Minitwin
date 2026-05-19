@@ -3,7 +3,7 @@ require "mini_twin"
 
 class RbsOutputExampleTest < ActiveSupport::TestCase
   test "should generate complete RBS for complex twin" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name
         "UserTwin"
       end
@@ -26,7 +26,7 @@ class RbsOutputExampleTest < ActiveSupport::TestCase
 
     # Verify structure
     rbs_lines = rbs.split("\n")
-    assert_equal rbs_lines[0], "class ::UserTwin < ::MiniTwin"
+    assert_equal rbs_lines[0], "class ::UserTwin < ::Minitwin"
     assert_equal rbs_lines[1], "  attr_reader name: ::String"
     assert_equal rbs_lines[2], "  attr_writer name: ::String"
     assert_equal rbs_lines[3], "  attr_reader age: ::Integer"
@@ -44,7 +44,7 @@ class RbsOutputExampleTest < ActiveSupport::TestCase
   end
 
   test "should generate RBS with proper formatting for multiple properties" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       def self.name
         "ProductTwin"
       end

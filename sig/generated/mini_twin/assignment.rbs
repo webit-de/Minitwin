@@ -1,6 +1,6 @@
 # Generated from lib/mini_twin/assignment.rb with RBS::Inline
 
-class MiniTwin
+class Minitwin
   # Assign/update helpers to merge incoming data into an existing twin.
   # - assign_object: copy readable attributes from an object and remember it
   # - assign_hash / assign_params: update only known attributes, recursing into

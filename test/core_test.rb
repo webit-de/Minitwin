@@ -1,11 +1,11 @@
 require "test_helper"
 require "mini_twin"
 
-class MiniTwinCoreTest < ActiveSupport::TestCase
+class CoreTest < ActiveSupport::TestCase
   test "should expose VERSION and DSL" do
-    assert MiniTwin::VERSION
+    assert Minitwin::VERSION
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :id
       collection :items do
         property :name
@@ -18,7 +18,7 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
   end
 
   test "to_hash falls back when serializable_getters not available" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :a
     end
     # Hide serializable_getters to force else branch
@@ -31,7 +31,7 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
   end
 
   test "ordered_methods_for_pp else branch and inspect formatting" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :a
       property :b
     end
@@ -51,27 +51,27 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
     assert_includes s, "b: 2"
   end
 
-  test "inherited hook tracks descendants of MiniTwin subclasses" do
-    # Create a direct subclass of MiniTwin
-    parent_klass = Class.new(MiniTwin) do
+  test "inherited hook tracks descendants of Minitwin subclasses" do
+    # Create a direct subclass of Minitwin
+    parent_klass = Class.new(Minitwin) do
       property :id
     end
 
-    # Create a subclass of the subclass (not directly from MiniTwin)
+    # Create a subclass of the subclass (not directly from Minitwin)
     child_klass = Class.new(parent_klass) do
       property :name
     end
 
-    # Both should be tracked in MiniTwin.__descendants__
-    assert_includes MiniTwin.__descendants__, parent_klass,
-      "Direct MiniTwin subclass should be tracked"
-    assert_includes MiniTwin.__descendants__, child_klass,
-      "Subclass of MiniTwin subclass should also be tracked in MiniTwin.__descendants__"
+    # Both should be tracked in Minitwin.__descendants__
+    assert_includes Minitwin.__descendants__, parent_klass,
+      "Direct Minitwin subclass should be tracked"
+    assert_includes Minitwin.__descendants__, child_klass,
+      "Subclass of Minitwin subclass should also be tracked in Minitwin.__descendants__"
   end
 
   test "allowed_attribute_keys includes inherited properties" do
     # Create a parent class with a property
-    parent_klass = Class.new(MiniTwin) do
+    parent_klass = Class.new(Minitwin) do
       property :inherited_prop
     end
 
@@ -91,7 +91,7 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
   test "initialize passes attributes as positional hash to ActiveModel" do
     # This test verifies that attributes are properly passed through
     # ActiveModel::API#initialize (which expects a positional hash, not kwargs)
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :value
     end
@@ -107,7 +107,7 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
   end
 
   test "allowed_attribute_keys_array preserves property definition order" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :charlie
       property :alpha
       property :bravo
@@ -117,7 +117,7 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
   end
 
   test "allowed_attribute_keys_array appends inherited keys not in property_order at the end" do
-    parent_klass = Class.new(MiniTwin) do
+    parent_klass = Class.new(Minitwin) do
       property :parent_prop
     end
 
@@ -138,7 +138,7 @@ class MiniTwinCoreTest < ActiveSupport::TestCase
   test "initialize uses private allowed_attribute_keys method" do
     # This test verifies that initialize correctly calls the private
     # allowed_attribute_keys method using respond_to?(name, true) and send()
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :age
     end

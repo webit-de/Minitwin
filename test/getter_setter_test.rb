@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class GetterSetterTwin < MiniTwin
+class GetterSetterTwin < Minitwin
   property :wrong_runtime, as: :runtime, type: Types::Params::Integer.lax, default: 0
   property :runtime_greater_than_3, getter: -> { runtime > 3 }
   property :set_days_with_variable_offset, setter: ->(value) { value.days.from_now.to_date }

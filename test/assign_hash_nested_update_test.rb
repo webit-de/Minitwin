@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class AssignNestedOuter < MiniTwin
+class AssignNestedOuter < Minitwin
   collection :items do
     property :value
     property :nested do

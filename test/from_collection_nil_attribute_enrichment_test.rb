@@ -30,7 +30,7 @@ class FakeContract2
   end
 end
 
-class ManagedServiceTwinCollection < MiniTwin
+class ManagedServiceTwinCollection < Minitwin
   property :id
   property :managed_service_category do
     property :value, as: :category

@@ -6,7 +6,7 @@ class SyncObjectTest < ActiveSupport::TestCase
   test "should handle to_object method" do
     model = Struct.new(:name, :value).new("from_model", 42)
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
       property :value
     end
@@ -21,7 +21,7 @@ class SyncObjectTest < ActiveSupport::TestCase
     assert_equal 10, model.value
   end
 
-  class SimpleContract < MiniTwin
+  class SimpleContract < Minitwin
     property :name, validates: { presence: true }
     property :age, validates: { presence: true, numericality: { greater_than: 17 } }
   end
@@ -81,7 +81,7 @@ class SyncObjectTest < ActiveSupport::TestCase
     item = Struct.new(:value)
     model = Struct.new(:items).new(coll.new([item.new("a"), item.new("b")]))
 
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       collection :items do
         property :value
       end
@@ -95,7 +95,7 @@ class SyncObjectTest < ActiveSupport::TestCase
 
   test "sync picks first stored model when default :model is missing" do
     model = Struct.new(:name).new("X")
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       property :name
     end
     twin = klass.from_objects(other: model)

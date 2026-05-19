@@ -1,7 +1,7 @@
 require "test_helper"
 require "mini_twin"
 
-class NestedTwin < MiniTwin
+class NestedTwin < Minitwin
   property :sub_property, as: :renamed
   property :another_sub_property, default: "default"
   nested :nested do
@@ -12,7 +12,7 @@ end
 
 class NestedTwinTest < ActiveSupport::TestCase
   test "nested const lookup rescue path executes" do
-    klass = Class.new(MiniTwin) do
+    klass = Class.new(Minitwin) do
       nested :group do
         property :a
       end
@@ -44,7 +44,7 @@ class NestedTwinTest < ActiveSupport::TestCase
   end
 end
 
-class DeepNestedTwin < MiniTwin
+class DeepNestedTwin < Minitwin
   nested :outer do
     property :a
     nested :inner do

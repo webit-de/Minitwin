@@ -8,6 +8,11 @@ SimpleCov.start do
   minimum_coverage line: 99, branch: 80
 end
 
+# Surface Ruby deprecation warnings (deprecate_constant et al.) during tests.
+# Defaults to false on Ruby 3.0+; we enable it so the suite exercises and
+# verifies the deprecation signal.
+Warning[:deprecated] = true
+
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 require "minitest/autorun"
@@ -27,7 +32,7 @@ require "action_controller"
 require "active_model"
 
 # Provide Types shorthand for dry-types in tests
-# (MiniTwin no longer ships its own Types module)
+# (Minitwin no longer ships its own Types module)
 require "mini_twin"
 module Types
   include Dry.Types()

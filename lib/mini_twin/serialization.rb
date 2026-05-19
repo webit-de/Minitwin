@@ -1,15 +1,15 @@
-class MiniTwin
+class Minitwin
   # Serialization to Hash/JSON and ActiveModel validation aggregation.
   # Converts nested twins recursively and preserves array items (dropping only
   # nil). When ActiveModel validations are available, nested errors are
   # surfaced on the parent using dot/bracket notation.
   module Serialization
     # Cache constant references for JIT optimization
-    ALIASES_VAR = MiniTwin::DYNAMIC_ALIASES_VAR
-    NESTED_PREFIX = MiniTwin::NESTED_READER_PREFIX
+    ALIASES_VAR = Minitwin::DYNAMIC_ALIASES_VAR
+    NESTED_PREFIX = Minitwin::NESTED_READER_PREFIX
 
     def to_hash(render_nil: false)
-      hash = MiniTwin.hash_klass.new
+      hash = Minitwin.hash_klass.new
 
       methods_to_serialize = self.class.send(:serializable_getters)
 
@@ -111,7 +111,7 @@ class MiniTwin
 
     def transform_value_for_serialization(value)
       case value
-      when MiniTwin
+      when Minitwin
         value.to_hash
       when Array
         value.filter_map { |item| item.respond_to?(:to_hash) ? item.to_hash : item }

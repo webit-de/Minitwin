@@ -28,7 +28,7 @@ class ARLikeUser
   end
 end
 
-class UserWithHasOneTwin < MiniTwin
+class UserWithHasOneTwin < Minitwin
   property :id, type: Types::Params::Integer.lax
   property :profile do
     property :name

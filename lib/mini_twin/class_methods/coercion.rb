@@ -1,4 +1,4 @@
-class MiniTwin
+class Minitwin
   module ClassMethods
     module Coercion
       private
@@ -72,7 +72,7 @@ class MiniTwin
         return {} unless value.respond_to?(:instance_variables) && value.instance_variables.any?
 
         value.instance_variables.each_with_object({}) do |var, attrs|
-          attrs[MiniTwin::Utils.ivar_to_key(var)] = value.instance_variable_get(var)
+          attrs[Minitwin::Utils.ivar_to_key(var)] = value.instance_variable_get(var)
         end
       end
 

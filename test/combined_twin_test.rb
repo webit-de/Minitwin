@@ -1,12 +1,12 @@
 require "test_helper"
 require "mini_twin"
 
-class CAddressTwin < MiniTwin
+class CAddressTwin < Minitwin
   property :street
   property :city
 end
 
-class CItemTwin < MiniTwin
+class CItemTwin < Minitwin
   property :name, validates: { presence: true }
   property :quantity, type: Types::Params::Integer.lax, default: 0
   property :block_in_item do
@@ -14,7 +14,7 @@ class CItemTwin < MiniTwin
   end
 end
 
-class CombinedTwin < MiniTwin
+class CombinedTwin < Minitwin
   # Scalars with options
   property :count, type: Types::Params::Integer.lax, default: 1
   property :name, validates: { presence: true }

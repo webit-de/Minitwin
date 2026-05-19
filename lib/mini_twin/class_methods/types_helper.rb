@@ -1,4 +1,4 @@
-class MiniTwin
+class Minitwin
   module ClassMethods
     module TypesHelper
       private
@@ -57,7 +57,7 @@ class MiniTwin
       def attempt_type_coercion(raw_value, type)
         return raw_value unless type
         type.call(raw_value)
-      rescue *MiniTwin.send(:coercion_error_classes)
+      rescue *Minitwin.send(:coercion_error_classes)
         raw_value
       end
     end

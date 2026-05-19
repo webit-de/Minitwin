@@ -1,7 +1,7 @@
 require "test_helper"
 
 class InheritedTwinSerializeTest < ActiveSupport::TestCase
-  class Parent < MiniTwin
+  class Parent < Minitwin
     property :name
   end
 

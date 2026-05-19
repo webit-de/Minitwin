@@ -3,7 +3,7 @@ require "mini_twin"
 require "pp"
 require "stringio"
 
-class SerTestTwin < MiniTwin
+class SerTestTwin < Minitwin
   property :wrong_runtime, as: :runtime, type: Types::Params::Integer.lax, default: 0
   property :virtual_prop, virtual: true
   property :wrong_lego, as: :lego do
