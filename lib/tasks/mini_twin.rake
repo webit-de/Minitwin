@@ -4,7 +4,23 @@ require "fileutils"
 namespace :minitwin do
   desc "Generate RBS signatures for all loaded Minitwin subclasses into sig/generated/ " \
        "(override output dir with OUTPUT_DIR env var or task argument)"
-  task :generate_rbs, [:output_dir] do |_t, args|
+
+  # Load the `environment` task only if it is defined. (like in Rails)
+  env_dep = Rake::Task.task_defined?(:environment) ? [:environment] : []
+
+  task :generate_rbs, [:output_dir] => env_dep do |_t, args|
+    # Eager load the rails app if the task runs in Rails context
+    Rails.application.eager_load! if defined?(Rails)
+
+    # Require files "manually" in non-rails projects.
+    # Provide pattern for file paths as ENV var:
+    #
+    # MINITWIN_REQUIRE_GLOB="lib/**/*.rb" rake minitwin:generate_rbs
+    #
+    if (glob = ENV.fetch("MINITWIN_REQUIRE_GLOB", nil))
+      Dir[glob].each { |f| require File.expand_path(f) }
+    end
+
     output_dir = args[:output_dir] || ENV.fetch("MINITWIN_RBS_DIR", "sig/generated")
 
     twins = Minitwin.__descendants__.select(&:name).sort_by(&:name)
