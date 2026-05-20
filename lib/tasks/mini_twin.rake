@@ -5,7 +5,7 @@ namespace :minitwin do
   desc "Generate RBS signatures for all loaded Minitwin subclasses into sig/generated/ " \
        "(override output dir with OUTPUT_DIR env var or task argument)"
 
-  task :generate_rbs, [:output_dir] => env_dep do |_t, args|
+  task :generate_rbs, [:output_dir] do |_t, args|
     # In Rails, invoke :environment to ensure the app is fully initialized
     # before eager loading. We invoke it here rather than declaring it as a
     # prerequisite because Rails defines :environment *after* running railtie
