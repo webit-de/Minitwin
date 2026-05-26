@@ -1,0 +1,45 @@
+# Generated from lib/mini_twin/initialization.rb with RBS::Inline
+
+class Minitwin
+  # Instance construction and low-level helpers used by the DSL-generated
+  # accessors. Filters unknown keys on initialize and seeds nested block
+  # properties so that validations on nested twins can run.
+  module Initialization
+    # Cache constant references for JIT optimization
+    ALIASES_VAR: untyped
+
+    ALIASES_REV_VAR: untyped
+
+    # : (**untyped) -> instance
+    def initialize: (**untyped) -> instance
+
+    private
+
+    def assign_attribute: (method: untyped, value: untyped) -> untyped
+
+    def attribute_methods: () -> untyped
+
+    def define_instance_variable: (name: untyped, value: untyped) -> untyped
+
+    # Define or update per-instance alias methods for properties/collections
+    # where `as:` was provided as a Proc. The Proc is executed in the context
+    # of the instance to compute the alias name.
+    def __recompute_dynamic_aliases__: () -> untyped
+
+    def __recompute_aliases_for_collection__: (untyped collection_method) -> untyped
+
+    def __recompute_nested_aliases__: () -> untyped
+
+    def __compute_alias_name__: (untyped as_proc) -> untyped
+
+    def __compute_nested_alias_name__: (untyped entry) -> untyped
+
+    # Forbidden method names that should never be aliased for security reasons
+    FORBIDDEN_ALIAS_NAMES: untyped
+
+    def __apply_dynamic_alias__: (untyped target_method, untyped alias_name) -> untyped
+
+    # Public: expose current dynamic aliases as a Hash of alias_name => target_method
+    def dynamic_aliases: () -> untyped
+  end
+end

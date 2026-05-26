@@ -1,0 +1,20 @@
+# Generated from lib/mini_twin/class_methods/rbs.rb with RBS::Inline
+
+class Minitwin
+  module ClassMethods
+    module Rbs
+      # : () -> String
+      def to_rbs: () -> String
+
+      private
+
+      def rbs_type_for: (untyped meta) -> untyped
+
+      def rbs_elem_type_for: (untyped meta) -> untyped
+
+      def rbs_class_name: (untyped klass) -> untyped
+
+      def dry_type_to_rbs: (untyped t) -> untyped
+    end
+  end
+end

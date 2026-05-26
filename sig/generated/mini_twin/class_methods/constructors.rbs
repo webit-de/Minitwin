@@ -1,0 +1,41 @@
+# Generated from lib/mini_twin/class_methods/constructors.rb with RBS::Inline
+
+class Minitwin
+  module ClassMethods
+    module Constructors
+      # : () -> Hash[untyped, untyped]
+      def properties: () -> Hash[untyped, untyped]
+
+      # : () -> Hash[untyped, untyped]
+      def collections: () -> Hash[untyped, untyped]
+
+      # : (Hash[untyped, untyped] args) -> instance
+      def from_hash: (Hash[untyped, untyped] args) -> instance
+
+      # : (String body) -> instance
+      def from_json: (String body) -> instance
+
+      # Actually, this is expected to be an `ActionController::Parameters`
+      # object. The type will be unknown when used without rails. So for RBS
+      # the argument is typed `untyped`.
+      # : (untyped params) -> instance
+      def from_params: (untyped params) -> instance
+
+      # : (untyped model) -> instance
+      def from_object: (untyped model) -> instance
+
+      # : (Hash[Symbol, untyped] **models) -> instance
+      def from_objects: (**untyped models) -> untyped
+
+      # : (Array[untyped] models) -> Array[instance]
+      def from_collection: (Array[untyped] models) -> Array[instance]
+
+      # : (Symbol name) -> String | nil
+      def internal_model_name: (Symbol name) -> String
+
+      def enrich_attributes_from_models!: (untyped attributes, untyped models) -> untyped
+
+      def enrich_attribute_from_models: (untyped attributes, untyped models, untyped key, is_collection: untyped) -> untyped
+    end
+  end
+end

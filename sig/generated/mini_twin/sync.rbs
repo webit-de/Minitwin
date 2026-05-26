@@ -1,0 +1,15 @@
+# Generated from lib/mini_twin/sync.rb with RBS::Inline
+
+class Minitwin
+  module Sync
+    # Cache constant reference for JIT optimization
+    MODEL_PREFIX: untyped
+
+    # : (untyped, validate: bool) -> bool
+    def sync: (untyped, validate: bool) -> bool
+
+    private
+
+    def build_target_id_lookup: (untyped coll) -> untyped
+  end
+end

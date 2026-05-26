@@ -1,8 +1,11 @@
+# rbs_inline: enabled
+
 class Minitwin
   module Sync
     # Cache constant reference for JIT optimization
     MODEL_PREFIX = Minitwin::INTERNAL_MODEL_PREFIX
 
+    #: (untyped, validate: bool) -> bool
     def sync(model = nil, validate: true)
       # Resolve target model
       target_model = model

@@ -1,0 +1,19 @@
+# This should come from Dry Types, but they do not ship rbs signatures.
+
+module Types
+  module Params
+    String: untyped
+    Nil: untyped
+    Date: untyped
+    DateTime: untyped
+    Time: untyped
+    True: untyped
+    False: untyped
+    Bool: untyped
+    Integer: untyped
+    Float: untyped
+    Decimal: untyped
+    Array: untyped
+    Hash: untyped
+  end
+end

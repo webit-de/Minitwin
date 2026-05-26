@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 class Minitwin
   # Instance construction and low-level helpers used by the DSL-generated
   # accessors. Filters unknown keys on initialize and seeds nested block
@@ -6,6 +8,8 @@ class Minitwin
     # Cache constant references for JIT optimization
     ALIASES_VAR = Minitwin::DYNAMIC_ALIASES_VAR
     ALIASES_REV_VAR = Minitwin::DYNAMIC_ALIASES_REV_VAR
+
+    #: (**untyped) -> instance
     def initialize(**args)
       allowed_keys = self.class.send(:allowed_attribute_keys)
 

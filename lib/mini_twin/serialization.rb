@@ -1,3 +1,5 @@
+# rbs_inline: enabled
+
 class Minitwin
   # Serialization to Hash/JSON and ActiveModel validation aggregation.
   # Converts nested twins recursively and preserves array items (dropping only
@@ -8,6 +10,7 @@ class Minitwin
     ALIASES_VAR = Minitwin::DYNAMIC_ALIASES_VAR
     NESTED_PREFIX = Minitwin::NESTED_READER_PREFIX
 
+    #: (render_nil: bool) -> Hash[Symbol, untyped]
     def to_hash(render_nil: false)
       hash = Minitwin.hash_klass.new
 
@@ -45,10 +48,12 @@ class Minitwin
 
     alias_method :to_h, :to_hash
 
+    #: (**untyped) -> String
     def to_json(**opts)
       to_hash(**opts).to_json
     end
 
+    #: () -> Hash[Symbol, untyped]
     def attributes
       # Use setter-based attribute names and read via `send` to allow
       # accessing protected original readers when aliases (`as:`) are used.
@@ -57,6 +62,7 @@ class Minitwin
       end
     end
 
+    #: () -> bool
     def valid?
       # If ActiveModel validations are available and included, run them and
       # aggregate nested errors. Otherwise, consider the twin valid.
@@ -89,11 +95,14 @@ class Minitwin
       end
     end
 
+    #: () -> String
     def inspect
       attrs = to_hash.map { |k, v| "#{k}: #{v.inspect}" }.join(", ")
       "#<#{self.class.name} #{attrs}>"
     end
 
+    # Internal helper for PrettyPrint. Do not call this on your own.
+    #: (PP) -> void
     def pretty_print(q)
       q.object_group(self) do
         q.breakable

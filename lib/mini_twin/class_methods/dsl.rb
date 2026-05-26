@@ -1,26 +1,42 @@
+# rbs_inline: enabled
+
 class Minitwin
   module ClassMethods
     module Dsl
+
+      #: () -> Array[Symbol]
       def block_properties
         @block_properties ||= []
       end
 
+      #: () -> Array[Symbol]
       def collection_properties
         @collection_properties ||= []
       end
 
+      #: () -> Array[Symbol]
       def virtual_properties
         @virtual_properties ||= []
       end
 
+      #: () -> Array[Symbol]
       def property_order
         @property_order ||= []
       end
 
+      #: () -> Array[Hash]
       def dynamic_nested_aliases
         @dynamic_nested_aliases ||= []
       end
 
+      # @rbs name: Symbol
+      # @rbs validates: Hash[Symbol, untyped]
+      # @rbs default: untyped
+      # @rbs as: Symbol | Proc
+      # @rbs getter: Proc
+      # @rbs twin: untyped
+      # @rbs on: Symbol
+      # @rbs return: void
       def collection(name, validates: {}, default: [], as: nil, getter: nil, twin: nil, on: nil, **_opts, &block)
         nested_class = block ? create_nested_class(name:, &block) : nil
         element_klass = twin || nested_class
@@ -47,6 +63,18 @@ class Minitwin
         add_to_property_order(name)
       end
 
+      # @rbs name: Symbol
+      # @rbs validates: Hash[Symbol, untyped]
+      # @rbs default: untyped
+      # @rbs as: Symbol | Proc
+      # @rbs virtual: bool
+      # @rbs readonly: bool
+      # @rbs type: untyped
+      # @rbs getter: Proc
+      # @rbs setter: Proc
+      # @rbs twin: untyped
+      # @rbs on: Symbol
+      # @rbs return: void
       def property(name, validates: {}, default: nil, as: nil, virtual: false, readonly: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
         nested_class = nil
 
@@ -99,6 +127,7 @@ class Minitwin
         add_to_property_order(name)
       end
 
+      #: (Symbol) -> void
       def nested(name, &block)
         raise ArgumentError, "nested requires a block" unless block_given?
         property(name, &block)

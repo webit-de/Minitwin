@@ -1,6 +1,10 @@
+# rbs_inline: enabled
+
 class Minitwin
   module ClassMethods
     module Rbs
+
+      #: () -> String
       def to_rbs
         # :nocov:
         return "" unless name

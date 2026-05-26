@@ -1,6 +1,10 @@
+# rbs_inline: enabled
+
 class Minitwin
   module ClassMethods
     module Caches
+
+      #: () -> bool
       def has_dynamic_aliases?
         return @has_dynamic_aliases_cache unless @has_dynamic_aliases_cache.nil?
 

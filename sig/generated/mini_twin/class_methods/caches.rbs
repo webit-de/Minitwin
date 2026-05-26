@@ -1,0 +1,22 @@
+# Generated from lib/mini_twin/class_methods/caches.rb with RBS::Inline
+
+class Minitwin
+  module ClassMethods
+    module Caches
+      # : () -> bool
+      def has_dynamic_aliases?: () -> bool
+
+      private
+
+      def invalidate_caches: () -> untyped
+
+      def serializable_getters: () -> untyped
+
+      def allowed_attribute_keys: () -> untyped
+
+      def allowed_attribute_keys_array: () -> untyped
+
+      def setter_methods: () -> untyped
+    end
+  end
+end

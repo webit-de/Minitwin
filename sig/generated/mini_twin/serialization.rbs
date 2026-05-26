@@ -1,0 +1,45 @@
+# Generated from lib/mini_twin/serialization.rb with RBS::Inline
+
+class Minitwin
+  # Serialization to Hash/JSON and ActiveModel validation aggregation.
+  # Converts nested twins recursively and preserves array items (dropping only
+  # nil). When ActiveModel validations are available, nested errors are
+  # surfaced on the parent using dot/bracket notation.
+  module Serialization
+    # Cache constant references for JIT optimization
+    ALIASES_VAR: untyped
+
+    NESTED_PREFIX: untyped
+
+    # : (render_nil: bool) -> Hash[Symbol, untyped]
+    def to_hash: (render_nil: bool) -> Hash[Symbol, untyped]
+
+    # : (**untyped) -> String
+    def to_json: (**untyped) -> String
+
+    # : () -> Hash[Symbol, untyped]
+    def attributes: () -> Hash[Symbol, untyped]
+
+    # : () -> bool
+    def valid?: () -> bool
+
+    # : () -> String
+    def inspect: () -> String
+
+    # Internal helper for PrettyPrint. Do not call this on your own.
+    # : (PP) -> void
+    def pretty_print: (PP) -> void
+
+    private
+
+    def transform_value_for_serialization: (untyped value) -> untyped
+
+    def ordered_attributes_for_pp: () -> untyped
+
+    def ordered_methods_for_pp: () -> untyped
+
+    def display_name_for: (untyped method) -> untyped
+
+    def dynamic_aliases_for_pp: () -> untyped
+  end
+end

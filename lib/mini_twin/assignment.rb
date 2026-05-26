@@ -72,10 +72,10 @@ class Minitwin
       self
     end
 
-    # DEBT: This will fail in type checks in projects without rails, because
-    # argument type is unknown in plain ruby.
-    #
-    #: (ActionController::Parameters params) -> instance
+    # Actually, this is expected to be an `ActionController::Parameters`
+    # object. The type will be unknown when used without rails. So for RBS
+    # the argument is typed `untyped`.
+    #: (untyped params) -> instance
     def assign_params(params = {})
       params = params.to_unsafe_h if params.respond_to?(:to_unsafe_h)
       assign_hash(params)

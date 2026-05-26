@@ -1,0 +1,77 @@
+# Generated from lib/mini_twin/class_methods/dsl.rb with RBS::Inline
+
+class Minitwin
+  module ClassMethods
+    module Dsl
+      # : () -> Array[Symbol]
+      def block_properties: () -> Array[Symbol]
+
+      # : () -> Array[Symbol]
+      def collection_properties: () -> Array[Symbol]
+
+      # : () -> Array[Symbol]
+      def virtual_properties: () -> Array[Symbol]
+
+      # : () -> Array[Symbol]
+      def property_order: () -> Array[Symbol]
+
+      # : () -> Array[Hash]
+      def dynamic_nested_aliases: () -> Array[Hash]
+
+      # @rbs name: Symbol
+      # @rbs validates: Hash[Symbol, untyped]
+      # @rbs default: untyped
+      # @rbs as: Symbol | Proc
+      # @rbs getter: Proc
+      # @rbs twin: untyped
+      # @rbs on: Symbol
+      # @rbs return: void
+      def collection: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?getter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
+
+      # @rbs name: Symbol
+      # @rbs validates: Hash[Symbol, untyped]
+      # @rbs default: untyped
+      # @rbs as: Symbol | Proc
+      # @rbs virtual: bool
+      # @rbs readonly: bool
+      # @rbs type: untyped
+      # @rbs getter: Proc
+      # @rbs setter: Proc
+      # @rbs twin: untyped
+      # @rbs on: Symbol
+      # @rbs return: void
+      def property: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?virtual: bool, ?readonly: bool, ?type: untyped, ?getter: Proc, ?setter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
+
+      # : (Symbol) -> void
+      def nested: (Symbol) -> void
+
+      private
+
+      def constantize_name: (untyped name) -> untyped
+
+      def create_nested_class: (name: untyped) ?{ (?) -> untyped } -> untyped
+
+      def define_getter_method: (name: untyped, as: untyped, on: untyped, default: untyped, getter: untyped, ?type: untyped) -> untyped
+
+      def build_getter_proc: (name: untyped, on: untyped, default: untyped, getter: untyped, type: untyped) -> untyped
+
+      def build_composition_getter: (name: untyped, on: untyped, default: untyped, type: untyped) -> untyped
+
+      def build_regular_getter: (name: untyped, default: untyped, type: untyped) -> untyped
+
+      def apply_alias_to_getter: (name: untyped, as: untyped) -> untyped
+
+      def add_validation: (name: untyped, validates: untyped) -> untyped
+
+      def add_virtual_property: (name: untyped, virtual: untyped) -> untyped
+
+      def add_block_property: (name: untyped) -> untyped
+
+      def add_collection_property: (name: untyped) -> untyped
+
+      def add_to_property_order: (untyped name) -> untyped
+
+      def resolve_default_value: (untyped default, untyped type) -> untyped
+    end
+  end
+end

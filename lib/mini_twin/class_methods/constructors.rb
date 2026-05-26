@@ -1,33 +1,46 @@
+# rbs_inline: enabled
+
 class Minitwin
   module ClassMethods
     module Constructors
+
+      #: () -> Hash[untyped, untyped]
       def properties
         @properties ||= {}
       end
 
+      #: () -> Hash[untyped, untyped]
       def collections
         @collections ||= {}
       end
 
+      #: (Hash[untyped, untyped] args) -> instance
       def from_hash(args)
         new(**args)
       end
 
+      #: (String body) -> instance
       def from_json(body)
         hash = JSON.parse(body, symbolize_names: true)
         from_hash(hash)
       end
 
+      # Actually, this is expected to be an `ActionController::Parameters`
+      # object. The type will be unknown when used without rails. So for RBS
+      # the argument is typed `untyped`.
+      #: (untyped params) -> instance
       def from_params(params)
         return from_hash(params) unless params.respond_to?(:to_unsafe_h)
         from_hash params.to_unsafe_h
       end
 
+      #: (untyped model) -> instance
       def from_object(model)
         raise "Input is not an object. If you want to instantiate a Minitwin with multiple objects, then use the pluralized 'from_objects'-method." if model.is_a?(Hash)
         from_objects(model:)
       end
 
+      #: (Hash[Symbol, untyped] **models) -> instance
       def from_objects(**models)
         attributes =
           models.values.map do |model|
@@ -57,10 +70,12 @@ class Minitwin
         obj
       end
 
+      #: (Array[untyped] models) -> Array[instance]
       def from_collection(models)
         models.map { |item| from_objects(model: item) }
       end
 
+      #: (Symbol name) -> String | nil
       def internal_model_name(name)
         "#{Minitwin::INTERNAL_MODEL_PREFIX}#{name}" unless name.nil?
       end

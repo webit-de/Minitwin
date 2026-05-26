@@ -16,7 +16,14 @@ class Minitwin
     # : (Hash[ String | Symbol, untyped ] hash) -> instance
     def assign_hash: (Hash[String | Symbol, untyped] hash) -> instance
 
-    # : (Hash[ String | Symbol, untyped ] params) -> instance
-    def assign_params: (Hash[String | Symbol, untyped] params) -> instance
+    # Actually, this is expected to be an `ActionController::Parameters`
+    # object. The type will be unknown when used without rails. So for RBS
+    # the argument is typed `untyped`.
+    # : (untyped params) -> instance
+    def assign_params: (untyped params) -> instance
+
+    # Gets the non-readonly methods, which can be assigned with new values.
+    # : () -> Array[Symbol]
+    def assignable_attribute_methods: () -> Array[Symbol]
   end
 end
