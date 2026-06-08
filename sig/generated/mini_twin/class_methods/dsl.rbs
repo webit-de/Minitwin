@@ -10,7 +10,7 @@ class Minitwin
       def collection_properties: () -> Array[Symbol]
 
       # : () -> Array[Symbol]
-      def virtual_properties: () -> Array[Symbol]
+      def unexposed_properties: () -> Array[Symbol]
 
       # : () -> Array[Symbol]
       def property_order: () -> Array[Symbol]
@@ -32,7 +32,8 @@ class Minitwin
       # @rbs validates: Hash[Symbol, untyped]
       # @rbs default: untyped
       # @rbs as: Symbol | Proc
-      # @rbs virtual: bool
+      # @rbs virtual: bool?
+      # @rbs expose: bool
       # @rbs readonly: bool
       # @rbs type: untyped
       # @rbs getter: Proc
@@ -40,7 +41,7 @@ class Minitwin
       # @rbs twin: untyped
       # @rbs on: Symbol
       # @rbs return: void
-      def property: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?virtual: bool, ?readonly: bool, ?type: untyped, ?getter: Proc, ?setter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
+      def property: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?virtual: bool?, ?expose: bool, ?readonly: bool, ?type: untyped, ?getter: Proc, ?setter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
 
       # : (Symbol) -> void
       def nested: (Symbol) -> void
@@ -63,7 +64,7 @@ class Minitwin
 
       def add_validation: (name: untyped, validates: untyped) -> untyped
 
-      def add_virtual_property: (name: untyped, virtual: untyped) -> untyped
+      def add_unexposed_property: (name: untyped, expose: untyped) -> untyped
 
       def add_block_property: (name: untyped) -> untyped
 

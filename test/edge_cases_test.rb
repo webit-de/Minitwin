@@ -510,10 +510,10 @@ class EdgeCasesTest < ActiveSupport::TestCase
     assert_equal "test", obj.new_name
   end
 
-  test "should handle virtual properties exclusion from serialization" do
+  test "should handle unexposed properties exclusion from serialization" do
     klass = Class.new(Minitwin) do
       property :name
-      property :internal, virtual: true
+      property :internal, expose: false
     end
 
     obj = klass.new(name: "test", internal: "secret")

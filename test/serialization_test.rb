@@ -5,7 +5,7 @@ require "stringio"
 
 class SerTestTwin < Minitwin
   property :wrong_runtime, as: :runtime, type: Types::Params::Integer.lax, default: 0
-  property :virtual_prop, virtual: true
+  property :unexposed_prop, expose: false
   property :wrong_lego, as: :lego do
     property :brick, default: 0
   end
@@ -20,11 +20,11 @@ class SerTestTwin < Minitwin
 end
 
 class SerializationTest < ActiveSupport::TestCase
-  test "should convert to hash with indifferent access and omit virtuals" do
+  test "should convert to hash with indifferent access and omit unexposed properties" do
     obj = SerTestTwin.from_hash(
       wrong_runtime: "3",
       wrong_lego: { brick: 123 },
-      virtual_prop: "ignore me",
+      unexposed_prop: "ignore me",
       cool_stuff: [ { property: "test" } ],
       an_array: [1,2,3],
       sub_twin: {}
@@ -32,7 +32,7 @@ class SerializationTest < ActiveSupport::TestCase
 
     hash = obj.to_hash
     assert_instance_of ActiveSupport::HashWithIndifferentAccess, hash
-    assert_nil hash["virtual_prop"]
+    assert_nil hash["unexposed_prop"]
     assert_nil hash["wrong_runtime"]
     assert_equal 3, hash["runtime"]
     assert_equal 123, hash[:lego][:brick]

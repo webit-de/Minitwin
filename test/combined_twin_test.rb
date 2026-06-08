@@ -19,7 +19,7 @@ class CombinedTwin < Minitwin
   property :count, type: Types::Params::Integer.lax, default: 1
   property :name, validates: { presence: true }
   property :enabled, type: Types::Params::Bool.lax, default: false
-  property :virtual_secret, virtual: true
+  property :unexposed_secret, expose: false
   property :computed_upper, getter: -> { name.to_s.upcase }
   property :shifted_date, setter: ->(days) { days.days.from_now.to_date }
 
@@ -46,7 +46,7 @@ class CombinedTwin < Minitwin
   # Composition from external objects
   property :id, as: :customer_id, on: :customer
   property :street, on: :shipping
-  property :latitude, on: :shipping, virtual: true
+  property :latitude, on: :shipping, expose: false
 end
 
 class CombinedTwinTest < ActiveSupport::TestCase
@@ -62,7 +62,7 @@ class CombinedTwinTest < ActiveSupport::TestCase
       name: "alice",
       count: "7",
       enabled: "1",
-      virtual_secret: "hidden",
+      unexposed_secret: "hidden",
       shifted_date: 1,
       profile: { bio: "builder", age: "30" },
       address: { street: "Rails Ave", city: "Sinatra" },
@@ -113,8 +113,8 @@ class CombinedTwinTest < ActiveSupport::TestCase
     # Aliased id present, original hidden
     assert_equal 42, h[:customer_id]
     assert_nil h[:id]
-    # Virtuals omitted
-    assert_nil h[:virtual_secret]
+    # unexposed omitted
+    assert_nil h[:unexposed_secret]
     assert_nil h[:latitude]
     # Block property structure
     assert_equal "builder", h[:profile][:bio]
@@ -143,7 +143,7 @@ class CombinedTwinTest < ActiveSupport::TestCase
     assert_equal "widget", parsed.dig("line_items", 0, "name")
     assert_equal "dark", parsed.dig("settings", "theme")
     assert_equal true, parsed.dig("settings", "notifications", "email")
-    refute parsed.key?("virtual_secret")
+    refute parsed.key?("unexposed_secret")
     refute parsed.key?("latitude")
   end
 end

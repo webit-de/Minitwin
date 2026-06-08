@@ -6,12 +6,12 @@ class CompositionTwin < Minitwin
   property :id, as: :address_id, on: :address
   property :name, on: :customer
   property :street, on: :address
-  property :latitude, on: :address, virtual: true
+  property :latitude, on: :address, expose: false
   property :country, default: "D"
 end
 
 class CompositionWithProc < Minitwin
-  property :customer, virtual: true
+  property :customer, expose: false
   property :name, on: :customer
   property :street, on: -> { customer.address }
 end

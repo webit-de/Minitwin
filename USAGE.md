@@ -276,7 +276,7 @@ summary.name   #=> "Dana"
 | `default:` | Default value when the property is `nil`. Accepts a callable (`-> { ... }`) for computed defaults. |
 | `type:` | A dry-types type for coercion on assignment (e.g. `Types::Params::Integer.lax`). Errors fall back to the raw value. |
 | `twin:` | Wraps the value in another twin class. Accepts a hash, a twin instance, or an object with `to_h`/`attributes`. |
-| `virtual:` | `true` omits the property from `to_hash`/`to_json`. |
+| `expose:` | `false` omits the property from `to_hash`/`to_json`. |
 | `readonly:` | `true` prevents assignment via `assign_hash` and `assign_params`. |
 | `getter:` | A lambda `-> { ... }` that fully replaces the generated getter. Runs in instance context. |
 | `setter:` | A lambda `->(value) { ... }` that fully replaces the generated setter. Not allowed together with a block. |
@@ -340,7 +340,7 @@ The leaf properties (`city`, `zip`) are accessible directly on the parent instan
 
 | Method | Description |
 |---|---|
-| `to_hash(render_nil: false)` | Returns the twin as a Hash (or `HashWithIndifferentAccess` when ActiveSupport is available). Nested twins are serialized recursively. Virtual properties are omitted. |
+| `to_hash(render_nil: false)` | Returns the twin as a Hash (or `HashWithIndifferentAccess` when ActiveSupport is available). Nested twins are serialized recursively. Unexposed properties are omitted. |
 | `to_h` | Alias for `to_hash`. |
 | `to_json` | Delegates to `to_hash.to_json`. |
 | `attributes` | Returns a Hash keyed by the original setter names (before any `as:` aliasing). Includes protected readers. |

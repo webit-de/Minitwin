@@ -15,8 +15,8 @@ class Minitwin
       end
 
       #: () -> Array[Symbol]
-      def virtual_properties
-        @virtual_properties ||= []
+      def unexposed_properties
+        @unexposed_properties ||= []
       end
 
       #: () -> Array[Symbol]
@@ -67,7 +67,8 @@ class Minitwin
       # @rbs validates: Hash[Symbol, untyped]
       # @rbs default: untyped
       # @rbs as: Symbol | Proc
-      # @rbs virtual: bool
+      # @rbs virtual: bool?
+      # @rbs expose: bool
       # @rbs readonly: bool
       # @rbs type: untyped
       # @rbs getter: Proc
@@ -75,7 +76,12 @@ class Minitwin
       # @rbs twin: untyped
       # @rbs on: Symbol
       # @rbs return: void
-      def property(name, validates: {}, default: nil, as: nil, virtual: false, readonly: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
+      def property(name, validates: {}, default: nil, as: nil, virtual: nil, expose: true, readonly: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
+        unless virtual.nil?
+          warn "property :#{name} - `virtual:` is deprecated, use `expose: #{!virtual}` instead.", uplevel: 1
+          expose = !virtual
+        end
+
         nested_class = nil
 
         if block_given?
@@ -113,13 +119,13 @@ class Minitwin
 
         define_getter_method(name:, as:, on:, default:, getter:, type: type)
         add_validation(name:, validates:)
-        add_virtual_property(name:, virtual:)
+        add_unexposed_property(name:, expose:)
         invalidate_caches
 
         properties[name.to_sym] = {
           type: type,
           as: as,
-          virtual: virtual,
+          expose: expose,
           readonly: readonly
         }
         properties[name.to_sym][:twin] = twin if twin
@@ -188,13 +194,13 @@ class Minitwin
             define_method(alias_name) do
               send(target_reader)
             end
-            virtual_properties << alias_name
+            unexposed_properties << alias_name
 
             # Define protected getter with original name so sync can read the value,
             # and register in properties so sync resolves the as: alias.
             define_method(prop) { send(target_reader) }
             protected prop
-            properties[prop.to_sym] = { type: nil, as: as_meta, virtual: false, nested_proxy: true }
+            properties[prop.to_sym] = { type: nil, as: as_meta, expose: true, nested_proxy: true }
           else
             # Dynamic alias: register for instance-level aliasing and rely on
             # __recompute_dynamic_aliases__ to create the per-instance method.
@@ -202,7 +208,7 @@ class Minitwin
           end
 
           # Always hide the internal reader from serialization
-          virtual_properties << target_reader.to_sym
+          unexposed_properties << target_reader.to_sym
         end
 
         invalidate_caches
@@ -347,8 +353,8 @@ class Minitwin
         end
       end
 
-      def add_virtual_property(name:, virtual:)
-        virtual_properties << name if virtual
+      def add_unexposed_property(name:, expose:)
+        unexposed_properties << name unless expose
       end
 
       def add_block_property(name:)

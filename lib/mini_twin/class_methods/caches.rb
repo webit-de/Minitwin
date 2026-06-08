@@ -28,12 +28,12 @@ class Minitwin
 
       def serializable_getters
         @serializable_getters_cache ||= begin
-          virt = virtual_properties.to_set
+          unexposed = unexposed_properties.to_set
           prot = (protected_instance_methods - Minitwin.protected_instance_methods).to_set
           own_and_inherited = instance_methods - Minitwin.instance_methods
           own_and_inherited.reject do |m|
             s = m.to_s
-            s.end_with?("=", "?", "_attributes") || virt.include?(m) || prot.include?(m)
+            s.end_with?("=", "?", "_attributes") || unexposed.include?(m) || prot.include?(m)
           end
         end
       end

@@ -15,7 +15,7 @@ class InitTestTwin < Minitwin
     property :brick_wrong, as: :brick_right
   end
 
-  property :virtual_prop, virtual: true
+  property :unexposed_prop, expose: false
   property :duplo do
     property :brick, validates: { presence: true }
   end
@@ -41,7 +41,7 @@ class InitializationTest < ActiveSupport::TestCase
       wrong_runtime: "3",
       wrong_lego: { brick: 123, brick_wrong: "wrong" },
       duplo: { brick: "big_block" },
-      virtual_prop: "ignore me",
+      unexposed_prop: "ignore me",
       cool_stuff: [
         { property: "test", block_in_collection: { i_cant_believe_it: "2", bool: "1" } },
         { property: "test_2", block_in_collection: { i_cant_believe_it: "4", bool: "false" } }
@@ -53,7 +53,7 @@ class InitializationTest < ActiveSupport::TestCase
     assert_equal 3, obj.runtime
     assert_equal 123, obj.lego.brick
     assert_equal 3456, obj.lego.brick_2
-    assert_equal "ignore me", obj.virtual_prop
+    assert_equal "ignore me", obj.unexposed_prop
     assert_equal "big_block", obj.duplo.brick
     assert_equal "wrong", obj.lego.brick_right
     assert_equal 2, obj.list_of_stuff.size
