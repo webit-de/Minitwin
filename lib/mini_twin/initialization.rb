@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rbs_inline: enabled
 
 class Minitwin
@@ -8,6 +9,21 @@ class Minitwin
     # Cache constant references for JIT optimization
     ALIASES_VAR = Minitwin::DYNAMIC_ALIASES_VAR
     ALIASES_REV_VAR = Minitwin::DYNAMIC_ALIASES_REV_VAR
+
+    # Forbidden method names that should never be aliased for security reasons
+    FORBIDDEN_ALIAS_NAMES = %i[
+      eval instance_eval class_eval module_eval
+      send __send__ public_send
+      method_missing respond_to_missing?
+      define_method remove_method undef_method
+      instance_variable_get instance_variable_set
+      instance_variables instance_variable_defined?
+      const_get const_set
+      class_variable_get class_variable_set
+      binding tap then yield_self to_proc
+      freeze __id__ object_id
+      == equal? eql? hash <=>
+    ].freeze
 
     #: (**untyped) -> instance
     def initialize(**args)
@@ -33,7 +49,7 @@ class Minitwin
       end
       @__skip_alias_recompute__ = false
 
-      __recompute_dynamic_aliases__ if self.class.has_dynamic_aliases?
+      __recompute_dynamic_aliases__ if self.class.dynamic_aliases?
     end
 
     private
@@ -93,6 +109,7 @@ class Minitwin
         if as_meta.is_a?(Proc)
           alias_name = __compute_nested_alias_name__(entry)
           next if alias_name.nil?
+
           __apply_dynamic_alias__(target, alias_name)
         else
           # Static alias recorded by nested to support protected inner readers
@@ -103,7 +120,7 @@ class Minitwin
 
     def __compute_alias_name__(as_proc)
       instance_exec(&as_proc)
-    rescue StandardError => e
+    rescue StandardError
       # Expected: Dynamic alias proc may fail or return invalid names.
       # Return nil to skip this alias definition.
       nil
@@ -118,21 +135,6 @@ class Minitwin
       # Return nil to skip this alias definition.
       nil
     end
-
-    # Forbidden method names that should never be aliased for security reasons
-    FORBIDDEN_ALIAS_NAMES = %i[
-      eval instance_eval class_eval module_eval
-      send __send__ public_send
-      method_missing respond_to_missing?
-      define_method remove_method undef_method
-      instance_variable_get instance_variable_set
-      instance_variables instance_variable_defined?
-      const_get const_set
-      class_variable_get class_variable_set
-      binding tap then yield_self to_proc
-      freeze __id__ object_id
-      == equal? eql? hash <=>
-    ].freeze
 
     def __apply_dynamic_alias__(target_method, alias_name)
       alias_key = begin
@@ -179,6 +181,7 @@ class Minitwin
     # Public: expose current dynamic aliases as a Hash of alias_name => target_method
     def dynamic_aliases
       return {} unless instance_variable_defined?(ALIASES_REV_VAR) && instance_variable_get(ALIASES_REV_VAR)
+
       instance_variable_get(ALIASES_REV_VAR).dup
     end
   end

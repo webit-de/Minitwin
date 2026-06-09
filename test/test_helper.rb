@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Configure SimpleCov before loading any application code
 require "simplecov"
 SimpleCov.start do
@@ -38,6 +40,7 @@ module Types
   include Dry.Types()
 end
 
-class ActiveSupport::TestCase
-  # Global test setup can go here
-end
+# uncomment class definition if global things needed
+# class ActiveSupport::TestCase
+#   # Global test setup can go here
+# end

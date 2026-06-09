@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require "mini_twin"
 require "fileutils"
 
 namespace :minitwin do
   desc "Generate RBS signatures for all loaded Minitwin subclasses into sig/generated/ " \
-       "(override output dir with OUTPUT_DIR env var or task argument)"
+    "(override output dir with OUTPUT_DIR env var or task argument)"
 
   task :generate_rbs, [:output_dir] do |_t, args|
     # In Rails, invoke :environment to ensure the app is fully initialized
@@ -31,17 +33,17 @@ namespace :minitwin do
 
     if twins.empty?
       warn "[minitwin] No Minitwin subclasses found. " \
-           "Ensure your classes are loaded before running this task."
+        "Ensure your classes are loaded before running this task."
       next
     end
 
     twins.each do |klass|
-      file_path = klass.name
-        .gsub("::", "/")
-        .gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2')
-        .gsub(/([a-z\d])([A-Z])/, '\1_\2')
-        .downcase
-        .concat(".rbs")
+      file_path = klass.name.
+                    gsub("::", "/").
+                    gsub(/([A-Z]+)([A-Z][a-z])/, '\1_\2').
+                    gsub(/([a-z\d])([A-Z])/, '\1_\2').
+                    downcase.
+                    concat(".rbs")
 
       output_path = File.join(output_dir, file_path)
       FileUtils.mkdir_p(File.dirname(output_path))

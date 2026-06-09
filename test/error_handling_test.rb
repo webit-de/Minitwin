@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -8,7 +10,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
         nested :invalid
       end
     end
-    assert_match /requires a block/, error.message
+    assert_match(/requires a block/, error.message)
   end
 
   test "should handle composition property when model doesn't respond to property" do
@@ -22,7 +24,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
     error = assert_raises(RuntimeError) do
       obj.name
     end
-    assert_match /does not respond to/, error.message
+    assert_match(/does not respond to/, error.message)
   end
 
   test "should handle missing composition model error" do
@@ -34,7 +36,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
     error = assert_raises(RuntimeError) do
       obj.name
     end
-    assert_match /unknown composition source/, error.message
+    assert_match(/unknown composition source/, error.message)
   end
 
   test "should handle assign_params with non-ActionController params" do
@@ -107,7 +109,11 @@ class ErrorHandlingTest < ActiveSupport::TestCase
 
   test "should handle serialization without HashWithIndifferentAccess" do
     # Temporarily hide HashWithIndifferentAccess
-    original_const = Object.const_get(:HashWithIndifferentAccess) rescue nil
+    begin
+      Object.const_get(:HashWithIndifferentAccess)
+    rescue StandardError
+      nil
+    end
 
     klass = Class.new(Minitwin) do
       property :name
@@ -188,7 +194,7 @@ class ErrorHandlingTest < ActiveSupport::TestCase
 
     obj = klass.new(name: "test")
     # Should be valid when no validations are defined
-    assert obj.valid?
+    assert_predicate obj, :valid?
   end
 
   test "should handle dynamic alias removal and replacement" do

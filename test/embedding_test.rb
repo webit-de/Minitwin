@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -31,4 +33,3 @@ class EmbeddingTest < ActiveSupport::TestCase
     assert_equal "default", obj.sub_twins.last.another_sub_property
   end
 end
-

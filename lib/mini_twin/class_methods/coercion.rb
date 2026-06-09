@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Minitwin
   module ClassMethods
     module Coercion
@@ -59,9 +61,10 @@ class Minitwin
         begin
           iterate_attribute_sources(target_klass) do |key|
             next if attrs.key?(key)
+
             attrs[key] = value.public_send(key) if value.respond_to?(key)
           end
-        rescue StandardError => e
+        rescue StandardError
           # Expected: Reflection may fail if source object raises in attribute readers
           # or has unexpected behavior. Continue with partial attributes.
         end
@@ -71,8 +74,8 @@ class Minitwin
       def extract_instance_variables(value)
         return {} unless value.respond_to?(:instance_variables) && value.instance_variables.any?
 
-        value.instance_variables.each_with_object({}) do |var, attrs|
-          attrs[Minitwin::Utils.ivar_to_key(var)] = value.instance_variable_get(var)
+        value.instance_variables.to_h do |var|
+          [Minitwin::Utils.ivar_to_key(var), value.instance_variable_get(var)]
         end
       end
 
@@ -86,13 +89,13 @@ class Minitwin
             next unless source.respond_to?(key)
 
             # Special handling for collections to ensure array coercion
-            if target_klass.respond_to?(:collections) && target_klass.collections.key?(key)
-              attrs[key] = coerce_collection_array(source.public_send(key))
-            else
-              attrs[key] = source.public_send(key)
-            end
+            attrs[key] = if target_klass.respond_to?(:collections) && target_klass.collections.key?(key)
+                           coerce_collection_array(source.public_send(key))
+                         else
+                           source.public_send(key)
+                         end
           end
-        rescue StandardError => e
+        rescue StandardError
           # Expected: Source object may raise in attribute readers or have
           # unexpected behavior. Be resilient and proceed with partial attributes.
         end
@@ -103,6 +106,7 @@ class Minitwin
       def coerce_collection_array(raw)
         return raw if raw.is_a?(Array)
         return raw.to_a if raw.respond_to?(:to_a)
+
         Array(raw)
       end
     end

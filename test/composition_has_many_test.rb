@@ -1,8 +1,11 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
 class RelItem
   include ActiveModel::Model
+
   attr_accessor :sub
 end
 
@@ -25,6 +28,7 @@ end
 
 class ContractWithRelation
   include ActiveModel::Model
+
   attr_accessor :items
 
   def initialize(items: [])
@@ -50,4 +54,3 @@ class CompositionHasManyTest < ActiveSupport::TestCase
     assert_equal "y", twin.items.last.renamed
   end
 end
-

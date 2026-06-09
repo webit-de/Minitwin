@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+require "English"
 require "test_helper"
 
 class NoActiveModelInitTest < ActiveSupport::TestCase
@@ -27,7 +30,7 @@ class NoActiveModelInitTest < ActiveSupport::TestCase
     RUBY
 
     out = IO.popen([RbConfig.ruby, "-e", script], err: %i[child out], &:read)
-    assert_equal 0, $?.exitstatus, "child failed: #{out}"
+    assert_equal 0, $CHILD_STATUS.exitstatus, "child failed: #{out}"
     assert_match(/^ok$/, out)
   end
 end

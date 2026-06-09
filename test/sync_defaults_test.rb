@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -19,4 +21,3 @@ class SyncDefaultsTest < ActiveSupport::TestCase
     assert_equal 31, model.age
   end
 end
-

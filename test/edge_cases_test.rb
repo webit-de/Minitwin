@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -25,11 +27,13 @@ class EdgeCasesTest < ActiveSupport::TestCase
   test "attribute_methods fallback branch without cache" do
     klass = Class.new(Minitwin) do
       # Define a writer-only attribute and a plain reader to exercise respond_to? check
-      def foo=(v); @foo = v; end
-      def foo; @foo; end
+      attr_writer :foo
+
+      attr_reader :foo
     end
-    def klass.respond_to?(name, include_private=false)
+    def klass.respond_to?(name, include_private = false) # rubocop: disable Style/OptionalBooleanParameter -- is method overwrite from `Object`
       return false if name == :allowed_attribute_keys && include_private
+
       super
     end
     twin = klass.new
@@ -135,8 +139,10 @@ class EdgeCasesTest < ActiveSupport::TestCase
     def bad_object.name
       raise "method failed"
     end
-    def bad_object.respond_to?(method, include_private = false)
+
+    def bad_object.respond_to?(method, include_private = false) # rubocop: disable Style/OptionalBooleanParameter -- is method overwrite from `Object`
       return true if method == :name
+
       super
     end
 
@@ -292,7 +298,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
   test "should handle type inference from string representation" do
     # Create a type without a clear primitive
-    custom_int_type = Types.Constructor(Integer) { |v| v.to_i }
+    custom_int_type = Types.Constructor(Integer, &:to_i)
 
     klass = Class.new(Minitwin) do
       property :number, type: custom_int_type
@@ -311,7 +317,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
     # Should raise informative error
     obj = klass.new
     error = assert_raises(RuntimeError) { obj.name }
-    assert_match /unknown composition source/, error.message
+    assert_match(/unknown composition source/, error.message)
   end
 
   test "should handle model composition with model not responding to property" do
@@ -323,7 +329,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
     obj = klass.from_objects(model: model)
     error = assert_raises(RuntimeError) { obj.name }
-    assert_match /does not respond to/, error.message
+    assert_match(/does not respond to/, error.message)
   end
 
   test "should handle property getter with custom getter proc" do
@@ -365,17 +371,17 @@ class EdgeCasesTest < ActiveSupport::TestCase
         property :invalid, setter: ->(v) { v } do
           property :name
         end
-      rescue => e
-        @caught_error = e
+      rescue StandardError => exception
+        @caught_error = exception
       end
 
-      def self.caught_error
-        @caught_error
+      class << self
+        attr_reader :caught_error
       end
     end
 
     # The error should be caught during class definition
-    assert_match /setters are not possible in blocks/, klass.caught_error.message
+    assert_match(/setters are not possible in blocks/, klass.caught_error.message)
   end
 
   test "should handle validation errors without activemodel" do
@@ -394,7 +400,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
         property :name, validates: { presence: true }
       end
     end
-    assert_match /activemodel is not available/, error.message
+    assert_match(/activemodel is not available/, error.message)
   end
 
   test "should handle cache invalidation" do
@@ -403,7 +409,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
     end
 
     # Cache should be built
-    first_getters = klass.send(:serializable_getters)
+    klass.send(:serializable_getters)
 
     # Add another property
     klass.class_eval do
@@ -443,7 +449,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
     # Should silently ignore unknown keys
     obj = klass.new(name: "test", unknown: "value", another: "ignored")
     assert_equal "test", obj.name
-    refute obj.respond_to?(:unknown)
+    refute_respond_to obj, :unknown
   end
 
   test "should handle assign_object with model tracking" do
@@ -484,7 +490,7 @@ class EdgeCasesTest < ActiveSupport::TestCase
     error = assert_raises(RuntimeError) do
       klass.from_object({ name: "test" })
     end
-    assert_match /use.*from_objects/, error.message
+    assert_match(/use.*from_objects/, error.message)
   end
 
   test "should handle from_objects with attribute_aliases" do
@@ -564,9 +570,11 @@ class EdgeCasesTest < ActiveSupport::TestCase
   test "should handle validation without activemodel" do
     klass = Class.new do
       include Minitwin::Serialization
+
       def self.block_properties
         []
       end
+
       def self.collection_properties
         []
       end
@@ -574,6 +582,6 @@ class EdgeCasesTest < ActiveSupport::TestCase
 
     obj = klass.new
     # Should return true when ActiveModel is not included
-    assert obj.valid?
+    assert_predicate obj, :valid?
   end
 end

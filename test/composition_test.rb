@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -27,7 +29,7 @@ class CompositionTest < ActiveSupport::TestCase
     assert_equal "Petra Rodriguez", obj.name
     assert_equal "1234 fake street", obj.street
     assert_equal "D", obj.country
-    assert_equal 55.76, obj.latitude
+    assert_in_delta(55.76, obj.latitude)
 
     hash = obj.to_hash
     assert_equal "abc", hash[:address_id]
@@ -50,4 +52,3 @@ class CompositionTest < ActiveSupport::TestCase
     assert_equal({ "name" => "Petra Rodriguez", "street" => "1234 fake street" }, obj.to_hash)
   end
 end
-

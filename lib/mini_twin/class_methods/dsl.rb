@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rbs_inline: enabled
 
 class Minitwin
@@ -46,7 +47,7 @@ class Minitwin
           coerced_values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
           define_instance_variable(name:, value: coerced_values)
           # :nocov:
-          if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+          if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
             __recompute_dynamic_aliases__
           end
           # :nocov:
@@ -76,7 +77,10 @@ class Minitwin
       # @rbs twin: untyped
       # @rbs on: Symbol
       # @rbs return: void
-      def property(name, validates: {}, default: nil, as: nil, virtual: nil, expose: true, readonly: false, type: nil, getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block)
+      def property(
+        name, validates: {}, default: nil, as: nil, virtual: nil, expose: true, readonly: false, type: nil, getter: nil, setter: nil,
+        twin: nil, on: nil, **_opts, &block
+      )
         unless virtual.nil?
           warn "property :#{name} - `virtual:` is deprecated, use `expose: #{!virtual}` instead.", uplevel: 1
           expose = !virtual
@@ -86,13 +90,15 @@ class Minitwin
 
         if block_given?
           raise "setters are not possible in blocks" if setter
+
           nested_class = create_nested_class(name:, &block)
 
           define_method("#{name}=") do |value|
             coerced = self.class.send(:coerce_value_to_twin, value, nested_class)
             raise "Unprocessable input for property '#{name}'." unless coerced.nil? || coerced.is_a?(nested_class)
+
             define_instance_variable(name:, value: coerced)
-            if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+            if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
               __recompute_dynamic_aliases__
             end
           end
@@ -111,7 +117,7 @@ class Minitwin
                 value
               end
             define_instance_variable(name:, value: coerced_value)
-            if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+            if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
               __recompute_dynamic_aliases__
             end
           end
@@ -136,6 +142,7 @@ class Minitwin
       #: (Symbol) -> void
       def nested(name, &block)
         raise ArgumentError, "nested requires a block" unless block_given?
+
         property(name, &block)
 
         # Pull the nested class directly from the registration `property`
@@ -145,7 +152,7 @@ class Minitwin
         # Registry for dynamic nested aliases (as: -> { ... }) on leafs.
         # Reader defined once in the module body above.
         leafs = []
-        if nested_klass && nested_klass.respond_to?(:properties)
+        if nested_klass.respond_to?(:properties)
           extract_leaf_properties = ->(klass, path) do
             klass.properties.each do |prop, meta|
               if meta[:nested_class]
@@ -158,13 +165,13 @@ class Minitwin
           extract_leaf_properties.call(nested_klass, [])
         end
 
-        leafs.each do |leaf|
+        leafs.each do |leaf| # rubocop: disable Metrics/BlockLength
           path = leaf[:path]
           prop = path.last
           as_meta = leaf[:as]
 
           # Define a stable internal reader for this leaf to support dynamic aliasing
-          target_reader = "#{Minitwin::NESTED_READER_PREFIX}#{([name] + path).join('__')}"
+          target_reader = "#{Minitwin::NESTED_READER_PREFIX}#{([name] + path).join("__")}"
           define_method(target_reader) do
             obj = public_send(name)
             obj = Minitwin::Utils.traverse_path(obj, path[0..-2])
@@ -183,7 +190,7 @@ class Minitwin
             obj = public_send(name)
             obj = Minitwin::Utils.traverse_path(obj, path[0..-2])
             obj.public_send("#{prop}=", value)
-            if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+            if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
               __recompute_dynamic_aliases__
             end
           end
@@ -204,7 +211,7 @@ class Minitwin
           else
             # Dynamic alias: register for instance-level aliasing and rely on
             # __recompute_dynamic_aliases__ to create the per-instance method.
-            self.dynamic_nested_aliases << { target: target_reader.to_sym, as: (as_meta || prop), group: name, path: path }
+            dynamic_nested_aliases << { target: target_reader.to_sym, as: as_meta || prop, group: name, path: path }
           end
 
           # Always hide the internal reader from serialization
@@ -217,7 +224,7 @@ class Minitwin
       private
 
       def constantize_name(name)
-        name.to_s.split('_').map(&:capitalize).join
+        name.to_s.split("_").map(&:capitalize).join
       end
 
       def create_nested_class(name:, &block)
@@ -232,8 +239,8 @@ class Minitwin
 
           const_name = constantize_name(name)
           begin
-            self.const_set(const_name, klass) unless self.const_defined?(const_name, false)
-          rescue NameError => e
+            const_set(const_name, klass) unless const_defined?(const_name, false)
+          rescue NameError
             # Expected: Constant name may be invalid or already defined in complex scenarios.
             # The nested class is still accessible via the klass variable.
           end
@@ -264,21 +271,24 @@ class Minitwin
         col_meta = nil
         col_meta_resolved = false
 
-        -> {
+        -> { # rubocop: disable Metrics/BlockLength
           # Get composition model - handle both symbol and proc cases
           model = if on.is_a?(Proc)
-            instance_exec(&on)
-          else
-            instance_variable_get(model_ivar) || begin
-              send(on)
-            rescue NoMethodError
-              nil
-            end
-          end
+                    instance_exec(&on)
+                  else
+                    instance_variable_get(model_ivar) || begin
+                      send(on)
+                    rescue NoMethodError
+                      nil
+                    end
+                  end
 
           # Validate model
           if model.nil?
-            raise "Property '#{name}' refers to unknown composition source '#{on}' in #{self.class}. Ensure the model is provided via from_objects or a reader exists."
+            raise(
+              "Property '#{name}' refers to unknown composition source '#{on}' in #{self.class}. " \
+                "Ensure the model is provided via from_objects or a reader exists."
+            )
           end
           unless model.respond_to?(name)
             raise "The instance of '#{model.class}' does not respond to '#{name}'."
@@ -317,6 +327,7 @@ class Minitwin
           if instance_variable_defined?(ivar)
             val = instance_variable_get(ivar)
             return self.class.send(:resolve_default_value, default, type) if val.nil?
+
             val
           else
             self.class.send(:resolve_default_value, default, type)
@@ -341,7 +352,7 @@ class Minitwin
         return if validates.nil?
         return if validates.respond_to?(:empty?) && validates.empty?
 
-        raise "Validation is not possible, because activemodel is not available" unless self.respond_to?(:validates)
+        raise "Validation is not possible, because activemodel is not available" unless respond_to?(:validates)
 
         if validates.is_a?(Proc)
           validate do
@@ -374,6 +385,7 @@ class Minitwin
         unless default.nil?
           return default.respond_to?(:call) ? default.call : default
         end
+
         type ? type_default_value(type) : nil
       end
     end

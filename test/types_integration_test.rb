@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -15,7 +17,9 @@ class TypesIntegrationTest < ActiveSupport::TestCase
   test "infer_default_from_type_string method-level rescue executes" do
     helper = Class.new { extend Minitwin::ClassMethods }
     bomb = Object.new
-    def bomb.to_s; raise "boom"; end
+    def bomb.to_s
+      raise "boom"
+    end
     # Should rescue and return nil
     assert_nil helper.send(:infer_default_from_type_string, bomb)
   end

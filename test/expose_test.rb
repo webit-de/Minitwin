@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -42,6 +44,6 @@ class ExposeTest < ActiveSupport::TestCase
     twin_class = Class.new(Minitwin) do
       property :token, expose: false
     end
-    assert_equal false, twin_class.properties[:token][:expose]
+    refute twin_class.properties[:token][:expose]
   end
 end

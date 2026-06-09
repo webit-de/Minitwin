@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -22,8 +24,9 @@ class CoreTest < ActiveSupport::TestCase
       property :a
     end
     # Hide serializable_getters to force else branch
-    def klass.respond_to?(name, include_private=false)
+    def klass.respond_to?(name, include_private = false) # rubocop: disable Style/OptionalBooleanParameter -- is method overwrite from `Object`
       return false if name == :serializable_getters && include_private
+
       super
     end
     twin = klass.new(a: 1)
@@ -35,9 +38,10 @@ class CoreTest < ActiveSupport::TestCase
       property :a
       property :b
     end
-    def klass.respond_to?(name, include_private=false)
+    def klass.respond_to?(name, include_private = false) # rubocop: disable Style/OptionalBooleanParameter -- is method overwrite from `Object`
       return false if name == :serializable_getters && include_private
       return false if name == :property_order && include_private
+
       super
     end
     twin = klass.new(a: 1, b: 2)
@@ -63,10 +67,16 @@ class CoreTest < ActiveSupport::TestCase
     end
 
     # Both should be tracked in Minitwin.__descendants__
-    assert_includes Minitwin.__descendants__, parent_klass,
+    assert_includes(
+      Minitwin.__descendants__,
+      parent_klass,
       "Direct Minitwin subclass should be tracked"
-    assert_includes Minitwin.__descendants__, child_klass,
+    )
+    assert_includes(
+      Minitwin.__descendants__,
+      child_klass,
       "Subclass of Minitwin subclass should also be tracked in Minitwin.__descendants__"
+    )
   end
 
   test "allowed_attribute_keys includes inherited properties" do
@@ -82,10 +92,16 @@ class CoreTest < ActiveSupport::TestCase
 
     # Child class should have both its own and inherited properties as allowed keys
     allowed_keys = child_klass.send(:allowed_attribute_keys)
-    assert_includes allowed_keys, :inherited_prop,
+    assert_includes(
+      allowed_keys,
+      :inherited_prop,
       "Inherited property should be in allowed_attribute_keys"
-    assert_includes allowed_keys, :child_prop,
+    )
+    assert_includes(
+      allowed_keys,
+      :child_prop,
       "Child's own property should be in allowed_attribute_keys"
+    )
   end
 
   test "initialize passes attributes as positional hash to ActiveModel" do
@@ -100,10 +116,16 @@ class CoreTest < ActiveSupport::TestCase
     obj = klass.new(name: "test", value: 42)
 
     # Verify attributes were properly assigned via ActiveModel's assign_attributes
-    assert_equal "test", obj.name,
+    assert_equal(
+      "test",
+      obj.name,
       "Attributes should be assigned via ActiveModel::API#initialize"
-    assert_equal 42, obj.value,
+    )
+    assert_equal(
+      42,
+      obj.value,
       "Multiple attributes should all be assigned correctly"
+    )
   end
 
   test "allowed_attribute_keys_array preserves property definition order" do
@@ -113,7 +135,7 @@ class CoreTest < ActiveSupport::TestCase
       property :bravo
     end
 
-    assert_equal [:charlie, :alpha, :bravo], klass.send(:allowed_attribute_keys_array)
+    assert_equal %i[charlie alpha bravo], klass.send(:allowed_attribute_keys_array)
   end
 
   test "allowed_attribute_keys_array appends inherited keys not in property_order at the end" do
@@ -131,8 +153,7 @@ class CoreTest < ActiveSupport::TestCase
 
     assert child_index, "child_prop should be present"
     assert parent_index, "parent_prop should be present"
-    assert child_index < parent_index,
-      "child_prop (in property_order) should come before inherited parent_prop"
+    assert_operator child_index, :<, parent_index, "child_prop (in property_order) should come before inherited parent_prop"
   end
 
   test "initialize uses private allowed_attribute_keys method" do
@@ -144,16 +165,23 @@ class CoreTest < ActiveSupport::TestCase
     end
 
     # Verify allowed_attribute_keys is private (not public)
-    assert_not klass.respond_to?(:allowed_attribute_keys),
+    assert_not(
+      klass.respond_to?(:allowed_attribute_keys),
       "allowed_attribute_keys should not be a public method"
-    assert klass.respond_to?(:allowed_attribute_keys, true),
-      "allowed_attribute_keys should be accessible as a private method"
+    )
+    assert klass.respond_to?(:allowed_attribute_keys, true), "allowed_attribute_keys should be accessible as a private method" # rubocop: disable Minitest/AssertRespondTo -- assertion helper has no parameter for `include_all`
 
     # Verify initialization works correctly despite the method being private
     obj = klass.new(name: "Alice", age: 30)
-    assert_equal "Alice", obj.name,
+    assert_equal(
+      "Alice",
+      obj.name,
       "Private allowed_attribute_keys should be called during initialization"
-    assert_equal 30, obj.age,
+    )
+    assert_equal(
+      30,
+      obj.age,
       "All allowed attributes should be assigned correctly"
+    )
   end
 end

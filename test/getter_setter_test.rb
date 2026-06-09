@@ -1,19 +1,21 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
 class GetterSetterTwin < Minitwin
   property :wrong_runtime, as: :runtime, type: Types::Params::Integer.lax, default: 0
-  property :runtime_greater_than_3, getter: -> { runtime > 3 }
+  property :runtime_greater_than_three, getter: -> { runtime > 3 }
   property :set_days_with_variable_offset, setter: ->(value) { value.days.from_now.to_date }
 end
 
-CharsSetThree = -> (value) { value[..3] }
+CharsSetThree = ->(value) { value[..3] }
 
 class SetMe < Minitwin
-  property :name, setter: ->(value) { value.upcase }
+  property :name, setter: lambda(&:upcase)
   property :age, as: :settered_age, setter: ->(value) { value + 1 }
   property :nested do
-    property :street, setter: ->(value) { value.upcase }
+    property :street, setter: lambda(&:upcase)
   end
   property :chars, setter: CharsSetThree, type: Types::Coercible::String
 end
@@ -22,8 +24,8 @@ class GetterSetterTest < ActiveSupport::TestCase
   test "should compute getter on instance" do
     a = GetterSetterTwin.from_hash(wrong_runtime: 3)
     b = GetterSetterTwin.from_hash(wrong_runtime: 4)
-    assert_not a.runtime_greater_than_3
-    assert b.runtime_greater_than_3
+    assert_not a.runtime_greater_than_three
+    assert b.runtime_greater_than_three
   end
 
   test "should apply setter on instance" do
@@ -65,4 +67,3 @@ class GetterSetterTest < ActiveSupport::TestCase
     assert_equal "JOHN", obj.name
   end
 end
-

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -23,20 +25,35 @@ class RbsGenerationTest < ActiveSupport::TestCase
 
   test "bool mapping via primitive and untyped fallback type" do
     bool_klass = Class.new(Minitwin) do
-      def self.name; "BoolPrimTwin"; end
+      def self.name
+        "BoolPrimTwin"
+      end
       property :flag, type: Types::Bool
     end
     rbs1 = bool_klass.to_rbs
     assert_includes rbs1, "flag: bool"
 
     dummy_t = Class.new do
-      def primitive; :weird; end
-      def to_s; "Mystery"; end
-      def inspect; "Mystery"; end
-      def class; Struct; end
+      def primitive
+        :weird
+      end
+
+      def to_s
+        "Mystery"
+      end
+
+      def inspect
+        "Mystery"
+      end
+
+      def class
+        Struct
+      end
     end.new
     untyped_klass = Class.new(Minitwin) do
-      def self.name; "UntypedPrimTwin"; end
+      def self.name
+        "UntypedPrimTwin"
+      end
       property :myst, type: dummy_t
     end
     rbs2 = untyped_klass.to_rbs

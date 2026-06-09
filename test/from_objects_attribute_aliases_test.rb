@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -30,4 +32,3 @@ class FromObjectsAttributeAliasesTest < ActiveSupport::TestCase
     assert_equal "Value", twin.alias_name
   end
 end
-

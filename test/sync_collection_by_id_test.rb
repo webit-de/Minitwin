@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -13,10 +15,12 @@ class SyncCollectionByIdTest < ActiveSupport::TestCase
   end
 
   test "sync collection elements by id when possible, else by index" do
-    o = OrderModel.new([
-      ItemModel.new(1, "a"),
-      ItemModel.new(2, "b")
-    ])
+    o = OrderModel.new(
+      [
+        ItemModel.new(1, "a"),
+        ItemModel.new(2, "b")
+      ]
+    )
 
     twin = OrderTwin.from_object(o)
     # reorder and change values
@@ -36,11 +40,10 @@ class SyncCollectionByIdTest < ActiveSupport::TestCase
 
   test "falls back to writer assigning array of hashes when no target collection" do
     o = OrderModel.new(nil)
-    twin = OrderTwin.from_params(items: [ { id: 1, value: "x" } ])
+    twin = OrderTwin.from_params(items: [{ id: 1, value: "x" }])
 
     assert twin.sync(o, validate: false)
     assert_kind_of Array, o.items
     assert_equal [{ id: 1, value: "x" }.with_indifferent_access], o.items
   end
 end
-

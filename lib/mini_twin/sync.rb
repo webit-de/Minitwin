@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rbs_inline: enabled
 
 class Minitwin
@@ -21,15 +22,15 @@ class Minitwin
       return false if validate && !valid?
       return false if target_model.nil?
 
-      attribute_methods.each do |method|
-        prop_meta = self.class.properties[method] || self.class.collections[method]
+      attribute_methods.each do |method_name| # rubocop: disable Metrics/BlockLength
+        prop_meta = self.class.properties[method_name] || self.class.collections[method_name]
         as_name = prop_meta&.[](:as)
-        target_name = (as_name.is_a?(Symbol) || as_name.is_a?(String)) ? as_name.to_sym : method
+        target_name = as_name.is_a?(Symbol) || as_name.is_a?(String) ? as_name.to_sym : method_name
 
         writer = :"#{target_name}="
         next unless target_model.respond_to?(writer) || target_model.respond_to?(target_name)
 
-        value = respond_to?(method, true) ? send(method) : nil
+        value = respond_to?(method_name, true) ? send(method_name) : nil
 
         # Nested twins
         if value.is_a?(Minitwin)
@@ -48,19 +49,20 @@ class Minitwin
           if target_model.respond_to?(target_name)
             begin
               coll = target_model.public_send(target_name)
-              if coll && coll.respond_to?(:each)
+              if coll.respond_to?(:each)
                 deep_synced_any = false
 
                 id_map = build_target_id_lookup(coll)
 
                 value.each_with_index do |elem, idx|
                   next unless elem.is_a?(Minitwin)
+
                   target = nil
 
                   # Try id-based match first
                   target ||= begin
                     elem_id = elem.respond_to?(:id, true) ? elem.send(:id) : nil
-                    (id_map && elem_id) ? id_map[elem_id] : nil
+                    id_map && elem_id ? id_map[elem_id] : nil
                   end
 
                   if target.nil? && coll.respond_to?(:[])
@@ -71,11 +73,11 @@ class Minitwin
                     end
                   end
 
-                  if target
-                    elem.sync(target, validate: false)
-                    deep_synced_any = true
-                    next
-                  end
+                  next unless target
+
+                  elem.sync(target, validate: false)
+                  deep_synced_any = true
+                  next
 
                   # Unmatched elements are handled later by writer fallback
                 end
@@ -89,13 +91,13 @@ class Minitwin
         end
 
         assignable = case value
-        when Minitwin
-          value.to_hash
-        when Array
-          value.map { |v| v.is_a?(Minitwin) ? v.to_hash : v }
-        else
-          value
-        end
+                     when Minitwin
+                       value.to_hash
+                     when Array
+                       value.map { |v| v.is_a?(Minitwin) ? v.to_hash : v }
+                     else
+                       value
+                     end
 
         begin
           target_model.public_send(writer, assignable)
@@ -111,17 +113,18 @@ class Minitwin
 
     def build_target_id_lookup(coll)
       ary = if coll.is_a?(Array)
-        coll
-      elsif coll.respond_to?(:to_a)
-        coll.to_a
-      else
-        return nil
-      end
+              coll
+            elsif coll.respond_to?(:to_a)
+              coll.to_a
+            else
+              return nil
+            end
 
       ary.each_with_object({}) do |m, h|
         next unless m.respond_to?(:id)
+
         key = begin
-          m.public_send(:id)
+          m.id
         rescue StandardError
           nil
         end

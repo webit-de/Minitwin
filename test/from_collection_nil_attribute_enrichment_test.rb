@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -10,9 +12,7 @@ class FakeManagedServiceCategory2
     { value: @value }
   end
 
-  def value
-    @value
-  end
+  attr_reader :value
 end
 
 class FakeContract2
@@ -47,8 +47,7 @@ class FromCollectionNilAttributeEnrichmentTest < ActiveSupport::TestCase
     list = ManagedServiceTwinCollection.from_collection(items)
     assert_equal 2, list.size
     assert_equal [1, 2], list.map(&:id)
-    assert list.all? { |e| !e.managed_service_category.nil? }
-    assert_equal ["A", "B"], list.map { |e| e.managed_service_category.category }
+    assert(list.all? { |e| !e.managed_service_category.nil? })
+    assert_equal(%w[A B], list.map { |e| e.managed_service_category.category })
   end
 end
-

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Minitwin
   module ClassMethods
     module TypesHelper
@@ -5,6 +7,7 @@ class Minitwin
 
       def dry_type_primitive(type)
         return nil unless type.respond_to?(:primitive)
+
         type.primitive
       end
 
@@ -30,13 +33,14 @@ class Minitwin
         rescue StandardError
           # Type.inspect may fail for some custom types
         end
-        type_description = parts.compact.join(' ')
+        type_description = parts.compact.join(" ")
 
-        return 0 if type_description.include?('Integer')
-        return "" if type_description.include?('String')
-        return false if type_description.include?('Bool')
+        return 0 if type_description.include?("Integer")
+        return "" if type_description.include?("String")
+        return false if type_description.include?("Bool")
+
         nil
-      rescue StandardError => e
+      rescue StandardError
         # Expected: Type introspection may fail for custom or complex types.
         # Return nil as a safe default.
         nil
@@ -56,6 +60,7 @@ class Minitwin
 
       def attempt_type_coercion(raw_value, type)
         return raw_value unless type
+
         type.call(raw_value)
       rescue *Minitwin.send(:coercion_error_classes)
         raw_value

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class DynamicAliasesSkipTest < ActiveSupport::TestCase
@@ -12,11 +14,11 @@ class DynamicAliasesSkipTest < ActiveSupport::TestCase
   end
 
   test "class without dynamic aliases reports has_dynamic_aliases? false" do
-    refute NoAliases.has_dynamic_aliases?
+    refute_predicate NoAliases, :dynamic_aliases?
   end
 
   test "class with dynamic alias reports has_dynamic_aliases? true" do
-    assert WithDynamicAlias.has_dynamic_aliases?
+    assert_predicate WithDynamicAlias, :dynamic_aliases?
   end
 
   test "no-alias twin setters do not invoke recompute" do

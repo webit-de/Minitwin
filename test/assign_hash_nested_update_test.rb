@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -12,10 +14,12 @@ end
 
 class AssignHashNestedUpdateTest < ActiveSupport::TestCase
   test "should update nested collection items via assign_hash" do
-    t = AssignNestedOuter.from_hash(items: [
-      { value: 1, nested: { nval: "a" } },
-      { value: 2, nested: { nval: "b" } }
-    ])
+    t = AssignNestedOuter.from_hash(
+      items: [
+        { value: 1, nested: { nval: "a" } },
+        { value: 2, nested: { nval: "b" } }
+      ]
+    )
 
     t.assign_hash(items: [{}, { nested: { nval: "Z" } }])
     assert_equal "a", t.items.first.nested.nval

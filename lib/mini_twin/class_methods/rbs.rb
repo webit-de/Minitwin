@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rbs_inline: enabled
 
 class Minitwin
@@ -8,8 +9,9 @@ class Minitwin
       def to_rbs
         # :nocov:
         return "" unless name
+
         lines = []
-        superclass_name = self.superclass ? " < ::#{self.superclass.name}" : ""
+        superclass_name = superclass ? " < ::#{superclass.name}" : ""
         # :nocov:
         lines << "class ::#{name}#{superclass_name}"
 
@@ -21,10 +23,10 @@ class Minitwin
           as_meta = meta[:as]
           # Dynamic aliases (Proc) cannot be represented statically in RBS;
           # fall back to the base property name.
-          reader_name = (as_meta && !as_meta.is_a?(Proc) && as_meta != prop) ? as_meta : prop
+          reader_name = as_meta && !as_meta.is_a?(Proc) && as_meta != prop ? as_meta : prop
           type = rbs_type_for(meta)
           lines << "  attr_reader #{reader_name}: #{type}"
-          if instance_methods(false).include?("#{prop}=".to_sym)
+          if method_defined?(:"#{prop}=", false)
             # :nocov:
             lines << "  attr_writer #{prop}: #{type}"
             # :nocov:
@@ -43,13 +45,12 @@ class Minitwin
         end
 
         # Add initializer signature
-        if init_params.any?
-          lines << ""
-          lines << "  def initialize: (#{init_params.join(', ')}, **untyped) -> void"
-        else
-          lines << ""
-          lines << "  def initialize: (**untyped) -> void"
-        end
+        lines << ""
+        lines << if init_params.any?
+                   "  def initialize: (#{init_params.join(", ")}, **untyped) -> void"
+                 else
+                   "  def initialize: (**untyped) -> void"
+                 end
 
         lines << "end"
         lines.join("\n")
@@ -71,43 +72,56 @@ class Minitwin
         if meta[:element_twin]
           rbs_class_name(meta[:element_twin])
         else
-          'untyped'
+          "untyped"
         end
       end
 
       def rbs_class_name(klass)
-        return 'untyped' unless klass && klass.name
+        return "untyped" unless klass&.name
+
         "::#{klass.name}"
       end
 
-      def dry_type_to_rbs(t)
-        return 'untyped' unless t
-        if t.respond_to?(:primitive) && t.primitive
-          prim = t.primitive
-          if prim == TrueClass || prim == FalseClass
-            'bool'
+      def dry_type_to_rbs(dry_type)
+        return "untyped" unless dry_type
+
+        if dry_type.respond_to?(:primitive) && dry_type.primitive
+          prim = dry_type.primitive
+          if [TrueClass, FalseClass].include?(prim)
+            "bool"
           elsif prim.is_a?(Class) && prim.name
             "::#{prim.name}"
           else
-            'untyped'
+            "untyped"
           end
         else
-          s = t.to_s rescue ''
-          i = (t.inspect rescue '')
-          blob = [ s, i, t.class.name ].join(' ')
-          return 'bool' if blob.include?('Bool')
-          return '::Integer' if blob.include?('Integer')
-          return '::String' if blob.include?('String')
-          return '::Float' if blob.include?('Float')
+          s =
+            begin
+              dry_type.to_s
+            rescue StandardError
+              ""
+            end
+          i =
+            begin
+              dry_type.inspect
+            rescue StandardError
+              ""
+            end
+          blob = [s, i, dry_type.class.name].join(" ")
+          return "bool" if blob.include?("Bool")
+          return "::Integer" if blob.include?("Integer")
+          return "::String" if blob.include?("String")
+          return "::Float" if blob.include?("Float")
+
           begin
-            v1 = t.call(true)
-            v2 = t.call(false)
-            return 'bool' if (v1 == true || v1 == false) && (v2 == true || v2 == false)
-          rescue StandardError => e
+            v1 = dry_type.call(true)
+            v2 = dry_type.call(false)
+            return "bool" if [true, false].include?(v1) && [true, false].include?(v2)
+          rescue StandardError
             # Expected: Type coercion may fail for non-boolean types.
             # Continue to fallback 'untyped'.
           end
-          'untyped'
+          "untyped"
         end
       end
     end

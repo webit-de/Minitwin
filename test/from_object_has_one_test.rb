@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -20,12 +22,10 @@ class ARLikeUser
   end
 
   def attributes
-    { id: @id } # Note: no :profile key here, like ActiveRecord attributes
+    { id: @id } # NOTE: no :profile key here, like ActiveRecord attributes
   end
 
-  def profile
-    @profile
-  end
+  attr_reader :profile
 end
 
 class UserWithHasOneTwin < Minitwin
@@ -44,4 +44,3 @@ class FromObjectHasOneTest < ActiveSupport::TestCase
     assert_equal "Dana", twin.profile.name
   end
 end
-

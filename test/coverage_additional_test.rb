@@ -1,14 +1,22 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
 class CoverageAdditionalTest < ActiveSupport::TestCase
   test "initialize uses allowed_attribute_keys when provided" do
     klass = Class.new(Minitwin) do
-      def self.allowed_attribute_keys; Set[:foo]; end
-      def foo=(v); @foo = v; end
-      def foo; @foo; end
-      def bar=(v); @bar = v; end
-      def bar; @bar; end
+      def self.allowed_attribute_keys
+        Set[:foo]
+      end
+
+      attr_writer :foo
+
+      attr_reader :foo
+
+      attr_writer :bar
+
+      attr_reader :bar
     end
     obj = klass.new(foo: 1, bar: 2)
     assert_equal 1, obj.foo
@@ -17,8 +25,9 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
 
   test "assign_attribute uses setter branch when available" do
     klass = Class.new(Minitwin) do
-      def foo=(v); @foo = v; end
-      def foo; @foo; end
+      attr_writer :foo
+
+      attr_reader :foo
     end
     obj = klass.new
     obj.send(:assign_attribute, method: :foo, value: 42)
@@ -38,28 +47,50 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
   test "sync read NoMethodError path via allowed_attribute_keys without getter" do
     model = Class.new do
       attr_reader :written
-      def missing_getter=(v); @written = true; end
+
+      def missing_getter=(_)
+        @written = true
+      end
     end.new
     twin = Class.new(Minitwin) do
-      def self.allowed_attribute_keys; Set[:missing_getter]; end
-      def missing_getter=(v); @missing = v; end
+      def self.allowed_attribute_keys
+        Set[:missing_getter]
+      end
+
+      def missing_getter=(value)
+        @missing = value
+      end
     end.new
     assert twin.sync(model)
-    assert_equal true, model.written
+    assert model.written
   end
 
   test "sync collection index rescue path with [] raising accesses" do
     coll = Class.new do
-      def initialize(arr); @arr = arr; end
-      def each(&b); @arr.each(&b); end
-      def [](i); raise "boom"; end
+      def initialize(arr)
+        @arr = arr
+      end
+
+      def each(&blk)
+        @arr.each(&blk)
+      end
+
+      def [](_)
+        raise "boom"
+      end
     end
     item = Struct.new(:val)
     m = Class.new do
       attr_reader :items
       attr_reader :assigned
-      def initialize(items); @items = items; end
-      def items=(v); @assigned = v; end
+
+      def initialize(items)
+        @items = items
+      end
+
+      def items=(value)
+        @assigned = value
+      end
     end.new(coll.new([item.new("a"), item.new("b")]))
 
     twin = Class.new(Minitwin) do
@@ -76,7 +107,11 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
   test "build_target_id_lookup elsif branch via Array subclass without to_a in respond_to?" do
     item = Struct.new(:id, :value)
     weird = Class.new(Array) do
-      def respond_to?(m, inc=false); return false if m == :to_a; super; end
+      def respond_to?(method_name, inc = false) # rubocop: disable Style/OptionalBooleanParameter -- is method overwrite from `Object`
+        return false if method_name == :to_a
+
+        super
+      end
     end
     array = weird.new([item.new(1, "a"), item.new(2, "b")])
 
@@ -97,14 +132,27 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
 
   test "rbs untyped element type when collection has no element twin and unknown type maps to untyped" do
     dummy_t = Class.new do
-      def to_s; "Mystery"; end
-      def inspect; "Mystery"; end
-      def class; Struct; end
-      def call(x); raise "nope"; end
+      def to_s
+        "Mystery"
+      end
+
+      def inspect
+        "Mystery"
+      end
+
+      def class
+        Struct
+      end
+
+      def call(_)
+        raise "nope"
+      end
     end.new
 
     klass = Class.new(Minitwin) do
-      def self.name; "UntypedTwin"; end
+      def self.name
+        "UntypedTwin"
+      end
       property :myst, type: dummy_t
       collection :stuff
     end
@@ -125,7 +173,9 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
 
   test "coercion extracts instance variables when no readers present" do
     val = Class.new do
-      def initialize; @foo = 9; end
+      def initialize
+        @foo = 9
+      end
     end.new
     inner = Class.new(Minitwin) do
       property :foo
@@ -140,8 +190,13 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
 
   test "enrich_attrs_from_readers! collection path and coerce_collection_array Array(raw) path" do
     src = Class.new do
-      def attributes; {}; end
-      def items; Object.new; end
+      def attributes
+        {}
+      end
+
+      def items
+        Object.new
+      end
     end.new
     container = Class.new(Minitwin) do
       collection :items

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -18,4 +20,3 @@ class AttributesAliasTest < ActiveSupport::TestCase
     assert_equal({ secret_value: 10 }, attrs)
   end
 end
-

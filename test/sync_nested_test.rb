@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -28,13 +30,15 @@ class SyncNestedTest < ActiveSupport::TestCase
     assert_equal "old@example.com", presented.profile.contact.email
 
     # Submitting form with nested changes on the same presented instance
-    presented.assign_params({
-      name: "Bob",
-      profile: {
-        bio: "New bio",
-        contact: { email: "new@example.com" }
+    presented.assign_params(
+      {
+        name: "Bob",
+        profile: {
+          bio: "New bio",
+          contact: { email: "new@example.com" }
+        }
       }
-    })
+    )
 
     assert presented.sync(nil) # defaults to stored model when available
 
@@ -50,15 +54,17 @@ class SyncNestedTest < ActiveSupport::TestCase
     # Model without nested object instance yet
     user = UserModel.new("Carol", nil)
 
-    twin = UserTwin.from_params({
-      name: "Dave",
-      profile: { bio: "Bio", contact: { email: "contact@example.com" } }
-    })
+    twin = UserTwin.from_params(
+      {
+        name: "Dave",
+        profile: { bio: "Bio", contact: { email: "contact@example.com" } }
+      }
+    )
 
     # The writer should receive a hash for profile
     assert twin.sync(user, validate: false)
     assert_equal "Dave", user.name
-    assert user.profile.is_a?(Hash), "expected profile to be assigned as a Hash when no nested target exists"
+    assert_kind_of Hash, user.profile, "expected profile to be assigned as a Hash when no nested target exists"
     assert_equal({ bio: "Bio", contact: { email: "contact@example.com" } }.with_indifferent_access, user.profile)
   end
 end

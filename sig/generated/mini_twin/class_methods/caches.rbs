@@ -4,7 +4,7 @@ class Minitwin
   module ClassMethods
     module Caches
       # : () -> bool
-      def has_dynamic_aliases?: () -> bool
+      def dynamic_aliases?: () -> bool
 
       private
 

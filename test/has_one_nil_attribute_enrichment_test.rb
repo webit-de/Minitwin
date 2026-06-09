@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -15,9 +17,7 @@ class FakeManagedServiceCategory
     { value: @value }
   end
 
-  def value
-    @value
-  end
+  attr_reader :value
 end
 
 class FakeContract
@@ -55,4 +55,3 @@ class HasOneNilAttributeEnrichmentTest < ActiveSupport::TestCase
     assert_equal "MSP", obj.managed_service_category.category
   end
 end
-

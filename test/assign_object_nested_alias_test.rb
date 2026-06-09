@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -24,4 +26,3 @@ class AssignObjectNestedAliasTest < ActiveSupport::TestCase
     assert_equal expected.deep_stringify_keys, twin.to_hash
   end
 end
-

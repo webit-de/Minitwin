@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -8,7 +10,9 @@ class DslRescueCompositionTest < ActiveSupport::TestCase
       property :foo, on: :src
     end
     t = klass.from_objects(src: src)
-    def klass.collections(*); raise "boom"; end
+    def klass.collections(*)
+      raise "boom"
+    end
     assert_equal "value", t.foo
   end
 end

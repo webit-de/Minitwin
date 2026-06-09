@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -78,7 +80,7 @@ class CombinedTwinTest < ActiveSupport::TestCase
 
     # Scalars and coercions
     assert_equal 7, twin.count
-    assert_equal true, twin.enabled
+    assert twin.enabled
     assert_equal "ALICE", twin.computed_upper
     assert_equal Date.tomorrow, twin.shifted_date
 
@@ -93,14 +95,14 @@ class CombinedTwinTest < ActiveSupport::TestCase
 
     # Collection with alias and defaults
     assert_equal 2, twin.line_items.size
-    assert_equal ["widget", "gadget"], twin.line_items.map(&:name)
+    assert_equal %w[widget gadget], twin.line_items.map(&:name)
     assert_equal [2, 0], twin.line_items.map(&:quantity)
-    assert_equal ["ok", "fine"], twin.line_items.map { |it| it.block_in_item.note }
+    assert_equal(%w[ok fine], twin.line_items.map { |item| item.block_in_item.note })
     assert_respond_to twin, :items_attributes=
 
     # Nested grouping via proxies
     assert_equal "dark", twin.settings.theme
-    assert_equal true, twin.settings.notifications.email
+    assert twin.settings.notifications.email
 
     # Composition
     assert_equal 42, twin.customer_id
@@ -109,7 +111,7 @@ class CombinedTwinTest < ActiveSupport::TestCase
     # Serialization checks
     h = twin.to_hash
     # HashWithIndifferentAccess output
-    assert h.is_a?(ActiveSupport::HashWithIndifferentAccess)
+    assert_kind_of ActiveSupport::HashWithIndifferentAccess, h
     # Aliased id present, original hidden
     assert_equal 42, h[:customer_id]
     assert_nil h[:id]
@@ -131,7 +133,7 @@ class CombinedTwinTest < ActiveSupport::TestCase
     refute h.key?(:theme)
     refute h.key?(:email)
     assert_equal "dark", h[:settings][:theme]
-    assert_equal true, h[:settings][:notifications][:email]
+    assert h[:settings][:notifications][:email]
 
     # JSON equivalent
     parsed = JSON.parse(twin.to_json)
@@ -142,7 +144,7 @@ class CombinedTwinTest < ActiveSupport::TestCase
     assert_equal "Rails Ave", parsed.dig("address", "street")
     assert_equal "widget", parsed.dig("line_items", 0, "name")
     assert_equal "dark", parsed.dig("settings", "theme")
-    assert_equal true, parsed.dig("settings", "notifications", "email")
+    assert parsed.dig("settings", "notifications", "email")
     refute parsed.key?("unexposed_secret")
     refute parsed.key?("latitude")
   end

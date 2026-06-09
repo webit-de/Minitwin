@@ -1,14 +1,18 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class TypeCoercionSetterTest < ActiveSupport::TestCase
   class CountingType
     attr_reader :calls
+
     def initialize
       @calls = 0
     end
-    def call(v)
+
+    def call(value)
       @calls += 1
-      Integer(v)
+      Integer(value)
     end
   end
 
@@ -29,7 +33,9 @@ class TypeCoercionSetterTest < ActiveSupport::TestCase
     CT.instance_variable_set(:@calls, 0)
     t = T.new(n: "1")
     before = CT.calls
-    t.n; t.n; t.n
+    t.n
+    t.n
+    t.n
     assert_equal before, CT.calls, "expected no additional coercion on read"
   end
 

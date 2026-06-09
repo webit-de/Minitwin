@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -31,17 +33,17 @@ class SyncObjectTest < ActiveSupport::TestCase
 
     # presenting form
     contract = SimpleContract.from_object(model)
-    assert contract.valid?
+    assert_predicate contract, :valid?
     assert_equal "Max", contract.name
     assert_equal 18, contract.age
 
     # submitting form
-    contract = SimpleContract.from_params({ name: 'Moritz', age: 15 })
-    refute contract.valid?
+    contract = SimpleContract.from_params({ name: "Moritz", age: 15 })
+    refute_predicate contract, :valid?
     assert_equal ["must be greater than 17"], contract.errors[:age]
 
-    contract = SimpleContract.from_params({ name: 'Moritz', age: 19 })
-    assert contract.valid?
+    contract = SimpleContract.from_params({ name: "Moritz", age: 19 })
+    assert_predicate contract, :valid?
     assert contract.sync(model)
 
     assert_equal "Moritz", model.name
@@ -53,13 +55,13 @@ class SyncObjectTest < ActiveSupport::TestCase
 
     # presenting form
     contract = SimpleContract.from_object(model)
-    assert contract.valid?
+    assert_predicate contract, :valid?
     assert_equal "Max", contract.name
     assert_equal 18, contract.age
 
     # submitting form
-    contract = SimpleContract.from_params({ name: 'Moritz', age: 15 })
-    refute contract.valid?
+    contract = SimpleContract.from_params({ name: "Moritz", age: 15 })
+    refute_predicate contract, :valid?
     assert_equal ["must be greater than 17"], contract.errors[:age]
     assert_not contract.sync(model)
 
@@ -73,9 +75,17 @@ class SyncObjectTest < ActiveSupport::TestCase
 
   test "sync falls back to index when no ids and collection responds to each/[] only" do
     coll = Class.new do
-      def initialize(arr); @arr = arr; end
-      def each(&b); @arr.each(&b); end
-      def [](i); @arr[i]; end
+      def initialize(arr)
+        @arr = arr
+      end
+
+      def each(&blk)
+        @arr.each(&blk)
+      end
+
+      def [](idx)
+        @arr[idx]
+      end
     end
 
     item = Struct.new(:value)
@@ -105,4 +115,3 @@ class SyncObjectTest < ActiveSupport::TestCase
   end
 
 end
-

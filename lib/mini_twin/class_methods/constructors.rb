@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rbs_inline: enabled
 
 class Minitwin
@@ -31,12 +32,19 @@ class Minitwin
       #: (untyped params) -> instance
       def from_params(params)
         return from_hash(params) unless params.respond_to?(:to_unsafe_h)
+
         from_hash params.to_unsafe_h
       end
 
       #: (untyped model) -> instance
       def from_object(model)
-        raise "Input is not an object. If you want to instantiate a Minitwin with multiple objects, then use the pluralized 'from_objects'-method." if model.is_a?(Hash)
+        if model.is_a?(Hash)
+          raise(
+            "Input is not an object. If you want to instantiate a Minitwin with multiple " \
+              "objects, then use the pluralized 'from_objects'-method."
+          )
+        end
+
         from_objects(model:)
       end
 
@@ -81,18 +89,16 @@ class Minitwin
       end
 
       def enrich_attributes_from_models!(attributes, models)
-        begin
-          properties.each_key do |key|
-            enrich_attribute_from_models(attributes, models, key, is_collection: false)
-          end
-
-          collections.each_key do |key|
-            enrich_attribute_from_models(attributes, models, key, is_collection: true)
-          end
-        rescue StandardError => e
-          # Expected: Model objects may raise in attribute readers or have unexpected
-          # behavior. Be resilient and proceed with best-effort enrichment.
+        properties.each_key do |key|
+          enrich_attribute_from_models(attributes, models, key, is_collection: false)
         end
+
+        collections.each_key do |key|
+          enrich_attribute_from_models(attributes, models, key, is_collection: true)
+        end
+      rescue StandardError
+        # Expected: Model objects may raise in attribute readers or have unexpected
+        # behavior. Be resilient and proceed with best-effort enrichment.
       end
 
       def enrich_attribute_from_models(attributes, models, key, is_collection:)
@@ -101,6 +107,7 @@ class Minitwin
 
         models.each_value do |model|
           next unless model.respond_to?(key)
+
           val = model.public_send(key)
           next if val.nil?
 

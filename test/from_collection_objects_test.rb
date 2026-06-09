@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -27,8 +29,7 @@ class FromCollectionObjectsTest < ActiveSupport::TestCase
   test "should build from array of objects with attributes and aliases" do
     models = [AliasModel2.new({ real_name: "A" }), AliasModel2.new({ real_name: "B" })]
     list = FromCollectionAliasTwin.from_collection(models)
-    assert_equal ["A", "B"], list.map(&:alias_name)
-    assert list.all? { |e| e.is_a?(FromCollectionAliasTwin) }
+    assert_equal %w[A B], list.map(&:alias_name)
+    assert(list.all?(FromCollectionAliasTwin))
   end
 end
-

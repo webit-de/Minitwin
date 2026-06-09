@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -35,4 +37,3 @@ class AliasProtectionExtendedTest < ActiveSupport::TestCase
     assert_raises(ArgumentError) { klass.new(x: 1) }
   end
 end
-

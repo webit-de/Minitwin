@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 require "pp"
@@ -25,8 +27,8 @@ class SerializationTest < ActiveSupport::TestCase
       wrong_runtime: "3",
       wrong_lego: { brick: 123 },
       unexposed_prop: "ignore me",
-      cool_stuff: [ { property: "test" } ],
-      an_array: [1,2,3],
+      cool_stuff: [{ property: "test" }],
+      an_array: [1, 2, 3],
       sub_twin: {}
     )
 
@@ -36,16 +38,16 @@ class SerializationTest < ActiveSupport::TestCase
     assert_nil hash["wrong_runtime"]
     assert_equal 3, hash["runtime"]
     assert_equal 123, hash[:lego][:brick]
-    assert_equal [1,2,3], hash[:an_array]
+    assert_equal [1, 2, 3], hash[:an_array]
     assert_equal [], hash[:empty_array]
-    assert_not hash["sub_twin"].has_key?(:sub_property)
+    assert_not hash["sub_twin"].key?(:sub_property)
   end
 
   test "pretty_print should format output nicely" do
     obj = SerTestTwin.from_hash(
       wrong_runtime: "42",
       wrong_lego: { brick: 100 },
-      cool_stuff: [ { property: "item1" }, { property: "item2" } ],
+      cool_stuff: [{ property: "item1" }, { property: "item2" }],
       an_array: [1, 2, 3],
       sub_twin: { sub_property: "nested" }
     )
@@ -94,4 +96,3 @@ class SerializationTest < ActiveSupport::TestCase
     assert_includes result, "second"
   end
 end
-

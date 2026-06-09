@@ -1,13 +1,17 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
 class AMItem
   include ActiveModel::Model
+
   attr_accessor :sub_property, :another_sub_property
 end
 
 class AMContract
   include ActiveModel::Model
+
   attr_accessor :property, :with_collection
 end
 

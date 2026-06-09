@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -27,15 +29,15 @@ class AssignmentTest < ActiveSupport::TestCase
     klass = Class.new(Minitwin) do
       collection :items
     end
-    twin = klass.new(items: [1,2,3])
-    twin.assign_hash(items: [9,8,7])
-    assert_equal [9,8,7], twin.items
+    twin = klass.new(items: [1, 2, 3])
+    twin.assign_hash(items: [9, 8, 7])
+    assert_equal [9, 8, 7], twin.items
   end
 
   test "should assign boolean values" do
     twin = AssignSubTwin.new(**{ "bool?" => true })
     assert_instance_of TrueClass, twin.bool?
-    assert twin.bool?
+    assert_predicate twin, :bool?
     twin = AssignSubTwin.new(**{ "bool?" => false })
     assert_instance_of FalseClass, twin.bool?
     assert_not twin.bool?

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -5,8 +7,8 @@ require "mini_twin"
 # Mimics helpers like ActionView::Helpers::UrlHelper#sms_to which are mixed
 # into twins but must not be treated as serializable getters.
 module MixinWithArgMethod
-  def needs_args(a, b = nil, c = nil)
-    [a, b, c]
+  def needs_args(mandatory, optional_one = nil, optional_two = nil)
+    [mandatory, optional_one, optional_two]
   end
 
   # Mixed-in setter, mimics helpers like ActionView's #output_buffer=.

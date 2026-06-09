@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -24,6 +26,7 @@ end
 
 class Person
   include ActiveModel::Model
+
   attr_accessor :name, :age, :sub_property, :another_sub_property
 end
 
@@ -42,14 +45,14 @@ class FromObjectTest < ActiveSupport::TestCase
   end
 
   test "should instantiate from an activemodel object" do
-    model = Person.new(sub_property: 'bob', another_sub_property: '18')
+    model = Person.new(sub_property: "bob", another_sub_property: "18")
     obj = TwinFromObject.from_object(model)
     assert_equal "bob", obj.renamed
     assert_equal "18", obj.another_sub_property
   end
 
   test "should instantiate from an activemodel object in a block" do
-    person = Person.new(name: 'bob', age: '18')
+    person = Person.new(name: "bob", age: "18")
     model = Data.define(:sub_property, :another_sub_property).new(sub_property: "test", another_sub_property: person)
     obj = NestedTwinFromObject.from_object(model)
     assert_equal "test", obj.renamed
@@ -66,7 +69,8 @@ class FromObjectTest < ActiveSupport::TestCase
           with_collection: [
             collection.new(sub_property: "test", another_sub_property: "another test"),
             collection.new(sub_property: "test2", another_sub_property: "test")
-          ])
+          ]
+        )
     obj = SubTwinFromObject.from_objects(contract: contract)
     assert_equal "test normal", obj.property
     assert_instance_of Array, obj.with_collection
@@ -79,4 +83,3 @@ class FromObjectTest < ActiveSupport::TestCase
     assert_equal "test", second_collection.another_sub_property
   end
 end
-

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -56,18 +58,18 @@ class SyncAsAliasTest < ActiveSupport::TestCase
 
   test "sync deep-syncs collection using alias" do
     item_model = Struct.new(:value)
-    parent_model = Struct.new(:entries).new([item_model.new("a"), item_model.new("b")])
+    parent_model = Struct.new(:renamed_items).new([item_model.new("a"), item_model.new("b")])
 
     klass = Class.new(Minitwin) do
-      collection :items, as: :entries do
+      collection :items, as: :renamed_items do
         property :value
       end
     end
 
     twin = klass.new(items: [{ value: "A1" }, { value: "B2" }])
     assert twin.sync(parent_model, validate: false)
-    assert_equal "A1", parent_model.entries[0].value
-    assert_equal "B2", parent_model.entries[1].value
+    assert_equal "A1", parent_model.renamed_items[0].value
+    assert_equal "B2", parent_model.renamed_items[1].value
   end
 
   test "sync ignores Proc as: and uses original method name" do

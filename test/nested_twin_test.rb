@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -23,7 +25,7 @@ class NestedTwinTest < ActiveSupport::TestCase
   end
 
   test "should handle nested twins" do
-    twin = NestedTwin.new(sub_property: "test", this_is_nested: 'nested', rename_me: 'omg')
+    twin = NestedTwin.new(sub_property: "test", this_is_nested: "nested", rename_me: "omg")
     result = twin.to_hash
     # Top-level alias is used and default property is present
     assert_equal "test", result[:renamed]
@@ -36,11 +38,11 @@ class NestedTwinTest < ActiveSupport::TestCase
   end
 
   test "should handle nested twins from objects" do
-    obj = Data.define(:rename_me).new(rename_me: 'omg')
+    obj = Data.define(:rename_me).new(rename_me: "omg")
     twin = NestedTwin.from_object(obj)
     assert_raises(NoMethodError) { twin.rename_me }
-    assert_equal({ another_sub_property: "default", nested: { nested_renamed: 'omg' } }.deep_stringify_keys, twin.to_hash)
-    assert_equal 'omg', twin.nested_renamed
+    assert_equal({ another_sub_property: "default", nested: { nested_renamed: "omg" } }.deep_stringify_keys, twin.to_hash)
+    assert_equal "omg", twin.nested_renamed
   end
 end
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "class_methods/dsl"
 require_relative "class_methods/constructors"
 require_relative "class_methods/rbs"

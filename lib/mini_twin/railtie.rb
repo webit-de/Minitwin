@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Minitwin
   class Railtie < Rails::Railtie
     rake_tasks do

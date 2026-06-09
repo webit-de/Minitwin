@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rbs_inline: enabled
 
 class Minitwin
@@ -5,12 +6,12 @@ class Minitwin
     module Caches
 
       #: () -> bool
-      def has_dynamic_aliases?
+      def dynamic_aliases?
         return @has_dynamic_aliases_cache unless @has_dynamic_aliases_cache.nil?
 
         @has_dynamic_aliases_cache = begin
           procs = properties.any? { |_, m| m[:as].is_a?(Proc) } ||
-                  collections.any? { |_, m| m[:as].is_a?(Proc) }
+            collections.any? { |_, m| m[:as].is_a?(Proc) }
           nested = respond_to?(:dynamic_nested_aliases) && dynamic_nested_aliases.any?
           procs || nested
         end
@@ -19,15 +20,15 @@ class Minitwin
       private
 
       def invalidate_caches
-        @serializable_getters_cache = nil
-        @allowed_attribute_keys_cache = nil
-        @allowed_attribute_keys_array_cache = nil
-        @setter_methods_cache = nil
+        @serializable_getters = nil
+        @allowed_attribute_keys = nil
+        @allowed_attribute_keys_array = nil
+        @setter_methods = nil
         @has_dynamic_aliases_cache = nil
       end
 
       def serializable_getters
-        @serializable_getters_cache ||= begin
+        @serializable_getters ||= begin
           unexposed = unexposed_properties.to_set
           prot = (protected_instance_methods - Minitwin.protected_instance_methods).to_set
           own_and_inherited = serializable_method_candidates
@@ -44,26 +45,24 @@ class Minitwin
       # like #link_to) are excluded because instance_methods(false) reports only
       # methods owned by the class, not by included modules.
       def serializable_method_candidates
-        ancestors
-          .take_while { |a| a != Minitwin }
-          .select { |a| a.instance_of?(Class) }
-          .flat_map { |klass| klass.instance_methods(false) }
-          .uniq
+        ancestors.
+          take_while { |a| a != Minitwin }.
+          select { |a| a.instance_of?(Class) }.
+          flat_map { |klass| klass.instance_methods(false) }.
+          uniq
       end
 
       def allowed_attribute_keys
-        @allowed_attribute_keys_cache ||= begin
-          # Setters defined directly on the twin class hierarchy. Uses the same
-          # candidate set as serializable_getters so mixed-in module setters
-          # (e.g. ActionView's #output_buffer=) are not treated as assignable
-          # attributes.
-          serializable_method_candidates
-            .grep(/=\z/).map { |m| m.to_s.delete_suffix("=").to_sym }.to_set
-        end
+        # Setters defined directly on the twin class hierarchy. Uses the same
+        # candidate set as serializable_getters so mixed-in module setters
+        # (e.g. ActionView's #output_buffer=) are not treated as assignable
+        # attributes.
+        @allowed_attribute_keys ||= serializable_method_candidates.
+                                      grep(/=\z/).to_set { |m| m.to_s.delete_suffix("=").to_sym }
       end
 
       def allowed_attribute_keys_array
-        @allowed_attribute_keys_array_cache ||= begin
+        @allowed_attribute_keys_array ||= begin
           allowed = allowed_attribute_keys
           ordered = property_order.select { |k| allowed.include?(k) }
           remaining = allowed.to_a - ordered
@@ -72,9 +71,7 @@ class Minitwin
       end
 
       def setter_methods
-        @setter_methods_cache ||= begin
-          public_instance_methods(false).select { |m| m.to_s.end_with?("=") }
-        end
+        @setter_methods ||= public_instance_methods(false).select { |m| m.to_s.end_with?("=") }
       end
     end
   end

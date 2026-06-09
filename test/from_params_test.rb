@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -24,4 +26,3 @@ class FromParamsTest < ActiveSupport::TestCase
     assert_equal "fine", t.y
   end
 end
-

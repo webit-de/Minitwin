@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rbs_inline: enabled
 
 class Minitwin
@@ -12,6 +13,7 @@ class Minitwin
     def to_object(model)
       assignable_attribute_methods.each do |method|
         next unless model.respond_to?(method)
+
         value = model.public_send(method)
 
         ivar_name = Minitwin::Utils.ivar_name(method)
@@ -19,8 +21,8 @@ class Minitwin
 
         if current_value.is_a?(Minitwin) && !value.nil? && !value.is_a?(Hash)
           current_value.to_object(value)
-        else
-          send("#{method}=", value) if respond_to?("#{method}=", true)
+        elsif respond_to?("#{method}=", true)
+          send("#{method}=", value)
         end
       end
       self
@@ -57,15 +59,15 @@ class Minitwin
                 current_value[idx] = item
               end
             end
-          else
-            send("#{method}=", value) if respond_to?("#{method}=", true)
+          elsif respond_to?("#{method}=", true)
+            send("#{method}=", value)
           end
         end
       ensure
         @__skip_alias_recompute__ = was_skipping
       end
 
-      if !@__skip_alias_recompute__ && self.class.has_dynamic_aliases?
+      if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
         __recompute_dynamic_aliases__
       end
 

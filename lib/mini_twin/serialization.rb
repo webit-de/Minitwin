@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # rbs_inline: enabled
 
 class Minitwin
@@ -46,11 +47,11 @@ class Minitwin
       hash
     end
 
-    alias_method :to_h, :to_hash
+    alias to_h to_hash
 
     #: (**untyped) -> String
-    def to_json(**opts)
-      to_hash(**opts).to_json
+    def to_json(**)
+      to_hash(**).to_json
     end
 
     #: () -> Hash[Symbol, untyped]
@@ -70,8 +71,9 @@ class Minitwin
         super
 
         self.class.block_properties.each do |property|
-          child = self.send(property)
+          child = send(property)
           next unless child.respond_to?(:valid?)
+
           child.valid?
           child.errors.each do |attribute|
             errors.add("#{property}.#{attribute.attribute}", attribute.message)
@@ -79,8 +81,9 @@ class Minitwin
         end
 
         self.class.collection_properties.each do |property|
-          self.send(property).each_with_index do |value, index|
+          send(property).each_with_index do |value, index|
             next unless value.respond_to?(:valid?)
+
             value.valid?
             value.errors.each do |attribute|
               errors.add("#{property}[#{index}].#{attribute.attribute}", attribute.message)
@@ -103,14 +106,20 @@ class Minitwin
 
     # Internal helper for PrettyPrint. Do not call this on your own.
     #: (PP) -> void
-    def pretty_print(q)
-      q.object_group(self) do
-        q.breakable
-        q.seplist(ordered_attributes_for_pp, lambda { q.text(','); q.breakable }) do |(name, value)|
-          q.group do
-            q.text name.to_s
-            q.text ': '
-            q.pp value
+    def pretty_print(pretty_printer)
+      pretty_printer.object_group(self) do
+        pretty_printer.breakable
+        pretty_printer.seplist(
+          ordered_attributes_for_pp,
+          -> {
+            pretty_printer.text(",")
+            pretty_printer.breakable
+          }
+        ) do |(name, value)|
+          pretty_printer.group do
+            pretty_printer.text name.to_s
+            pretty_printer.text ": "
+            pretty_printer.pp value
           end
         end
       end
@@ -143,7 +152,7 @@ class Minitwin
 
     def display_name_for(method)
       meta = self.class.properties[method] || self.class.collections[method]
-      (meta && meta[:as] && !meta[:as].is_a?(Proc)) ? meta[:as] : method
+      meta && meta[:as] && !meta[:as].is_a?(Proc) ? meta[:as] : method
     end
 
     def dynamic_aliases_for_pp
@@ -154,6 +163,7 @@ class Minitwin
 
       aliases.filter_map do |target_method, alias_method|
         next if target_method.is_a?(Symbol) && target_method.to_s.start_with?(NESTED_PREFIX)
+
         [alias_method, send(target_method)]
       end
     end

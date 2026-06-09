@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class DeprecationTest < ActiveSupport::TestCase
@@ -21,7 +23,10 @@ class DeprecationTest < ActiveSupport::TestCase
   end
 
   test "virtual: true behaves like expose: false (excluded from to_hash)" do
-    klass = Class.new(Minitwin) { property :name; property :token, virtual: true }
+    klass = Class.new(Minitwin) do
+      property :name
+      property :token, virtual: true
+    end
     twin = klass.new(name: "Alice", token: "secret")
     assert_equal({ name: "Alice" }.with_indifferent_access, twin.to_hash)
   end

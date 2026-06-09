@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 require "mini_twin"
 
@@ -19,7 +21,9 @@ end
 class RbsTest < ActiveSupport::TestCase
   test "rbs_type_for covers nested and untyped branches" do
     klass = Class.new(Minitwin) do
-      def self.name; "RbsBranchTwin"; end
+      def self.name
+        "RbsBranchTwin"
+      end
       property :simple
       property :nested do
         property :sub
