@@ -7,6 +7,17 @@ class GetterSetterTwin < Minitwin
   property :set_days_with_variable_offset, setter: ->(value) { value.days.from_now.to_date }
 end
 
+CharsSetThree = -> (value) { value[..3] }
+
+class SetMe < Minitwin
+  property :name, setter: ->(value) { value.upcase }
+  property :age, as: :settered_age, setter: ->(value) { value + 1 }
+  property :nested do
+    property :street, setter: ->(value) { value.upcase }
+  end
+  property :chars, setter: CharsSetThree, type: Types::Coercible::String
+end
+
 class GetterSetterTest < ActiveSupport::TestCase
   test "should compute getter on instance" do
     a = GetterSetterTwin.from_hash(wrong_runtime: 3)
@@ -20,6 +31,38 @@ class GetterSetterTest < ActiveSupport::TestCase
     b = GetterSetterTwin.new(set_days_with_variable_offset: 2)
     assert_equal Date.tomorrow, a.set_days_with_variable_offset
     assert_equal 2.days.from_now.to_date, b.set_days_with_variable_offset
+  end
+
+  test "setter is applied to property" do
+    obj = SetMe.new(name: "john", age: 25)
+    assert_equal "JOHN", obj.name
+  end
+
+  test "setter is applied to aliased property" do
+    obj = SetMe.new(name: "john", age: 25)
+    assert_equal 26, obj.settered_age
+  end
+
+  test "setter is applied to nested property" do
+    obj = SetMe.new(name: "john", age: 25, nested: { street: "main" })
+    assert_equal "MAIN", obj.nested.street
+  end
+
+  test "setter is applied to coercible type" do
+    obj = SetMe.new(chars: "abc")
+    assert_equal "abc", obj.chars
+    obj = SetMe.new
+    assert_equal "", obj.chars
+  end
+
+  test "setter is applied in to_hash" do
+    obj = SetMe.new(name: "john")
+    assert_equal "JOHN", obj.to_hash[:name]
+  end
+
+  test "setter is applied in from_hash" do
+    obj = SetMe.from_hash(name: "john")
+    assert_equal "JOHN", obj.name
   end
 end
 
