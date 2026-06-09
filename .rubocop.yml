@@ -1,0 +1,9 @@
+inherit_gem:
+  webit-ruby-rubocop: config.yml
+
+plugins:
+  - rubocop-minitest
+  - rubocop-rake
+
+Layout/LeadingCommentSpace:
+  AllowRBSInlineAnnotation: true

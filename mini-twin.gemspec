@@ -27,4 +27,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "actionpack", ">= 6.1"
   spec.add_development_dependency "activemodel", ">= 6.1"
   spec.add_development_dependency "simplecov", ">= 0.22"
+  spec.add_development_dependency "webit-ruby-rubocop", ">= 3.1"
 end
