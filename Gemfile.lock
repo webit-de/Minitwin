@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    mini-twin (0.5.4)
+    mini-twin (0.6.5)
       zeitwerk (>= 2.6)
 
 GEM
