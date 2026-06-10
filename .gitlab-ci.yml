@@ -1,4 +1,5 @@
 stages:
+  - lint
   - test
 
 variables:
@@ -26,3 +27,23 @@ test:
     - bundle install
   script:
     - bundle exec rake test
+
+lint:
+  stage: lint
+  image: ruby:${RUBY_VERSION}-slim
+  interruptible: true
+  parallel:
+    matrix:
+      - RUBY_VERSION: ["3.3", "3.4", "4.0"]
+  cache:
+    key: ruby-${RUBY_VERSION}
+    paths:
+      - vendor/bundle
+  before_script:
+    - apt-get update -y
+    - apt-get install -y --no-install-recommends build-essential pkg-config
+    - gem install bundler -N || true
+    - bundle config set path "$BUNDLE_PATH"
+    - bundle install
+  script:
+    - bundle exec rubocop
