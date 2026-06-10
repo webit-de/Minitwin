@@ -137,11 +137,11 @@ class Minitwin
     end
 
     def __apply_dynamic_alias__(target_method, alias_name)
-      alias_key = begin
-        alias_name.to_sym
-      rescue NoMethodError
-        alias_name
+      unless alias_name.is_a?(String) || alias_name.is_a?(Symbol)
+        raise ArgumentError, "Invalid alias name #{alias_name.inspect}: must be a String or Symbol"
       end
+
+      alias_key = alias_name.to_sym
       aliases = instance_variable_get(ALIASES_VAR)
       aliases_rev = instance_variable_get(ALIASES_REV_VAR)
 

@@ -36,4 +36,13 @@ class AliasProtectionExtendedTest < ActiveSupport::TestCase
     end
     assert_raises(ArgumentError) { klass.new(x: 1) }
   end
+
+  test "raises ArgumentError with clear message when as: proc returns non-string/symbol" do
+    klass = Class.new(Minitwin) do
+      property :x, as: -> { 42 }
+    end
+    error = assert_raises(ArgumentError) { klass.new(x: 1) }
+    assert_match(/invalid alias name/i, error.message)
+    assert_match(/42/, error.message)
+  end
 end
