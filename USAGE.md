@@ -114,6 +114,17 @@ t.theme     #=> "dark"
 t.to_hash   #=> { username: "dana", settings: { theme: "dark", locale: "en" } }
 ```
 
+`nested` also accepts `as:` to rename the container key in serialization, the same
+way `property` does. Because the block uses the plain `name` internally, the alias
+may be any symbol — even one that is not a valid method or instance variable name:
+
+```ruby
+nested :settings, as: :"app:settings" do
+  property :theme
+end
+#=> { :"app:settings" => { theme: "dark" } }
+```
+
 ## Aliases
 
 A static alias (symbol) renames the public getter and protects the original name. The serialized key follows the alias:
@@ -298,7 +309,7 @@ summary.name   #=> "Dana"
 
 ### `nested`
 
-Groups properties under a container key in serialization while keeping a flat read/write API on the parent twin. Requires a block; no other options are accepted.
+Groups properties under a container key in serialization while keeping a flat read/write API on the parent twin. Requires a block.
 
 ```ruby
 nested :address do
@@ -308,6 +319,11 @@ end
 ```
 
 The leaf properties (`city`, `zip`) are accessible directly on the parent instance. `to_hash` places them under the `address` key.
+
+| Option | Description |
+|---|---|
+| block | Required. Defines the nested twin class. |
+| `as:` | Renames the container key in serialization. Accepts any symbol, including one that is not a valid identifier. |
 
 ---
 

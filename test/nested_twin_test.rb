@@ -72,3 +72,34 @@ class DeepNestedTwinTest < ActiveSupport::TestCase
     assert_equal "B", parsed.dig("outer", "inner", "b")
   end
 end
+
+class NestedAsAliasTwin < Minitwin
+  nested :voranfrage_online_request, as: :"@vao:VoranfrageOnlineRequest" do
+    property :kunde
+    property :menge
+  end
+end
+
+class NestedAsAliasTwinTest < ActiveSupport::TestCase
+  test "nested supports as: to rename the container key" do
+    twin = NestedAsAliasTwin.new(kunde: "ACME", menge: 5)
+
+    h = twin.to_hash
+    # Container serialized under the aliased (otherwise-invalid) key
+    assert_equal "ACME", h[:"@vao:VoranfrageOnlineRequest"][:kunde]
+    assert_equal 5, h[:"@vao:VoranfrageOnlineRequest"][:menge]
+    # Internal valid name is not exposed
+    refute h.key?(:voranfrage_online_request)
+
+    parsed = JSON.parse(twin.to_json)
+    assert_equal "ACME", parsed.dig("@vao:VoranfrageOnlineRequest", "kunde")
+  end
+
+  test "nested with as: still hoists leaf readers and setters" do
+    twin = NestedAsAliasTwin.new
+    twin.kunde = "BETA"
+    twin.menge = 9
+    assert_equal "BETA", twin.kunde
+    assert_equal 9, twin.menge
+  end
+end

@@ -139,11 +139,13 @@ class Minitwin
         add_to_property_order(name)
       end
 
-      #: (Symbol) -> void
-      def nested(name, &block)
+      # @rbs name: Symbol
+      # @rbs as: Symbol | Proc
+      # @rbs return: void
+      def nested(name, as: nil, &block)
         raise ArgumentError, "nested requires a block" unless block_given?
 
-        property(name, &block)
+        property(name, as: as, &block)
 
         # Pull the nested class directly from the registration `property`
         # just performed instead of round-tripping through `const_get`.
@@ -173,7 +175,7 @@ class Minitwin
           # Define a stable internal reader for this leaf to support dynamic aliasing
           target_reader = "#{Minitwin::NESTED_READER_PREFIX}#{([name] + path).join("__")}"
           define_method(target_reader) do
-            obj = public_send(name)
+            obj = send(name)
             obj = Minitwin::Utils.traverse_path(obj, path[0..-2])
             if as_meta.is_a?(Proc)
               # When inner property has a dynamic alias, original reader may be protected.
@@ -187,7 +189,7 @@ class Minitwin
 
           # Setter uses original base name to call the nested twin's writer.
           define_method("#{prop}=") do |value|
-            obj = public_send(name)
+            obj = send(name)
             obj = Minitwin::Utils.traverse_path(obj, path[0..-2])
             obj.public_send("#{prop}=", value)
             if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
