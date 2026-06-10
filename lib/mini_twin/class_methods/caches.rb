@@ -29,7 +29,7 @@ class Minitwin
 
       def serializable_getters
         @serializable_getters ||= begin
-          unexposed = unexposed_properties.to_set
+          unexposed = unexposed_properties.to_set(&:to_sym)
           prot = (protected_instance_methods - Minitwin.protected_instance_methods).to_set
           own_and_inherited = serializable_method_candidates
           own_and_inherited.reject do |m|

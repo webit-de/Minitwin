@@ -7,7 +7,7 @@ class GetterSetterTwin < Minitwin
   property :wrong_runtime, as: :runtime, type: Types::Params::Integer.lax, default: 0
   property :runtime_greater_than_three, getter: -> { runtime > 3 }
   property :set_days_with_variable_offset, setter: ->(value) { value.days.from_now.to_date }
-  property :modify_me, getter: -> { @modify_me = "#{@modify_me} modified" }
+  property :modify_me, getter: -> { "#{@modify_me} modified" }
 end
 
 CharsSetThree = ->(value) { value[..3] }

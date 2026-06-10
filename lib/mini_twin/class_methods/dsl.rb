@@ -371,11 +371,11 @@ class Minitwin
       end
 
       def add_block_property(name:)
-        block_properties << name
+        block_properties << name.to_sym
       end
 
       def add_collection_property(name:)
-        collection_properties << name
+        collection_properties << name.to_sym
       end
 
       def add_to_property_order(name)
