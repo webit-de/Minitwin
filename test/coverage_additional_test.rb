@@ -130,6 +130,41 @@ class CoverageAdditionalTest < ActiveSupport::TestCase
     assert_equal "B2", m.items[1].value
   end
 
+  test "build_target_id_lookup branch with non-array but with to_a" do
+    collection_class = Class.new do
+      def initialize(arr)
+        @arr = arr
+      end
+
+      def each(&blk)
+        @arr.each(&blk)
+      end
+
+      def [](idx)
+        @arr[idx]
+      end
+
+      def to_a
+        @arr.to_a
+      end
+    end
+
+    item = Struct.new(:id, :value)
+    model = Struct.new(:items).new(collection_class.new([item.new(1, "a"), item.new(2, "b")]))
+
+    klass = Class.new(Minitwin) do
+      collection :items do
+        property :id
+        property :value
+      end
+    end
+
+    twin = klass.new(items: [{ id: 2, value: "B1" }, { id: 1, value: "A2" }])
+    assert twin.sync(model)
+    assert_equal "A2", model.items[0].value
+    assert_equal "B1", model.items[1].value
+  end
+
   test "rbs untyped element type when collection has no element twin and unknown type maps to untyped" do
     dummy_t = Class.new do
       def to_s

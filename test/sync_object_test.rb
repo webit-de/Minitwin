@@ -28,7 +28,7 @@ class SyncObjectTest < ActiveSupport::TestCase
     property :age, validates: { presence: true, numericality: { greater_than: 17 } }
   end
 
-  test "should handle a form livecycle" do
+  test "should handle a form lifecycle" do
     model = Struct.new(:name, :age).new("Max", 18)
 
     # presenting form
@@ -103,6 +103,23 @@ class SyncObjectTest < ActiveSupport::TestCase
     assert_equal "B2", model.items[1].value
   end
 
+  test "sync falls back to index when no ids are set" do
+    item = Struct.new(:id, :value)
+    model = Struct.new(:items).new([item.new(nil, "a"), item.new(nil, "b")])
+
+    klass = Class.new(Minitwin) do
+      collection :items do
+        property :id
+        property :value
+      end
+    end
+
+    twin = klass.new(items: [{ id: 1, value: "A1" }, { id: 2, value: "B2" }])
+    assert twin.sync(model)
+    assert_equal "A1", model.items[0].value
+    assert_equal "B2", model.items[1].value
+  end
+
   test "sync picks first stored model when default :model is missing" do
     model = Struct.new(:name).new("X")
     klass = Class.new(Minitwin) do
@@ -112,6 +129,15 @@ class SyncObjectTest < ActiveSupport::TestCase
     twin.assign_hash(name: "Y")
     assert twin.sync
     assert_equal "Y", model.name
+  end
+
+  test "should fail sync without model" do
+    klass = Class.new(Minitwin) do
+      property :value
+    end
+
+    twin = klass.new(value: "A1")
+    assert_not twin.sync
   end
 
 end

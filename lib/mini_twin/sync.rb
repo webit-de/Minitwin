@@ -111,6 +111,10 @@ class Minitwin
 
     private
 
+    # Builds a lookup hash from the provided collection.
+    # The collection may be an array or something convertible to an array.
+    # The result is a hash map with the ids of the models in the collection as
+    # keys and the models itself as values.
     def build_target_id_lookup(coll)
       ary = if coll.is_a?(Array)
               coll
@@ -123,11 +127,7 @@ class Minitwin
       ary.each_with_object({}) do |m, h|
         next unless m.respond_to?(:id)
 
-        key = begin
-          m.id
-        rescue StandardError
-          nil
-        end
+        key = m.id
         h[key] = m if key
       end
     end
