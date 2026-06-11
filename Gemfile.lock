@@ -138,6 +138,10 @@ GEM
       lint_roller (~> 1.1)
       rubocop (>= 1.75.0, < 2.0)
       rubocop-ast (>= 1.38.0, < 2.0)
+    rubocop-performance (1.26.1)
+      lint_roller (~> 1.1)
+      rubocop (>= 1.75.0, < 2.0)
+      rubocop-ast (>= 1.47.1, < 2.0)
     rubocop-rake (0.7.1)
       lint_roller (~> 1.1)
       rubocop (>= 1.72.1)
@@ -181,6 +185,7 @@ DEPENDENCIES
   mini-twin!
   minitest (>= 5.18)
   rake (>= 13.0)
+  rubocop-performance (= 1.26.1)
   simplecov (>= 0.22)
   webit-ruby-rubocop (>= 3.1)
 

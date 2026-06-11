@@ -3,6 +3,7 @@ inherit_gem:
 
 plugins:
   - rubocop-minitest
+  - rubocop-performance
   - rubocop-rake
 
 Layout/LeadingCommentSpace:

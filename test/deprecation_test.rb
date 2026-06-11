@@ -43,7 +43,7 @@ class DeprecationTest < ActiveSupport::TestCase
     original = Warning.method(:warn)
     captured = +""
     Warning.singleton_class.define_method(:warn) { |msg, **| captured << msg.to_s }
-    block.call
+    yield
     captured
   ensure
     Warning.singleton_class.define_method(:warn, &original)
