@@ -43,8 +43,10 @@ class Minitwin
       # @rbs return: void
       def property: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?virtual: bool?, ?expose: bool, ?readonly: bool, ?type: untyped, ?getter: Proc, ?setter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
 
-      # : (Symbol) -> void
-      def nested: (Symbol) -> void
+      # @rbs name: Symbol
+      # @rbs as: Symbol | Proc
+      # @rbs return: void
+      def nested: (Symbol name, ?as: untyped) ?{ (?) -> untyped } -> void
 
       private
 

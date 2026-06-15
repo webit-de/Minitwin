@@ -14,7 +14,7 @@ class Minitwin
 
       def rbs_class_name: (untyped klass) -> untyped
 
-      def dry_type_to_rbs: (untyped t) -> untyped
+      def dry_type_to_rbs: (untyped dry_type) -> untyped
     end
   end
 end

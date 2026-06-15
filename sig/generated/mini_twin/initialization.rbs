@@ -10,6 +10,9 @@ class Minitwin
 
     ALIASES_REV_VAR: untyped
 
+    # Forbidden method names that should never be aliased for security reasons
+    FORBIDDEN_ALIAS_NAMES: untyped
+
     # : (**untyped) -> instance
     def initialize: (**untyped) -> instance
 
@@ -33,9 +36,6 @@ class Minitwin
     def __compute_alias_name__: (untyped as_proc) -> untyped
 
     def __compute_nested_alias_name__: (untyped entry) -> untyped
-
-    # Forbidden method names that should never be aliased for security reasons
-    FORBIDDEN_ALIAS_NAMES: untyped
 
     def __apply_dynamic_alias__: (untyped target_method, untyped alias_name) -> untyped
 

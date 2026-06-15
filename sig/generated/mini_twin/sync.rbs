@@ -10,6 +10,10 @@ class Minitwin
 
     private
 
+    # Builds a lookup hash from the provided collection.
+    # The collection may be an array or something convertible to an array.
+    # The result is a hash map with the ids of the models in the collection as
+    # keys and the models itself as values.
     def build_target_id_lookup: (untyped coll) -> untyped
   end
 end

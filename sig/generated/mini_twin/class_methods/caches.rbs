@@ -12,6 +12,13 @@ class Minitwin
 
       def serializable_getters: () -> untyped
 
+      # Methods defined directly on the twin class hierarchy: this class and any
+      # intermediate Minitwin subclasses, but not Minitwin itself. Methods mixed
+      # in via modules (e.g. ActionView helpers, which include arg-taking methods
+      # like #link_to) are excluded because instance_methods(false) reports only
+      # methods owned by the class, not by included modules.
+      def serializable_method_candidates: () -> untyped
+
       def allowed_attribute_keys: () -> untyped
 
       def allowed_attribute_keys_array: () -> untyped
