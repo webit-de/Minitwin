@@ -28,6 +28,17 @@ class SetMe < Minitwin
   property :chars, setter: CharsSetThree, type: Types::Coercible::String
 end
 
+class GetterWithArgTwin < Minitwin
+  property :shout, getter: ->(val) { val&.upcase }
+  property :code,  getter: :strip_dashes
+
+  private
+
+  def strip_dashes(val)
+    val&.delete("-")
+  end
+end
+
 class GetterSetterTest < ActiveSupport::TestCase
   test "should compute getter on instance" do
     a = GetterSetterTwin.from_hash(wrong_runtime: 3)
@@ -79,5 +90,15 @@ class GetterSetterTest < ActiveSupport::TestCase
   test "getter from symbol calls named method in instance context" do
     t = GetterSetterTwin.new(modified_symbol: "hello")
     assert_equal "hello symbol", t.modified_symbol
+  end
+
+  test "getter lambda with argument receives current property value" do
+    t = GetterWithArgTwin.new(shout: "alice")
+    assert_equal "ALICE", t.shout
+  end
+
+  test "getter symbol with argument receives current property value" do
+    t = GetterWithArgTwin.new(code: "A-1-2")
+    assert_equal "A12", t.code
   end
 end

@@ -289,7 +289,7 @@ summary.name   #=> "Dana"
 | `twin:` | Wraps the value in another twin class. Accepts a hash, a twin instance, or an object with `to_h`/`attributes`. |
 | `expose:` | `false` omits the property from `to_hash`/`to_json`. |
 | `readonly:` | `true` prevents assignment via `assign_hash` and `assign_params`. |
-| `getter:` | A lambda `-> { ... }` or a symbol `:method_name` that fully replaces the generated getter. The lambda runs in instance context; the symbol calls the named method on the instance. |
+| `getter:` | A lambda `-> { ... }` or a symbol `:method_name` that fully replaces the generated getter. The lambda runs in instance context; the symbol calls the named method on the instance. If the lambda or method accepts a parameter, the current raw property value is passed as the argument. |
 | `setter:` | A lambda `->(value) { ... }` that fully replaces the generated setter. Not allowed together with a block. |
 | `on:` | Reads the value from a named composition source (see `from_objects`). |
 | `validates:` | ActiveModel validation options, e.g. `{ presence: true }`. Ignored when ActiveModel is not available. |
@@ -302,7 +302,7 @@ summary.name   #=> "Dana"
 | `as:` | Public getter name. Accepts a symbol or a lambda `-> { ... }` for dynamic aliases. |
 | `default:` | Default value. Defaults to `[]`. |
 | `twin:` | Wraps each element in the given twin class. |
-| `getter:` | A lambda `-> { ... }` or a symbol `:method_name` that fully replaces the generated getter. The lambda runs in instance context; the symbol calls the named method on the instance. |
+| `getter:` | A lambda `-> { ... }` or a symbol `:method_name` that fully replaces the generated getter. The lambda runs in instance context; the symbol calls the named method on the instance. If the lambda or method accepts a parameter, the current raw property value is passed as the argument. |
 | `on:` | Reads the collection from a named composition source. Each element is wrapped in the element twin when one is configured. |
 | `validates:` | ActiveModel validation options applied to the collection property itself. |
 | block | Defines an inline nested twin class used for each element. |

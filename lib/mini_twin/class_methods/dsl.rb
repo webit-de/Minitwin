@@ -257,10 +257,19 @@ class Minitwin
 
       def build_getter_proc(name:, on:, default:, getter:, type:)
         if getter
+          ivar = Minitwin::Utils.ivar_name(name)
           if getter.is_a?(Symbol)
-            return -> { send(getter) }
-          else
+            return -> {
+              if self.class.instance_method(getter).arity.zero?
+                send(getter)
+              else
+                send(getter, instance_variable_get(ivar))
+              end
+            }
+          elsif getter.arity.zero?
             return -> { instance_exec(&getter) }
+          else
+            return -> { instance_exec(instance_variable_get(ivar), &getter) }
           end
         end
 
