@@ -2,6 +2,8 @@
 
 require "rake/testtask"
 
+load "lib/tasks/minitwin.rake"
+
 Rake::TestTask.new(:test) do |t|
   t.libs << "lib"
   t.libs << "test"

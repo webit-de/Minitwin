@@ -116,6 +116,13 @@ GEM
       nokogiri (>= 1.15.7, != 1.16.7, != 1.16.6, != 1.16.5, != 1.16.4, != 1.16.3, != 1.16.2, != 1.16.1, != 1.16.0.rc1, != 1.16.0)
     rainbow (3.1.1)
     rake (13.4.2)
+    rbs (4.0.2)
+      logger
+      prism (>= 1.6.0)
+      tsort
+    rbs-inline (0.14.0)
+      prism (>= 0.29)
+      rbs (~> 4.0)
     regexp_parser (2.12.0)
     rubocop (1.87.0)
       json (~> 2.3)
@@ -153,6 +160,7 @@ GEM
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
+    tsort (0.2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (3.2.0)
@@ -185,6 +193,7 @@ DEPENDENCIES
   mini-twin!
   minitest (>= 5.18)
   rake (>= 13.0)
+  rbs-inline
   rubocop-performance (= 1.26.1)
   simplecov (>= 0.22)
   webit-ruby-rubocop (>= 3.1)

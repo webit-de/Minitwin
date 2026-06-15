@@ -13,6 +13,7 @@ group :development, :test do
   gem "m", ">= 1.6"
   gem "minitest", ">= 5.18"
   gem "rake", ">= 13.0"
+  gem "rbs-inline"
   gem "rubocop-performance", "1.26.1", require: false
   gem "simplecov", ">= 0.22"
   gem "webit-ruby-rubocop", ">= 3.1", require: false
