@@ -256,7 +256,13 @@ class Minitwin
       end
 
       def build_getter_proc(name:, on:, default:, getter:, type:)
-        return -> { instance_exec(&getter) } if getter
+        if getter
+          if getter.is_a?(Symbol)
+            return -> { send(getter) }
+          else
+            return -> { instance_exec(&getter) }
+          end
+        end
 
         if on
           build_composition_getter(name:, on:, default:, type:)

@@ -8,6 +8,13 @@ class GetterSetterTwin < Minitwin
   property :runtime_greater_than_three, getter: -> { runtime > 3 }
   property :set_days_with_variable_offset, setter: ->(value) { value.days.from_now.to_date }
   property :modify_me, getter: -> { "#{@modify_me} modified" }
+  property :modified_symbol, getter: :modify_by_symbol
+
+  private
+
+  def modify_by_symbol
+    "#{@modified_symbol} symbol"
+  end
 end
 
 CharsSetThree = ->(value) { value[..3] }
@@ -67,5 +74,10 @@ class GetterSetterTest < ActiveSupport::TestCase
   test "setter is applied in from_hash" do
     obj = SetMe.from_hash(name: "john")
     assert_equal "JOHN", obj.name
+  end
+
+  test "getter from symbol calls named method in instance context" do
+    t = GetterSetterTwin.new(modified_symbol: "hello")
+    assert_equal "hello symbol", t.modified_symbol
   end
 end
