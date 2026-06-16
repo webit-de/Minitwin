@@ -1,0 +1,35 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check-rbs:
+    name: Check RBS Task
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ruby einrichten
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: RBS Dateien überprüfen
+        run: bundle exec rake minitwin:check_rbs
+
+  rubocop:
+    name: Rubocop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ruby einrichten
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Rubocop ausführen
+        run: bundle exec rubocop
