@@ -19,6 +19,17 @@ class Minitwin
       # methods owned by the class, not by included modules.
       def serializable_method_candidates: () -> untyped
 
+      # Base names of every declared property and collection across the twin
+      # class hierarchy. Only methods whose declaration name is one of these
+      # serialize, so plain getters hand-defined on a twin are excluded. `as:`
+      # aliases pass because #original_name maps them back to the original
+      # property (the aliased reader is made protected and rejected separately).
+      def declared_property_keys: () -> untyped
+
+      # This class and any intermediate Minitwin subclasses, but not Minitwin
+      # itself or mixed-in modules.
+      def twin_class_hierarchy: () -> untyped
+
       def allowed_attribute_keys: () -> untyped
 
       def allowed_attribute_keys_array: () -> untyped

@@ -24,7 +24,8 @@ class MixinTwin < Minitwin
 
   property :name
 
-  # Plain getter defined directly on the twin must still be serialized.
+  # Plain getter defined directly on the twin must not be serialized; only
+  # declared properties are.
   def computed
     "computed-#{name}"
   end
@@ -37,8 +38,8 @@ class MixinMethodSerializationTest < ActiveSupport::TestCase
     hash = obj.to_hash
 
     assert_not hash.key?(:needs_args), "mixed-in method should not be serialized"
+    assert_not hash.key?(:computed), "plain getter defined on twin must not be serialized"
     assert_equal "x", hash[:name]
-    assert_equal "computed-x", hash[:computed], "plain getter defined on twin must still serialize"
   end
 
   test "mixed-in module setters are not assignable attributes" do
