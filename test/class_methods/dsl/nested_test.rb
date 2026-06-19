@@ -3,7 +3,7 @@
 require "test_helper"
 require "mini_twin"
 
-class NestedTwinTest < ActiveSupport::TestCase
+class DslNestedTest < ActiveSupport::TestCase
 
   class NestedTwin < Minitwin
     property :sub_property, as: :renamed
@@ -14,7 +14,46 @@ class NestedTwinTest < ActiveSupport::TestCase
     end
   end
 
-  test "nested const lookup rescue path executes" do
+  class DeepNestedTwin < Minitwin
+    nested :outer do
+      property :a
+      nested :inner do
+        property :b
+        property :c, as: :d
+      end
+    end
+  end
+
+  class NestedAsAliasTwin < Minitwin
+    nested :voranfrage_online_request, as: :"@vao:VoranfrageOnlineRequest" do
+      property :kunde
+      property :menge
+    end
+  end
+
+  # A nested block can be declared with a String name (e.g. nested 'GF06'),
+  # commonly used when the container key must match an external schema verbatim.
+  class StringNamedNestedTwin < Minitwin
+    nested :outer do
+      nested "GROUP" do
+        property :leaf
+      end
+    end
+  end
+
+  # Leaves whose `as:` alias is a String must be hidden from the parent's
+  # serialization just like Symbol aliases are; otherwise the hoisted top-level
+  # read proxy leaks a duplicate key at every ancestor level.
+  class StringAliasNestedTwin < Minitwin
+    nested :outer, as: "Outer" do
+      property :name, as: "Name"
+      nested :inner, as: "Inner" do
+        property :code, as: "Code"
+      end
+    end
+  end
+
+  test "nested const lookup falls back to local class when const_set rescue branch runs" do
     klass = Class.new(Minitwin) do
       nested :group do
         property :a
@@ -25,7 +64,7 @@ class NestedTwinTest < ActiveSupport::TestCase
     assert_equal 1, t.group.a
   end
 
-  test "should handle nested twins" do
+  test "nested twins group leaves under the container and hoist top-level aliases" do
     twin = NestedTwin.new(sub_property: "test", this_is_nested: "nested", rename_me: "omg")
     result = twin.to_hash
     # Top-level alias is used and default property is present
@@ -38,28 +77,15 @@ class NestedTwinTest < ActiveSupport::TestCase
     assert_not result.key?(:this_is_nested)
   end
 
-  test "should handle nested twins from objects" do
+  test "nested twins from objects expose only declared readers and group leaves" do
     obj = Data.define(:rename_me).new(rename_me: "omg")
     twin = NestedTwin.from_object(obj)
     assert_raises(NoMethodError) { twin.rename_me }
     assert_equal({ another_sub_property: "default", nested: { nested_renamed: "omg" } }.deep_stringify_keys, twin.to_hash)
     assert_equal "omg", twin.nested_renamed
   end
-end
 
-class DeepNestedTwinTest < ActiveSupport::TestCase
-
-  class DeepNestedTwin < Minitwin
-    nested :outer do
-      property :a
-      nested :inner do
-        property :b
-        property :c, as: :d
-      end
-    end
-  end
-
-  test "should serialize nested structure in to_hash and to_json" do
+  test "deep nesting serializes the nested structure in to_hash and to_json" do
     twin = DeepNestedTwin.new(a: "A", b: "B")
 
     h = twin.to_hash
@@ -76,16 +102,6 @@ class DeepNestedTwinTest < ActiveSupport::TestCase
 
     h = DeepNestedTwin.new.to_hash
     assert_equal({ outer: { inner: {} } }.deep_stringify_keys, h)
-  end
-end
-
-class NestedAsAliasTwinTest < ActiveSupport::TestCase
-
-  class NestedAsAliasTwin < Minitwin
-    nested :voranfrage_online_request, as: :"@vao:VoranfrageOnlineRequest" do
-      property :kunde
-      property :menge
-    end
   end
 
   test "nested supports as: to rename the container key" do
@@ -109,19 +125,6 @@ class NestedAsAliasTwinTest < ActiveSupport::TestCase
     assert_equal "BETA", twin.kunde
     assert_equal 9, twin.menge
   end
-end
-
-class StringNamedNestedTwinTest < ActiveSupport::TestCase
-
-  # A nested block can be declared with a String name (e.g. nested 'GF06'),
-  # commonly used when the container key must match an external schema verbatim.
-  class StringNamedNestedTwin < Minitwin
-    nested :outer do
-      nested "GROUP" do
-        property :leaf
-      end
-    end
-  end
 
   test "string-named nested block is seeded on flat init so leaf setters work" do
     twin = StringNamedNestedTwin.new(leaf: "value")
@@ -140,20 +143,6 @@ class StringNamedNestedTwinTest < ActiveSupport::TestCase
 
     assert_equal({ outer: { "GROUP" => {} } }.deep_stringify_keys, h)
   end
-end
-
-class StringAliasNestedTwinTest < ActiveSupport::TestCase
-  # Leaves whose `as:` alias is a String must be hidden from the parent's
-  # serialization just like Symbol aliases are; otherwise the hoisted top-level
-  # read proxy leaks a duplicate key at every ancestor level.
-  class StringAliasNestedTwin < Minitwin
-    nested :outer, as: "Outer" do
-      property :name, as: "Name"
-      nested :inner, as: "Inner" do
-        property :code, as: "Code"
-      end
-    end
-  end
 
   test "string-aliased leaves do not leak into ancestor serialization" do
     h = StringAliasNestedTwin.new(name: "n", code: "c").to_hash
@@ -169,5 +158,39 @@ class StringAliasNestedTwinTest < ActiveSupport::TestCase
 
     assert_equal "n", twin.to_hash["Outer"]["Name"]
     assert_equal "c", twin.to_hash["Outer"]["Inner"]["Code"]
+  end
+
+  test "nested class creation tolerates an invalid constant name" do
+    klass = Class.new(Minitwin) do
+      # Using a name that might cause issues with constant naming
+      property :my_nested_prop do
+        property :value
+      end
+    end
+
+    obj = klass.new(my_nested_prop: { value: "test" })
+    assert_equal "test", obj.my_nested_prop.value
+  end
+
+  test "nested without a block raises an ArgumentError" do
+    error = assert_raises(ArgumentError) do
+      Class.new(Minitwin) do
+        nested :invalid
+      end
+    end
+    assert_match(/requires a block/, error.message)
+  end
+
+  test "nested groups expose leaf readers through their protected alias" do
+    klass = Class.new(Minitwin) do
+      nested :metadata do
+        property :created_at, as: :timestamp
+      end
+    end
+
+    obj = klass.new(created_at: "2024-01-01")
+    # Nested groups create setters for leaf properties
+    # Should be able to access via the nested group
+    assert_equal "2024-01-01", obj.timestamp
   end
 end
