@@ -68,7 +68,6 @@ class Minitwin
       # @rbs validates: Hash[Symbol, untyped]
       # @rbs default: untyped
       # @rbs as: Symbol | Proc
-      # @rbs virtual: bool?
       # @rbs expose: bool
       # @rbs readonly: bool
       # @rbs type: untyped
@@ -78,14 +77,9 @@ class Minitwin
       # @rbs on: Symbol
       # @rbs return: void
       def property(
-        name, validates: {}, default: nil, as: nil, virtual: nil, expose: true, readonly: false, type: nil, getter: nil, setter: nil,
+        name, validates: {}, default: nil, as: nil, expose: true, readonly: false, type: nil, getter: nil, setter: nil,
         twin: nil, on: nil, **_opts, &block
       )
-        unless virtual.nil?
-          warn "property :#{name} - `virtual:` is deprecated, use `expose: #{!virtual}` instead.", uplevel: 1
-          expose = !virtual
-        end
-
         nested_class = nil
 
         if block_given?

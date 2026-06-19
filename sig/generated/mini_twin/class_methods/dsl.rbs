@@ -32,7 +32,6 @@ class Minitwin
       # @rbs validates: Hash[Symbol, untyped]
       # @rbs default: untyped
       # @rbs as: Symbol | Proc
-      # @rbs virtual: bool?
       # @rbs expose: bool
       # @rbs readonly: bool
       # @rbs type: untyped
@@ -41,7 +40,7 @@ class Minitwin
       # @rbs twin: untyped
       # @rbs on: Symbol
       # @rbs return: void
-      def property: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?virtual: bool?, ?expose: bool, ?readonly: bool, ?type: untyped, ?getter: Proc, ?setter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
+      def property: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?expose: bool, ?readonly: bool, ?type: untyped, ?getter: Proc, ?setter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
 
       # @rbs name: Symbol
       # @rbs as: Symbol | Proc
