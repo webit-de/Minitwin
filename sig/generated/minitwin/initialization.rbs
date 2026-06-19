@@ -1,4 +1,4 @@
-# Generated from lib/mini_twin/initialization.rb with RBS::Inline
+# Generated from lib/minitwin/initialization.rb with RBS::Inline
 
 class Minitwin
   # Instance construction and low-level helpers used by the DSL-generated

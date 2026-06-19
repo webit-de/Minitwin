@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "mini_twin"
+require "minitwin"
 
 class CachesTest < ActiveSupport::TestCase
   # --- serializable getters: only declared properties serialize ---

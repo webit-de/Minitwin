@@ -2,7 +2,7 @@
 
 require "English"
 require "test_helper"
-require "mini_twin"
+require "minitwin"
 
 class MinitwinTest < ActiveSupport::TestCase
   class NamedTwin < Minitwin
@@ -24,19 +24,6 @@ class MinitwinTest < ActiveSupport::TestCase
     obj = klass.new(id: 1, items: [{ name: "a" }])
     assert_equal 1, obj.id
     assert_equal "a", obj.items.first.name
-  end
-
-  # --- Deprecation alias ---
-
-  test "MiniTwin is an alias for Minitwin" do
-    # Resolve MiniTwin through const_get to suppress the access warning here.
-    legacy = Object.const_get(:MiniTwin)
-    assert_same Minitwin, legacy
-  end
-
-  test "referencing MiniTwin emits a deprecation warning" do
-    captured = capture_warning { Object.const_get(:MiniTwin) }
-    assert_match(/MiniTwin.*deprecated/, captured)
   end
 
   # --- Descendants WeakMap ---
@@ -96,7 +83,7 @@ class MinitwinTest < ActiveSupport::TestCase
         end
       end
 
-      require "mini_twin"
+      require "minitwin"
       raise "ActiveModel leaked" if defined?(ActiveModel::Model)
 
       class WidgetTwin < Minitwin
@@ -110,17 +97,5 @@ class MinitwinTest < ActiveSupport::TestCase
     out = IO.popen([RbConfig.ruby, "-e", script], err: %i[child out], &:read)
     assert_equal 0, $CHILD_STATUS.exitstatus, "child failed: #{out}"
     assert_match(/^ok$/, out)
-  end
-
-  private
-
-  def capture_warning(&block)
-    original = Warning.method(:warn)
-    captured = +""
-    Warning.singleton_class.define_method(:warn) { |msg, **| captured << msg.to_s }
-    yield
-    captured
-  ensure
-    Warning.singleton_class.define_method(:warn, &original)
   end
 end

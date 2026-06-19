@@ -5,14 +5,13 @@ require "simplecov"
 SimpleCov.start do
   add_filter "/test/"
   add_filter "/vendor/"
-  add_filter "/lib/mini_twin.rb"
+  add_filter "/lib/minitwin.rb"
   enable_coverage :branch
   minimum_coverage line: 99, branch: 80
 end
 
-# Surface Ruby deprecation warnings (deprecate_constant et al.) during tests.
-# Defaults to false on Ruby 3.0+; we enable it so the suite exercises and
-# verifies the deprecation signal.
+# Surface Ruby deprecation warnings during tests. Defaults to false on
+# Ruby 3.0+; we enable it so the suite flags any deprecated API usage.
 Warning[:deprecated] = true
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
@@ -35,7 +34,7 @@ require "active_model"
 
 # Provide Types shorthand for dry-types in tests
 # (Minitwin no longer ships its own Types module)
-require "mini_twin"
+require "minitwin"
 module Types
   include Dry.Types()
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "mini_twin"
+require "minitwin"
 require "pp"
 require "stringio"
 

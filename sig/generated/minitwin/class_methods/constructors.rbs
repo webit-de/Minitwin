@@ -1,4 +1,4 @@
-# Generated from lib/mini_twin/class_methods/constructors.rb with RBS::Inline
+# Generated from lib/minitwin/class_methods/constructors.rb with RBS::Inline
 
 class Minitwin
   module ClassMethods

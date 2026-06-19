@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative "lib/mini_twin/version"
+require_relative "lib/minitwin/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "mini-twin"
+  spec.name = "minitwin"
   spec.version = Minitwin::VERSION
   spec.authors = ["Johannes Balk", "Roland Schwarzer"]
   spec.email = ["eteam@webit.de"]

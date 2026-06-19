@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "mini_twin"
+require "minitwin"
 
 class CoercionTest < ActiveSupport::TestCase
   # === embedding sub twins via twin: ===

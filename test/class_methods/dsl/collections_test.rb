@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "mini_twin"
+require "minitwin"
 
 class DslCollectionsTest < ActiveSupport::TestCase
   test "collection supports _attributes suffix writer and reader" do

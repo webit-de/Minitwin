@@ -1,4 +1,4 @@
-# Generated from lib/mini_twin/serialization.rb with RBS::Inline
+# Generated from lib/minitwin/serialization.rb with RBS::Inline
 
 class Minitwin
   # Serialization to Hash/JSON and ActiveModel validation aggregation.

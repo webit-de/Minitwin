@@ -1,4 +1,4 @@
-# Generated from lib/mini_twin/sync.rb with RBS::Inline
+# Generated from lib/minitwin/sync.rb with RBS::Inline
 
 class Minitwin
   module Sync

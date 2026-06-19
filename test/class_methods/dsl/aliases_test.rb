@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "mini_twin"
+require "minitwin"
 
 class DslAliasesTest < ActiveSupport::TestCase
   class AliasTwin < Minitwin

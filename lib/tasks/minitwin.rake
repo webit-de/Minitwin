@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../mini_twin"
+require_relative "../minitwin"
 require "fileutils"
 
 namespace :minitwin do

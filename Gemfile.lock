@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    mini-twin (0.7.0)
+    minitwin (0.7.0)
       zeitwerk (>= 2.6)
 
 GEM
@@ -190,8 +190,8 @@ DEPENDENCIES
   activemodel (>= 6.1)
   dry-types (>= 1.7)
   m (>= 1.6)
-  mini-twin!
   minitest (>= 5.18)
+  minitwin!
   rake (>= 13.0)
   rbs-inline
   rubocop-performance (= 1.26.1)

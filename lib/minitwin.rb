@@ -7,7 +7,7 @@ begin
 rescue LoadError
   # dry-types is an optional dependency
 end
-require_relative "mini_twin/version"
+require_relative "minitwin/version"
 
 begin
   require "active_model"
@@ -17,16 +17,6 @@ end
 
 # Setup Zeitwerk loader for the gem to support Rails autoloading
 loader = Zeitwerk::Loader.for_gem
-# Ignore the Bundler auto-require shim file (lib/minitwin.rb), which does not
-# follow Zeitwerk's constant naming conventions.
-begin
-  loader.ignore(File.join(__dir__, "mini-twin.rb"))
-rescue NoMethodError
-  # Older Zeitwerk versions may not support ignore here; safe to skip.
-end
-loader.inflector.inflect(
-  "mini_twin" => "Minitwin"
-)
 loader.setup
 
 class Minitwin
@@ -130,15 +120,10 @@ if ENV["MINITWIN_RBS_OUT"] && !ENV["MINITWIN_RBS_OUT"].empty?
   end
 end
 
-require "mini_twin/railtie" if defined?(Rails::Railtie)
+require "minitwin/railtie" if defined?(Rails::Railtie)
 # Minitwin
 # --------
 # Entry point that wires together the core modules and conditionally enables
 # ActiveModel integration when it is available. The goal is to keep runtime
 # dependencies minimal while providing a clean DSL for twin/presenter objects.
 # See docs/ARCHITECTURE.md for an overview.
-
-# Backward-compatible alias. References to `MiniTwin` continue to work but
-# emit Ruby's standard deprecation warning (gated by Warning[:deprecated]).
-MiniTwin = Minitwin
-Object.deprecate_constant(:MiniTwin)
