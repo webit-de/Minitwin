@@ -5,18 +5,20 @@ require_relative "lib/minitwin/version"
 Gem::Specification.new do |spec|
   spec.name = "minitwin"
   spec.version = Minitwin::VERSION
-  spec.authors = ["Johannes Balk", "Roland Schwarzer"]
-  spec.email = ["eteam@webit.de"]
-  spec.homepage = "https://www.webit.de"
+  spec.authors = ["Johannes Balk", "Roland Schwarzer", "Susanne Götze", "Leon Stöckert"]
+  spec.email = ["balk@webit.de", "schwarzer@webit.de", "susanne.goetze@webit.de", "leon.stoeckert@webit.de"]
+  spec.homepage = "https://github.com/webit-de/minitwin"
   spec.license = "MIT"
 
-  spec.summary = "Tiny presenter/twin"
+  spec.summary = "Minimal presentation layer"
   spec.description =
-    "A minimal twin/presenter object with nested/collection properties, optional type coercion, and optional ActiveModel validations."
+    "It is a tiny presentation layer with a small DSL to define properties, " \
+      "collections, light type coercion via dry-types, and optional ActiveModel validations. " \
+      "It's designed to be framework-friendly but not framework-bound."
 
   spec.required_ruby_version = ">= 3.3"
 
-  spec.files = Dir["lib/**/*", "README.md", "USAGE.md", "LICENSE*"].select { |f| File.file?(f) }
+  spec.files = Dir["lib/**/*", "sig/**/*", "README.md", "USAGE.md", "LICENSE*"].select { |f| File.file?(f) }
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
