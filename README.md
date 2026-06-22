@@ -1,6 +1,6 @@
 # Minitwin
 
-![Minitwin Logo](logo.png){width=20%}
+<img src="logo.png" alt="Minitwin Logo" width="20%">
 
 ## What is Minitwin?
 
