@@ -54,20 +54,22 @@ Notes on fairness:
 
 | Variant | i/s | Allocated |
 |---|---|---|
-| disposable new(PlainClass) | 77,416 | 2,240 B |
-| disposable new(Data) | 75,736 | 2,240 B |
-| disposable new(Struct) | 74,155 | 2,240 B |
-| disposable new(OpenStruct) | 73,309 | 2,240 B |
-| minitwin from_hash | 48,851 | 2,520 B |
-| minitwin from_object(PlainClass) | 37,168 | 3,480 B |
-| minitwin from_object(Struct) | 36,995 | 3,480 B |
-| minitwin from_object(OpenStruct) | 36,989 | 3,480 B |
-| minitwin from_object(Data) | 36,977 | 3,480 B |
+| disposable new(Data) | 73,358 | 2,240 B |
+| disposable new(OpenStruct) | 72,810 | 2,240 B |
+| disposable new(PlainClass) | 70,691 | 2,240 B |
+| disposable new(Struct) | 69,742 | 2,240 B |
+| minitwin from_hash | 51,909 | 1,960 B |
+| minitwin from_object(OpenStruct) | 43,630 | 2,920 B |
+| minitwin from_object(Data) | 42,229 | 2,920 B |
+| minitwin from_object(PlainClass) | 40,129 | 2,920 B |
+| minitwin from_object(Struct) | 40,088 | 2,920 B |
 | representable | N/A (nested parse raises on Ruby 4.0) | — |
 
-Disposable constructs ~1.5–2× faster than Minitwin and allocates a bit less.
-The backing object type is not a meaningful lever for either library. Minitwin's
-object-free `from_hash` is its fastest construction path.
+Disposable constructs ~1.4–1.8× faster than Minitwin. Minitwin pays for
+ActiveModel mass-assignment, dry-types coercion of typed fields, and building a
+nested twin for `address` — `from_object` is a touch slower than `from_hash`
+because it first reflects attributes off the source object. The backing object
+type is not a meaningful lever for either library.
 
 ## Read (iterations/sec)
 
@@ -75,25 +77,26 @@ Reads a flat field, a nested field, and iterates the collection.
 
 | Variant | i/s | Allocated |
 |---|---|---|
-| disposable read | 1,622,772 | 160 B |
-| minitwin read | 914,041 | 0 B |
+| minitwin read | 2,590,000 | 0 B |
+| disposable read | 1,607,000 | 160 B |
 | representable | N/A (render/parse layer) | — |
 
-Both are sub-microsecond. Disposable reads ~1.8× faster; Minitwin allocates
-nothing on read, Disposable allocates a little per access.
+Minitwin reads ~1.6× faster than Disposable and allocates nothing: plain
+properties (no type/default/composition) are compiled `attr_reader`s, so a read
+is a bare C-level ivar fetch. Disposable allocates a little per access.
 
 ## Serialize (iterations/sec)
 
 | Variant | i/s | Allocated |
 |---|---|---|
-| minitwin to_hash | 124,208 | 360 B |
-| representable to_hash | 40,633 | 3,400 B |
-| minitwin to_json | 102,861 | 888 B |
-| representable to_json | 31,262 | 4,160 B |
+| minitwin to_hash | 123,065 | 360 B |
+| representable to_hash | 40,690 | 3,400 B |
+| minitwin to_json | 109,105 | 888 B |
+| representable to_json | 31,949 | 4,160 B |
 | disposable | N/A (to_nested_hash raises on Ruby 4.0) | — |
 
-Minitwin's `to_hash` is ~3.1× faster than Representable's with ~9× less memory;
-for JSON it is ~3.3× faster with ~4.7× less memory, and JSON is built in.
+Minitwin's `to_hash` is ~3.0× faster than Representable's with ~9× less memory;
+for JSON it is ~3.4× faster with ~4.7× less memory, and JSON is built in.
 Serialization is Minitwin's strongest area.
 
 ## Mutate (iterations/sec)
@@ -119,14 +122,14 @@ validation pass is the entire difference.
 
 | Variant | valid i/s | invalid i/s |
 |---|---|---|
-| minitwin valid? | 120,804 | 104,738 |
-| reform validate | 6,274 | 1,163 |
+| minitwin valid? | 129,536 | 111,993 |
+| reform validate | 6,183 | 1,161 |
 
 **Read with the fairness note above.** `minitwin valid?` validates an
 already-built twin. `reform validate(params)` is Reform's only validation entry
 point and *also* populates the form (params → Representable deserialization →
-nested forms) before validating, which dominates its cost — hence ~19× (valid)
-and ~90× (invalid) slower here. For the "validate an in-memory object" use case
+nested forms) before validating, which dominates its cost — hence ~21× (valid)
+and ~96× (invalid) slower here. For the "validate an in-memory object" use case
 Minitwin is far lighter; for Reform's params-driven form workflow the number
 reflects the whole populate-and-validate cycle.
 
@@ -145,5 +148,5 @@ reflects the whole populate-and-validate cycle.
 - **Validate:** for validating an in-memory object Minitwin is dramatically
   lighter than Reform, which couples population and validation in one call.
 - **Backing object type is not a meaningful performance lever** for Minitwin
-  `from_object` or Disposable — OpenStruct/Data/Struct/plain class all land in
-  the same band.
+  `from_object` or Disposable.
+```
