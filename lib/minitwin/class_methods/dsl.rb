@@ -41,11 +41,12 @@ class Minitwin
       def collection(name, validates: {}, default: [], as: nil, getter: nil, twin: nil, on: nil, **_opts, &block)
         nested_class = block ? create_nested_class(name:, &block) : nil
         element_klass = twin || nested_class
+        ivar = Minitwin::Utils.ivar_name(name)
 
         define_method("#{name}=") do |values|
           arr = self.class.send(:coerce_collection_array, values)
           coerced_values = arr.map { |v| self.class.send(:coerce_value_to_twin, v, element_klass) }
-          define_instance_variable(name:, value: coerced_values)
+          instance_variable_set(ivar, coerced_values)
           # :nocov:
           if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
             __recompute_dynamic_aliases__
@@ -81,6 +82,7 @@ class Minitwin
         twin: nil, on: nil, **_opts, &block
       )
         nested_class = nil
+        ivar = Minitwin::Utils.ivar_name(name)
 
         if block_given?
           raise "setters are not possible in blocks" if setter
@@ -91,7 +93,7 @@ class Minitwin
             coerced = self.class.send(:coerce_value_to_twin, value, nested_class)
             raise "Unprocessable input for property '#{name}'." unless coerced.nil? || coerced.is_a?(nested_class)
 
-            define_instance_variable(name:, value: coerced)
+            instance_variable_set(ivar, coerced)
             if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
               __recompute_dynamic_aliases__
             end
@@ -110,7 +112,7 @@ class Minitwin
               else
                 value
               end
-            define_instance_variable(name:, value: coerced_value)
+            instance_variable_set(ivar, coerced_value)
             if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
               __recompute_dynamic_aliases__
             end
@@ -244,8 +246,13 @@ class Minitwin
       end
 
       def define_getter_method(name:, as:, on:, default:, getter:, type: nil)
-        getter_proc = build_getter_proc(name:, on:, default:, getter:, type:)
-        define_method(name, &getter_proc)
+        if getter.nil? && on.nil? && default.nil? && type.nil? && !name.to_s.end_with?("?")
+          # Fast path: a plain property with no getter override
+          attr_reader(name)
+        else
+          getter_proc = build_getter_proc(name:, on:, default:, getter:, type:)
+          define_method(name, &getter_proc)
+        end
         apply_alias_to_getter(name:, as:)
       end
 
