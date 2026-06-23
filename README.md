@@ -94,6 +94,12 @@ MINITWIN_RBS_DIR=sig/custom_path rake minitwin:generate_rbs
 Minitwin was inspired by [Disposable](https://github.com/apotonick/disposable), a gem for building twin objects as a decorator layer on top of your domain models.
 
 
+## Benchmarks
+
+See [BENCHMARKS.md](./BENCHMARKS.md) for performance comparisons against
+Disposable, Representable and dry-struct, and how to reproduce them.
+
+
 ## License
 
 Minitwin is licensed under the MIT License. See [LICENSE](./LICENSE) for more details.

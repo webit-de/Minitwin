@@ -12,4 +12,13 @@ Rake::TestTask.new(:test) do |t|
   t.warning = false
 end
 
+desc "Run the performance benchmark suite (minitwin vs disposable/representable/dry-struct)"
+task :benchmark do
+  require "fileutils"
+  FileUtils.mkdir_p("benchmark/results")
+  sh "ruby -Ilib benchmark/run_all.rb | tee benchmark/results/latest.txt"
+end
+
+task bench: :benchmark
+
 task default: :test

@@ -18,3 +18,16 @@ group :development, :test do
   gem "simplecov", ">= 0.22"
   gem "webit-ruby-rubocop", ">= 3.1", require: false
 end
+
+group :benchmark do
+  gem "benchmark-ips", ">= 2.14"
+  gem "benchmark-memory", ">= 0.2"
+  gem "disposable", ">= 0.6"
+  gem "representable", ">= 3.2"
+  gem "reform", ">= 2.6"
+  # reform-rails supplies Reform's ActiveModel validation backend (apples-to-apples
+  # with minitwin); plain reform 2.6 only ships the dry-validation backend.
+  gem "reform-rails", ">= 0.3"
+  gem "ostruct"
+  gem "multi_json"
+end

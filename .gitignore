@@ -40,3 +40,6 @@ docs
 
 # Generated aggregate RBS file (run with MINITWIN_RBS_OUT to regenerate locally)
 sig/minitwin_generated.rbs
+
+# Benchmark raw output (curated results live in BENCHMARKS.md)
+/benchmark/results/
