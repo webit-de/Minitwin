@@ -161,7 +161,7 @@ class ConstructorsTest < ActiveSupport::TestCase
       property :name
     end
 
-    error = assert_raises(RuntimeError) do
+    error = assert_raises(Minitwin::ParseError) do
       klass.from_object({ name: "test" })
     end
     assert_match(/use.*from_objects/, error.message)

@@ -24,6 +24,8 @@ class Minitwin
       def from_json(body)
         hash = JSON.parse(body, symbolize_names: true)
         from_hash(hash)
+      rescue ::JSON::ParserError => exception
+        raise ParseError, "Invalid JSON passed to #{name}.from_json: #{exception.message}"
       end
 
       # Actually, this is expected to be an `ActionController::Parameters`
@@ -40,6 +42,7 @@ class Minitwin
       def from_object(model)
         if model.is_a?(Hash)
           raise(
+            ParseError,
             "Input is not an object. If you want to instantiate a Minitwin with multiple " \
               "objects, then use the pluralized 'from_objects'-method."
           )

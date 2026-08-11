@@ -296,6 +296,7 @@ class InitializationTest < ActiveSupport::TestCase
     klass = Class.new(Minitwin) do
       property :value, as: -> { :to_s }
     end
+    # Regression guard: AliasError must stay catchable as a plain ArgumentError. Do not narrow.
     assert_raises(ArgumentError) { klass.new(value: 1) }
   end
 
@@ -303,7 +304,7 @@ class InitializationTest < ActiveSupport::TestCase
     klass = Class.new(Minitwin) do
       property :value, as: -> { :send }
     end
-    err = assert_raises(ArgumentError) { klass.new(value: 1) }
+    err = assert_raises(Minitwin::AliasError) { klass.new(value: 1) }
     assert_includes err.message, "forbidden"
   end
 
@@ -326,7 +327,7 @@ class InitializationTest < ActiveSupport::TestCase
     end
 
     # Should raise on collision during initialization
-    assert_raises(ArgumentError) do
+    assert_raises(Minitwin::AliasError) do
       klass.new(first: "a", second: "b")
     end
   end
@@ -343,7 +344,7 @@ class InitializationTest < ActiveSupport::TestCase
     end
 
     # Should raise on collision during initialization
-    assert_raises(ArgumentError) do
+    assert_raises(Minitwin::AliasError) do
       klass.new(name: "test", other: "value")
     end
   end
@@ -407,28 +408,28 @@ class InitializationTest < ActiveSupport::TestCase
     klass = Class.new(Minitwin) do
       property :x, as: -> { :binding }
     end
-    assert_raises(ArgumentError) { klass.new(x: 1) }
+    assert_raises(Minitwin::AliasError) { klass.new(x: 1) }
   end
 
   test "to_proc cannot be used as dynamic alias" do
     klass = Class.new(Minitwin) do
       property :x, as: -> { :to_proc }
     end
-    assert_raises(ArgumentError) { klass.new(x: 1) }
+    assert_raises(Minitwin::AliasError) { klass.new(x: 1) }
   end
 
   test "freeze cannot be used as dynamic alias" do
     klass = Class.new(Minitwin) do
       property :x, as: -> { :freeze }
     end
-    assert_raises(ArgumentError) { klass.new(x: 1) }
+    assert_raises(Minitwin::AliasError) { klass.new(x: 1) }
   end
 
   test "raises ArgumentError with clear message when as: proc returns non-string/symbol" do
     klass = Class.new(Minitwin) do
       property :x, as: -> { 42 }
     end
-    error = assert_raises(ArgumentError) { klass.new(x: 1) }
+    error = assert_raises(Minitwin::AliasError) { klass.new(x: 1) }
     assert_match(/invalid alias name/i, error.message)
     assert_match(/42/, error.message)
   end

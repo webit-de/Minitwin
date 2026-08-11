@@ -181,6 +181,17 @@ class DslPropertiesTest < ActiveSupport::TestCase
     assert_match(/setters are not possible in blocks/, klass.caught_error.message)
   end
 
+  test "raises Minitwin::CoercionError when a block property receives an unconvertible value" do
+    klass = Class.new(Minitwin) do
+      property :nested_thing do
+        property :value
+      end
+    end
+
+    error = assert_raises(Minitwin::CoercionError) { klass.new(nested_thing: 42) }
+    assert_match(/Unprocessable input for property/, error.message)
+  end
+
   # --- defaults / types / boolean names (error handling) ---
 
   test "property without type returns nil" do

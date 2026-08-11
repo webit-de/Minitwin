@@ -112,7 +112,7 @@ class DslCompositionTest < ActiveSupport::TestCase
 
     # Should raise informative error
     obj = klass.new
-    error = assert_raises(RuntimeError) { obj.name }
+    error = assert_raises(Minitwin::CompositionError) { obj.name }
     assert_match(/unknown composition source/, error.message)
   end
 
@@ -124,7 +124,7 @@ class DslCompositionTest < ActiveSupport::TestCase
     end
 
     obj = klass.from_objects(model: model)
-    error = assert_raises(RuntimeError) { obj.name }
+    error = assert_raises(Minitwin::CompositionError) { obj.name }
     assert_match(/does not respond to/, error.message)
   end
 
@@ -148,7 +148,7 @@ class DslCompositionTest < ActiveSupport::TestCase
     end
 
     obj = klass.from_objects(model: model)
-    error = assert_raises(RuntimeError) do
+    error = assert_raises(Minitwin::CompositionError) do
       obj.name
     end
     assert_match(/does not respond to/, error.message)
@@ -160,7 +160,7 @@ class DslCompositionTest < ActiveSupport::TestCase
     end
 
     obj = klass.new
-    error = assert_raises(RuntimeError) do
+    error = assert_raises(Minitwin::CompositionError) do
       obj.name
     end
     assert_match(/unknown composition source/, error.message)
