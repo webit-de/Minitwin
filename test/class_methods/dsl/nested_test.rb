@@ -172,8 +172,8 @@ class DslNestedTest < ActiveSupport::TestCase
     assert_equal "test", obj.my_nested_prop.value
   end
 
-  test "nested without a block raises an ArgumentError" do
-    error = assert_raises(ArgumentError) do
+  test "nested without a block raises a Minitwin::DefinitionError" do
+    error = assert_raises(Minitwin::DefinitionError) do
       Class.new(Minitwin) do
         nested :invalid
       end
