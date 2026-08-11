@@ -90,13 +90,13 @@ class Minitwin
         ivar = Minitwin::Utils.ivar_name(name)
 
         if block_given?
-          raise "setters are not possible in blocks" if setter
+          raise DefinitionError, "setters are not possible in blocks" if setter
 
           nested_class = create_nested_class(name:, &block)
 
           define_method("#{name}=") do |value|
             coerced = self.class.send(:coerce_value_to_twin, value, nested_class)
-            raise "Unprocessable input for property '#{name}'." unless coerced.nil? || coerced.is_a?(nested_class)
+            raise CoercionError, "Unprocessable input for property '#{name}'." unless coerced.nil? || coerced.is_a?(nested_class)
 
             instance_variable_set(ivar, coerced)
             if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
@@ -144,7 +144,7 @@ class Minitwin
       # @rbs as: Symbol | Proc
       # @rbs return: void
       def nested(name, as: nil, &block)
-        raise ArgumentError, "nested requires a block" unless block_given?
+        raise DefinitionError, "nested requires a block" unless block_given?
 
         property(name, as: as, &block)
 
@@ -307,12 +307,13 @@ class Minitwin
           # Validate model
           if model.nil?
             raise(
+              CompositionError,
               "Property '#{name}' refers to unknown composition source '#{on}' in #{self.class}. " \
                 "Ensure the model is provided via from_objects or a reader exists."
             )
           end
           unless model.respond_to?(name)
-            raise "The instance of '#{model.class}' does not respond to '#{name}'."
+            raise CompositionError, "The instance of '#{model.class}' does not respond to '#{name}'."
           end
 
           raw = model.send(name)
@@ -373,7 +374,7 @@ class Minitwin
         return if validates.nil?
         return if validates.respond_to?(:empty?) && validates.empty?
 
-        raise "Validation is not possible, because activemodel is not available" unless respond_to?(:validates)
+        raise DefinitionError, "Validation is not possible, because activemodel is not available" unless respond_to?(:validates)
 
         if validates.is_a?(Proc)
           validate do

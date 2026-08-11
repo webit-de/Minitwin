@@ -138,7 +138,7 @@ class Minitwin
 
     def __apply_dynamic_alias__(target_method, alias_name)
       unless alias_name.is_a?(String) || alias_name.is_a?(Symbol)
-        raise ArgumentError, "Invalid alias name #{alias_name.inspect}: must be a String or Symbol"
+        raise AliasError, "Invalid alias name #{alias_name.inspect}: must be a String or Symbol"
       end
 
       alias_key = alias_name.to_sym
@@ -147,7 +147,7 @@ class Minitwin
 
       # Security check: prevent aliasing to forbidden method names
       if FORBIDDEN_ALIAS_NAMES.include?(alias_key)
-        raise ArgumentError, "Cannot define dynamic alias '#{alias_key}': forbidden method name for security reasons"
+        raise AliasError, "Cannot define dynamic alias '#{alias_key}': forbidden method name for security reasons"
       end
 
       prev = aliases[target_method]
@@ -162,11 +162,11 @@ class Minitwin
 
       # Collision checks: alias already used by another target or an existing method
       if aliases_rev.key?(alias_key) && aliases_rev[alias_key] != target_method
-        raise ArgumentError, "Dynamic alias '#{alias_key}' already defined for '#{aliases_rev[alias_key]}'"
+        raise AliasError, "Dynamic alias '#{alias_key}' already defined for '#{aliases_rev[alias_key]}'"
       end
 
       if respond_to?(alias_key, true) && aliases_rev[alias_key] != target_method
-        raise ArgumentError, "Cannot define dynamic alias '#{alias_key}': method already exists"
+        raise AliasError, "Cannot define dynamic alias '#{alias_key}': method already exists"
       end
 
       # Define forwarding method on the singleton class
