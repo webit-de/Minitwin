@@ -64,6 +64,9 @@ user = UserTwin.from_hash(name: "Bob", address: { city: "Berlin" })
 user.address.city  #=> "Berlin"
 ```
 
+To lift a value out of a nested twin into a top-level property, see
+[Flattening a nested twin](#flattening-a-nested-twin).
+
 ## Collection properties
 
 `collection` defines an array property. Each element can be a plain value or a nested twin:
@@ -275,6 +278,40 @@ summary.id     #=> 7
 summary.name   #=> "Dana"
 ```
 
+### Flattening a nested twin
+
+Use `on:` to read a property from a nested twin instead of a `from_objects` source: a symbol falls
+back to a reader on the twin itself, and a lambda runs in instance context and returns any object
+reachable from it. The nested structure is flattened into top-level properties:
+
+```ruby
+class SiteTwin < Minitwin
+  property :address, expose: false do
+    property :city
+    property :installation do
+      property :street
+    end
+  end
+
+  property :city,   on: :address                    # one level: a symbol is enough
+  property :street, on: -> { address.installation }  # deeper path: use a lambda
+end
+
+site = SiteTwin.from_hash(
+  address: { city: "Berlin", installation: { street: "1234 fake street" } }
+)
+site.city    #=> "Berlin"
+site.street  #=> "1234 fake street"
+site.to_hash #=> { city: "Berlin", street: "1234 fake street" }
+```
+
+The property name is the reader called on the source: `city` is read as `address.city`. When the names
+differ, or when a link in the path may be `nil`, use `getter:` instead — `property :town, getter: -> { address.city }`
+or `getter: -> { address&.installation&.street }`.
+
+The flattening only works for reading: `site.city = "Hamburg"` is discarded, so assign to
+`site.address.city` instead.
+
 ---
 
 ## DSL Reference
@@ -291,7 +328,7 @@ summary.name   #=> "Dana"
 | `readonly:` | `true` prevents assignment via `assign_hash` and `assign_params`. |
 | `getter:` | A lambda `-> { ... }` or a symbol `:method_name` that fully replaces the generated getter. The lambda runs in instance context; the symbol calls the named method on the instance. If the lambda or method accepts a parameter, the current raw property value is passed as the argument. |
 | `setter:` | A lambda `->(value) { ... }` that fully replaces the generated setter. Not allowed together with a block. |
-| `on:` | Reads the value from a named composition source (see `from_objects`). |
+| `on:` | Reads the value from a composition source (see `from_objects`), which can also be a nested twin. Accepts a symbol or a lambda `-> { ... }` returning the source. |
 | `validates:` | ActiveModel validation options, e.g. `{ presence: true }`. Ignored when ActiveModel is not available. |
 | block | Defines an inline nested twin class. Mutually exclusive with `setter:`. |
 
@@ -303,7 +340,7 @@ summary.name   #=> "Dana"
 | `default:` | Default value. Defaults to `[]`. |
 | `twin:` | Wraps each element in the given twin class. |
 | `getter:` | A lambda `-> { ... }` or a symbol `:method_name` that fully replaces the generated getter. The lambda runs in instance context; the symbol calls the named method on the instance. If the lambda or method accepts a parameter, the current raw property value is passed as the argument. |
-| `on:` | Reads the collection from a named composition source. Each element is wrapped in the element twin when one is configured. |
+| `on:` | Reads the collection from a composition source, which can also be a nested twin. Accepts a symbol or a lambda `-> { ... }`. Each element is wrapped in the element twin when one is configured. |
 | `validates:` | ActiveModel validation options applied to the collection property itself. |
 | block | Defines an inline nested twin class used for each element. |
 
