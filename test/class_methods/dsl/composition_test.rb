@@ -51,6 +51,30 @@ class DslCompositionTest < ActiveSupport::TestCase
     assert_equal({ "name" => "Petra Rodriguez", "street" => "1234 fake street" }, obj.to_hash)
   end
 
+  test "on: flattens values out of an inline block twin via a symbol and a proc source" do
+    klass = Class.new(Minitwin) do
+      property :address, expose: false do
+        property :city
+        property :installation do
+          property :street
+        end
+      end
+
+      property :city, on: :address
+      property :street, on: -> { address.installation }
+    end
+    obj = klass.from_hash(address: { city: "Berlin", installation: { street: "1234 fake street" } })
+
+    assert_equal "Berlin", obj.city
+    assert_equal "1234 fake street", obj.street
+    assert_equal({ "city" => "Berlin", "street" => "1234 fake street" }, obj.to_hash)
+
+    # The projection is read-only: the generated setter writes an ivar that the
+    # composition getter never reads.
+    obj.city = "Hamburg"
+    assert_equal "Berlin", obj.city
+  end
+
   test "collection with on: wraps a non-Array relation into element twins" do
     items = [RelationItem.new(sub: "x"), RelationItem.new(sub: "y")]
     contract = ContractWithRelation.new(items: items)
