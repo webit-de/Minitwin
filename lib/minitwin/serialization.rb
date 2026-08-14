@@ -16,10 +16,11 @@ class Minitwin
       hash = Minitwin.hash_klass.new
 
       methods_to_serialize = self.class.send(:serializable_getters)
+      expose_nil_getters = self.class.send(:expose_nil_getters)
 
       methods_to_serialize.each do |method|
         value = send(method)
-        next if value.nil? && !render_nil
+        next if value.nil? && !render_nil && !expose_nil_getters.include?(method)
 
         hash[method] = transform_value_for_serialization(value)
       end
@@ -28,6 +29,8 @@ class Minitwin
       if instance_variable_defined?(ALIASES_VAR)
         aliases = instance_variable_get(ALIASES_VAR)
         if aliases && !aliases.empty?
+          expose_nil_keys = self.class.send(:expose_nil_property_keys)
+
           aliases.each do |target_method, alias_method|
             # Skip nested proxy aliases at the top level; nested groups
             # serialize under their container key only.
@@ -37,7 +40,7 @@ class Minitwin
             # the alias method is overridden. Apply the same transformation rules
             # as above for nested twins and arrays.
             value = send(target_method)
-            next if value.nil? && !render_nil
+            next if value.nil? && !render_nil && !expose_nil_keys.include?(target_method)
 
             hash[alias_method] = transform_value_for_serialization(value)
           end

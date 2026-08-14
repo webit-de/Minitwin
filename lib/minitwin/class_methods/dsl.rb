@@ -70,6 +70,7 @@ class Minitwin
       # @rbs default: untyped
       # @rbs as: Symbol | Proc
       # @rbs expose: bool
+      # @rbs expose_nil: bool
       # @rbs readonly: bool
       # @rbs type: untyped
       # @rbs getter: Proc
@@ -78,9 +79,16 @@ class Minitwin
       # @rbs on: Symbol
       # @rbs return: void
       def property(
-        name, validates: {}, default: nil, as: nil, expose: true, readonly: false, type: nil, getter: nil, setter: nil,
-        twin: nil, on: nil, **_opts, &block
+        name, validates: {}, default: nil, as: nil, expose: true, expose_nil: false, readonly: false, type: nil,
+        getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block
       )
+        if expose_nil && !expose
+          raise(
+            ArgumentError, # TODO: replace with DefinitionError once PR#4 is merged into main
+            "Property '#{name}' cannot combine `expose: false` with `expose_nil: true`."
+          )
+        end
+
         nested_class = nil
         ivar = Minitwin::Utils.ivar_name(name)
 
@@ -128,6 +136,7 @@ class Minitwin
           type: type,
           as: as,
           expose: expose,
+          expose_nil: expose_nil,
           readonly: readonly
         }
         properties[name.to_sym][:twin] = twin if twin

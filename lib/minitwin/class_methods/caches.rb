@@ -25,6 +25,8 @@ class Minitwin
         @allowed_attribute_keys_array = nil
         @setter_methods = nil
         @has_dynamic_aliases_cache = nil
+        @expose_nil_getters = nil
+        @expose_nil_property_keys = nil
       end
 
       def serializable_getters
@@ -39,6 +41,22 @@ class Minitwin
               !declared.include?(instance_method(m).original_name)
           end
         end
+      end
+
+      def expose_nil_property_keys
+        @expose_nil_property_keys ||= twin_class_hierarchy.each_with_object(Set.new) do |klass, keys|
+          klass.properties.each { |name, meta| keys << name if meta[:expose_nil] }
+        end
+      end
+
+      def expose_nil_getters
+        keys = expose_nil_property_keys
+        @expose_nil_getters ||=
+          if keys.empty?
+            Set.new
+          else
+            serializable_getters.select { |m| keys.include?(instance_method(m).original_name) }.to_set
+          end
       end
 
       # Methods defined directly on the twin class hierarchy: this class and any

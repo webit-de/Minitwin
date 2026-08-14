@@ -288,6 +288,7 @@ summary.name   #=> "Dana"
 | `type:` | A dry-types type for coercion on assignment (e.g. `Types::Params::Integer.lax`). Errors fall back to the raw value. |
 | `twin:` | Wraps the value in another twin class. Accepts a hash, a twin instance, or an object with `to_h`/`attributes`. |
 | `expose:` | `false` omits the property from `to_hash`/`to_json`. |
+| `expose_nil:` | `true` keeps the property in `to_hash`/`to_json` even when its value is `nil`, without turning on the global `render_nil:`. Combining `expose_nil: true` with `expose: false` raises an `ArgumentError`. |
 | `readonly:` | `true` prevents assignment via `assign_hash` and `assign_params`. |
 | `getter:` | A lambda `-> { ... }` or a symbol `:method_name` that fully replaces the generated getter. The lambda runs in instance context; the symbol calls the named method on the instance. If the lambda or method accepts a parameter, the current raw property value is passed as the argument. |
 | `setter:` | A lambda `->(value) { ... }` that fully replaces the generated setter. Not allowed together with a block. |
@@ -356,7 +357,7 @@ The leaf properties (`city`, `zip`) are accessible directly on the parent instan
 
 | Method | Description |
 |---|---|
-| `to_hash(render_nil: false)` | Returns the twin as a Hash (or `HashWithIndifferentAccess` when ActiveSupport is available). Nested twins are serialized recursively. Unexposed properties are omitted. |
+| `to_hash(render_nil: false)` | Returns the twin as a Hash (or `HashWithIndifferentAccess` when ActiveSupport is available). Nested twins are serialized recursively. Unexposed properties are omitted. `nil` values are dropped unless `render_nil: true` is passed, or the property was declared with `expose_nil: true`. |
 | `to_h` | Alias for `to_hash`. |
 | `to_json` | Delegates to `to_hash.to_json`. |
 | `attributes` | Returns a Hash keyed by the original setter names (before any `as:` aliasing). Includes protected readers. |
