@@ -12,6 +12,13 @@ class Minitwin
 
       def serializable_getters: () -> untyped
 
+      # Declaration names of properties opting into nil serialization.
+      def expose_nil_property_keys: () -> untyped
+
+      # Serialized method names of `expose_nil` properties. Keyed by the public
+      # method name so `as:` aliases resolve, mapping back via #original_name.
+      def expose_nil_getters: () -> untyped
+
       # Methods defined directly on the twin class hierarchy: this class and any
       # intermediate Minitwin subclasses, but not Minitwin itself. Methods mixed
       # in via modules (e.g. ActionView helpers, which include arg-taking methods
