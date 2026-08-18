@@ -18,6 +18,8 @@ class Minitwin
       # : () -> Array[Hash]
       def dynamic_nested_aliases: () -> Array[Hash]
 
+      private
+
       # @rbs name: Symbol
       # @rbs validates: Hash[Symbol, untyped]
       # @rbs default: untyped
@@ -46,8 +48,6 @@ class Minitwin
       # @rbs as: Symbol | Proc
       # @rbs return: void
       def nested: (Symbol name, ?as: untyped) ?{ (?) -> untyped } -> void
-
-      private
 
       def constantize_name: (untyped name) -> untyped
 

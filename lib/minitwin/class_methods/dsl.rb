@@ -30,6 +30,11 @@ class Minitwin
         @dynamic_nested_aliases ||= []
       end
 
+      # The DSL surface is limited to class body usage. Declaring it private
+      # here rather than in ClassMethods avoids Ruby's visibility stubs, which
+      # would shadow these signatures.
+      private
+
       # @rbs name: Symbol
       # @rbs validates: Hash[Symbol, untyped]
       # @rbs default: untyped
@@ -218,8 +223,6 @@ class Minitwin
 
         invalidate_caches
       end
-
-      private
 
       def constantize_name(name)
         name.to_s.split("_").map(&:capitalize).join

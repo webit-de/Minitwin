@@ -17,10 +17,8 @@ class Minitwin
     include Minitwin::ClassMethods::TypesHelper
     include Minitwin::ClassMethods::Coercion
 
-    # Limit DSL surface to class body usage
-    private :property, :collection, :nested
-
-    # Make constructors and RBS API public
-    public :from_hash, :from_json, :from_params, :from_object, :from_objects, :from_collection, :to_rbs
+    # The DSL surface is limited to class body usage by Minitwin::ClassMethods::Dsl
+    # itself; declaring it here would install visibility stubs that shadow the
+    # typed originals.
   end
 end
