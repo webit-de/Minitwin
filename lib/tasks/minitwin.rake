@@ -52,6 +52,28 @@ namespace :minitwin do
     end
   end
 
+  desc "Generate rbi/minitwin.rbi from the RBS signatures in sig/generated for Sorbet consumers " \
+    "(override output with MINITWIN_RBI_OUT or task argument)"
+  task :generate_rbi, [:output] do |_t, args|
+    output = args[:output] || ENV.fetch("MINITWIN_RBI_OUT", "rbi/minitwin.rbi")
+
+    # sig/module.rbs is a local shim for dry-types, not part of minitwin's
+    # public API, so it must not leak into the RBI we ship.
+    paths = Dir["sig/generated/**/*.rbs"]
+
+    if paths.empty?
+      warn "[minitwin] No RBS signatures in sig/generated. Run: bundle exec rbs-inline --output lib"
+      next
+    end
+
+    FileUtils.mkdir_p(File.dirname(output))
+    File.write(
+      output,
+      Minitwin::Rbi.from_rbs_files(paths, extended_modules: Minitwin::Rbi.extended_modules(Minitwin))
+    )
+    puts "  [minitwin] #{output} (#{paths.size} RBS files)"
+  end
+
   desc "Check that generated RBS signatures are up to date"
   task :check_rbs do
     FileUtils.rm_rf(Dir["sig/generated/**/*.rbs"])
@@ -64,6 +86,19 @@ namespace :minitwin do
       warn "[minitwin] RBS signatures are out of date. Run: bundle exec rbs-inline --output lib"
       warn diff unless diff.empty?
       warn untracked unless untracked.empty?
+      exit 1
+    end
+  end
+
+  desc "Check that rbi/minitwin.rbi is up to date"
+  task :check_rbi do
+    expected = Minitwin::Rbi.from_rbs_files(
+      Dir["sig/generated/**/*.rbs"],
+      extended_modules: Minitwin::Rbi.extended_modules(Minitwin)
+    )
+
+    if !File.exist?("rbi/minitwin.rbi") || File.read("rbi/minitwin.rbi") != expected
+      warn "[minitwin] rbi/minitwin.rbi is out of date. Run: rake minitwin:generate_rbi"
       exit 1
     end
   end

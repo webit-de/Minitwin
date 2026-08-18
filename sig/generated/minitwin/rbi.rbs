@@ -1,0 +1,202 @@
+# Generated from lib/minitwin/rbi.rb with RBS::Inline
+
+class Minitwin
+  # Translates RBS signatures into Sorbet RBI files, so that Sorbet users can
+  # consume a gem that is typed with RBS only. The two languages overlap but do
+  # not match: constructs without a faithful counterpart degrade to T.untyped
+  # rather than producing an RBI Sorbet would reject.
+  module Rbi
+    SIGIL: ::String
+
+    GENERATED_NOTICE: untyped
+
+    # The names of the modules below `root` that reach it through `extend`
+    # rather than `include`, ready to be passed to #from_rbs_files. This is the
+    # one piece of information the RBS signatures cannot carry, so it has to be
+    # read off the loaded runtime.
+    # : (Module) -> Array[String]
+    def self?.extended_modules: (Module) -> Array[String]
+
+    # Translates a single RBS source string into an RBI file body.
+    #
+    # extended_modules lists the fully qualified names of modules that are mixed
+    # in with `extend` rather than `include`. RBS spells both the same way, but
+    # Sorbet needs to tell them apart (see #instance_type).
+    # : (String, ?extended_modules: Array[String]) -> String
+    def self?.from_rbs: (String, ?extended_modules: Array[String]) -> String
+
+    # Translates several RBS files into one RBI file, one section per input
+    # file. Reopening the same class per section is valid Ruby, so no merging
+    # of namespaces is needed.
+    # : (Array[String], ?relative_to: String, ?extended_modules: Array[String]) -> String
+    def self?.from_rbs_files: (Array[String], ?relative_to: String, ?extended_modules: Array[String]) -> String
+
+    # : (String, String, Array[String]) -> Array[String]
+    def self?.translate: (String, String, Array[String]) -> Array[String]
+
+    # Joins line groups with a blank line between them.
+    # : (Array[Array[String]]) -> Array[String]
+    def self?.space_out: (Array[Array[String]]) -> Array[String]
+
+    # Sorbet accepts T.self_type and T.attached_class only in specific
+    # positions, so the translator tracks where a type is being written:
+    # whether an attached class exists in this scope, whether the method is a
+    # singleton method, whether the position is an output position (`returns`),
+    # and whether the type sits nested inside another type.
+    class Position < Data
+      attr_reader attached(): untyped
+
+      attr_reader singleton(): untyped
+
+      attr_reader out(): untyped
+
+      attr_reader nested(): untyped
+
+      def self.new: (untyped attached, untyped singleton, untyped out, untyped nested) -> instance
+                  | (attached: untyped, singleton: untyped, out: untyped, nested: untyped) -> instance
+
+      def self.members: () -> [ :attached, :singleton, :out, :nested ]
+
+      def members: () -> [ :attached, :singleton, :out, :nested ]
+    end
+
+    # Position for types that can never be self-referential, such as constant
+    # types and type parameter bounds.
+    PLAIN: untyped
+
+    # The declaration the translator is currently inside: the enclosing
+    # namespace, the configured extended module names, and what those imply for
+    # the members being written.
+    class Context < Data
+      attr_reader namespace(): untyped
+
+      attr_reader extended(): untyped
+
+      attr_reader in_class(): untyped
+
+      attr_reader attached_module(): untyped
+
+      def self.new: (untyped namespace, untyped extended, untyped in_class, untyped attached_module) -> instance
+                  | (namespace: untyped, extended: untyped, in_class: untyped, attached_module: untyped) -> instance
+
+      def self.members: () -> [ :namespace, :extended, :in_class, :attached_module ]
+
+      def members: () -> [ :namespace, :extended, :in_class, :attached_module ]
+    end
+
+    # : (untyped, Integer, untyped) -> Array[String]
+    def self?.declaration_lines: (untyped, Integer, untyped) -> Array[String]
+
+    # : (untyped) -> String
+    def self?.class_header: (untyped) -> String
+
+    # : (String, untyped, Integer, untyped) -> Array[String]
+    def self?.namespace_lines: (String, untyped, Integer, untyped) -> Array[String]
+
+    VARIANCES: untyped
+
+    # Sorbet expresses RBS type parameters as type_member assignments, and an
+    # extended module's attached class as has_attached_class!. Both need
+    # T::Generic.
+    # : (untyped, Integer, untyped) -> Array[Array[String]]
+    def self?.generic_groups: (untyped, Integer, untyped) -> Array[Array[String]]
+
+    # : (untyped) -> String
+    def self?.type_member_line: (untyped) -> String
+
+    MIXINS: untyped
+
+    ATTRIBUTES: untyped
+
+    # : (untyped, Integer, untyped) -> Array[String]
+    def self?.member_lines: (untyped, Integer, untyped) -> Array[String]
+
+    # : (untyped, Integer, Symbol, untyped) -> Array[String]
+    def self?.attribute_lines: (untyped, Integer, Symbol, untyped) -> Array[String]
+
+    # Singleton attributes become plain singleton methods; that is equivalent
+    # for the type checker and avoids emitting a `class << self` block.
+    # : (untyped, String, String, Symbol) -> Array[String]
+    def self?.singleton_attribute_lines: (untyped, String, String, Symbol) -> Array[String]
+
+    # RBS `def self?.x` defines the method on both receivers.
+    RECEIVERS: untyped
+
+    # : (untyped, Integer, untyped) -> Array[String]
+    def self?.method_lines: (untyped, Integer, untyped) -> Array[String]
+
+    # : (untyped, untyped, attached: bool, singleton: bool) -> String
+    def self?.method_return: (untyped, untyped, attached: bool, singleton: bool) -> String
+
+    # : (untyped, String) -> Array[String]
+    def self?.overload_notice: (untyped, String) -> Array[String]
+
+    # Returns [name, rbi_type, ruby_declaration] triples in Ruby's required order.
+    # : (untyped, untyped) -> Array[[String, String, String]]
+    def self?.parameter_specs: (untyped, untyped) -> Array[[ String, String, String ]]
+
+    # : (untyped, untyped) -> Array[[String, String, String]]
+    def self?.positional_specs: (untyped, untyped) -> Array[[ String, String, String ]]
+
+    # : (untyped, Integer) -> String
+    def self?.positional_name: (untyped, Integer) -> String
+
+    # : (untyped, untyped) -> Array[[String, String, String]]
+    def self?.keyword_specs: (untyped, untyped) -> Array[[ String, String, String ]]
+
+    # : (untyped, untyped) -> [String, String, String]?
+    def self?.block_spec: (untyped, untyped) -> [ String, String, String ]?
+
+    # : (untyped, untyped) -> String
+    def self?.block_type: (untyped, untyped) -> String
+
+    # `void` is a return-position-only construct in both languages.
+    # : (untyped, untyped) -> String
+    def self?.return_clause: (untyped, untyped) -> String
+
+    # Stdlib classes Sorbet models as generics under the T:: namespace,
+    # mapped to the arity Sorbet expects.
+    GENERIC_STDLIB: untyped
+
+    # : (untyped, untyped) -> String
+    def self?.rbi_type: (untyped, untyped) -> String
+
+    # T.self_type is allowed in output positions only, and never nested inside
+    # another type.
+    # : (untyped) -> String
+    def self?.self_type: (untyped) -> String
+
+    # : (untyped) -> String
+    def self?.instance_type: (untyped) -> String
+
+    # : (Array[untyped], untyped) -> String
+    def self?.type_list: (Array[untyped], untyped) -> String
+
+    # : (untyped, untyped) -> String
+    def self?.class_instance_type: (untyped, untyped) -> String
+
+    LITERAL_CLASSES: untyped
+
+    # Sorbet has no literal types, so widen to the literal's class.
+    # : (untyped) -> String
+    def self?.literal_type: (untyped) -> String
+
+    # : (untyped, untyped) -> String
+    def self?.record_type: (untyped, untyped) -> String
+
+    # : (untyped, untyped) -> String
+    def self?.proc_from_function: (untyped, untyped) -> String
+
+    # RBS positional parameters may be anonymous; Sorbet always needs a name.
+    # : (untyped) -> Array[[String, untyped]]
+    def self?.positional_pairs: (untyped) -> Array[[ String, untyped ]]
+
+    # RBS spells nilability as a union member; Sorbet as a wrapper. A single
+    # non-nil member still counts as top level for Sorbet, several do not.
+    # : (untyped, untyped) -> String
+    def self?.union_type: (untyped, untyped) -> String
+
+    # : (String) -> String
+    def self?.nilable: (String) -> String
+  end
+end

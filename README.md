@@ -89,6 +89,41 @@ MINITWIN_RBS_DIR=sig/custom_path rake minitwin:generate_rbs
 ```
 
 
+## Sorbet
+
+For projects that type check with [Sorbet](https://sorbet.org) instead of Steep, Minitwin ships a
+Sorbet RBI file for its public interface in `rbi/minitwin.rbi`. You do not have to do anything to
+use it: [Tapioca](https://github.com/Shopify/tapioca) picks up the `rbi/` directory of a gem
+automatically and merges it into the RBI it generates for Minitwin.
+
+```bash
+bundle exec tapioca gem minitwin
+bundle exec srb tc
+```
+
+The RBI is generated from the very same RBS signatures, so there is a single source of truth and no
+`sig` annotations in the implementation. To regenerate it after changing the signatures:
+
+```bash
+bundle exec rbs-inline --output lib   # refresh sig/generated
+bundle exec rake minitwin:generate_rbi
+```
+
+`rake minitwin:check_rbi` fails if `rbi/minitwin.rbi` is out of date, which makes it suitable for
+CI. The output path can be overridden with a task argument or the `MINITWIN_RBI_OUT` env var.
+
+A detail of the translation is worth knowing about when you change Minitwin's own signatures.
+A module whose method returns RBS `instance` means "an instance of the class I am mixed into", which
+in Sorbet is `T.self_type` for an included module but `T.attached_class` for an extended one; the
+rake task determines which is which from the loaded runtime.
+
+Because the two type languages do not overlap completely, some constructs are translated with a
+deliberate loss of precision: RBS interfaces, type aliases and structural types become `T.untyped`,
+literal types are widened to their class, and RBS method overloads are reduced to their first
+variant (the RBI records a comment for the dropped ones). Everything else — unions, optionals,
+generics, blocks, visibility, type parameters — maps directly.
+
+
 ## Inspiration
 
 Minitwin was inspired by [Disposable](https://github.com/apotonick/disposable).
