@@ -14,7 +14,7 @@
 
 ## Basic
 
-Define properties and instantiate a twin from a hash:
+Define properties and instantiate a twin, which can be serialized:
 
 ```ruby
 class ArticleTwin < Minitwin
@@ -22,12 +22,23 @@ class ArticleTwin < Minitwin
   property :published
 end
 
-article = ArticleTwin.from_hash(title: "Hello", published: true)
+article = ArticleTwin.new(title: "Hello", published: true)
 article.title      #=> "Hello"
 article.published  #=> true
 
 article.to_hash    #=> { title: "Hello", published: true }
 article.to_json    #=> '{"title":"Hello","published":true}'
+```
+
+It's also possible to instantiate a twin from a plain Ruby Hash or JSON string:
+
+```ruby
+article = ArticleTwin.from_hash({title: "Hello", published: true})
+article.title #=> "Hello"
+
+json_string = { title: "Hello", published: true }.to_json
+article = ArticleTwin.from_json(json_string)
+article.title #=> "Hello"
 ```
 
 ## Block properties
@@ -43,7 +54,7 @@ class PostTwin < Minitwin
   end
 end
 
-post = PostTwin.from_hash(title: "Hi", author: { name: "Ana", email: "ana@example.com" })
+post = PostTwin.new(title: "Hi", author: { name: "Ana", email: "ana@example.com" })
 post.author.name   #=> "Ana"
 post.to_hash       #=> { title: "Hi", author: { name: "Ana", email: "ana@example.com" } }
 ```
@@ -60,7 +71,7 @@ class UserTwin < Minitwin
   property :address, twin: AddressTwin
 end
 
-user = UserTwin.from_hash(name: "Bob", address: { city: "Berlin" })
+user = UserTwin.new(name: "Bob", address: { city: "Berlin" })
 user.address.city  #=> "Berlin"
 ```
 
@@ -76,7 +87,7 @@ class InvoiceTwin < Minitwin
   collection :tags
 end
 
-inv = InvoiceTwin.from_hash(tags: %w[urgent vip])
+inv = InvoiceTwin.new(tags: %w[urgent vip])
 inv.tags  #=> ["urgent", "vip"]
 ```
 
@@ -90,7 +101,7 @@ class OrderTwin < Minitwin
   end
 end
 
-order = OrderTwin.from_hash(lines: [
+order = OrderTwin.new(lines: [
   { product: "Mug", qty: 2 },
   { product: "Shirt", qty: 1 }
 ])
@@ -112,7 +123,7 @@ class ProfileTwin < Minitwin
   end
 end
 
-t = ProfileTwin.from_hash(username: "dana", theme: "dark", locale: "en")
+t = ProfileTwin.new(username: "dana", theme: "dark", locale: "en")
 t.theme     #=> "dark"
 t.to_hash   #=> { username: "dana", settings: { theme: "dark", locale: "en" } }
 ```
@@ -137,7 +148,7 @@ class TokenTwin < Minitwin
   property :internal_token, as: :token
 end
 
-t = TokenTwin.from_hash(internal_token: "abc")
+t = TokenTwin.new(internal_token: "abc")
 t.token    #=> "abc"
 t.to_hash  #=> { token: "abc" }
 ```
@@ -150,7 +161,7 @@ class FieldTwin < Minitwin
   property :value, as: -> { key }
 end
 
-t = FieldTwin.from_hash(key: "score", value: 42)
+t = FieldTwin.new(key: "score", value: 42)
 t.score    #=> 42
 t.to_hash  #=> { key: "score", score: 42 }
 
@@ -172,7 +183,7 @@ class EventTwin < Minitwin
   property :active,        type: Types::Params::Bool.lax
 end
 
-ev = EventTwin.from_hash(visitor_count: "42", active: "1")
+ev = EventTwin.new(visitor_count: "42", active: "1")
 ev.visitor_count  #=> 42
 ev.active         #=> true
 ```
@@ -187,7 +198,7 @@ class ContactTwin < Minitwin
   property :name,  validates: { presence: true }
 end
 
-c = ContactTwin.from_hash(email: "", name: "")
+c = ContactTwin.new(email: "", name: "")
 c.valid?           #=> false
 c.errors.full_messages
 #=> ["Email can't be blank", "Email is invalid", "Name can't be blank"]
@@ -202,7 +213,7 @@ class RegistrationTwin < Minitwin
   end
 end
 
-r = RegistrationTwin.from_hash(contact: { email: "" })
+r = RegistrationTwin.new(contact: { email: "" })
 r.valid?  #=> false
 r.errors.full_messages  #=> ["contact.email can't be blank"]
 ```
@@ -225,7 +236,7 @@ user.name  #=> "Alex"
 `assign_hash` updates an existing twin in place (only known attributes):
 
 ```ruby
-twin = UserTwin.from_hash(name: "Alex", email: "old@example.com")
+twin = UserTwin.new(name: "Alex", email: "old@example.com")
 twin.assign_hash(email: "new@example.com")
 twin.email  #=> "new@example.com"
 ```
@@ -297,7 +308,7 @@ class SiteTwin < Minitwin
   property :street, on: -> { address.installation }  # deeper path: use a lambda
 end
 
-site = SiteTwin.from_hash(
+site = SiteTwin.new(
   address: { city: "Berlin", installation: { street: "1234 fake street" } }
 )
 site.city    #=> "Berlin"
