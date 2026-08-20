@@ -34,7 +34,7 @@ class UserTwin < Minitwin
   property :active, type: Types::Params::Bool.lax
 end
 
-user = UserTwin.from_hash(
+user = UserTwin.new(
   id: "42",
   name: "Alex",
   active: "1"
@@ -91,7 +91,7 @@ MINITWIN_RBS_DIR=sig/custom_path rake minitwin:generate_rbs
 
 ## Inspiration
 
-Minitwin was inspired by [Disposable](https://github.com/apotonick/disposable), a gem for building twin objects as a decorator layer on top of your domain models.
+Minitwin was inspired by [Disposable](https://github.com/apotonick/disposable).
 
 
 ## License
