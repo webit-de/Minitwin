@@ -370,8 +370,16 @@ class InitializationTest < ActiveSupport::TestCase
     end
 
     obj = klass.new(name: "test")
-    aliases = obj.send(:dynamic_aliases)
+    aliases = obj.dynamic_aliases
     assert_equal :name, aliases[:alias_name]
+  end
+
+  test "dynamic_aliases is publicly readable" do
+    klass = Class.new(Minitwin) do
+      property :name, as: -> { "alias_name" }
+    end
+
+    assert_equal({ alias_name: :name }, klass.new(name: "test").dynamic_aliases)
   end
 
   test "dynamic aliases return an empty hash when none are defined" do
@@ -380,7 +388,7 @@ class InitializationTest < ActiveSupport::TestCase
     end
 
     obj = klass.new(name: "test")
-    aliases = obj.send(:dynamic_aliases)
+    aliases = obj.dynamic_aliases
     assert_equal({}, aliases)
   end
 

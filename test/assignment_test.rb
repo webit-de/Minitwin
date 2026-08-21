@@ -193,12 +193,55 @@ class AssignmentTest < ActiveSupport::TestCase
     assert_equal "sub prop", twin.my_readonly_nested.my_sub_prop
   end
 
+  test "to_object reads the model attribute named by the as: alias" do
+    klass = Class.new(Minitwin) do
+      property :orderno, as: :draft_reference
+    end
+    model = Struct.new(:draft_reference).new("ORD_1")
+
+    twin = klass.new
+    twin.to_object(model)
+
+    assert_equal "ORD_1", twin.draft_reference
+  end
+
+  test "to_object falls back to the declared name when the model has no aliased attribute" do
+    klass = Class.new(Minitwin) do
+      property :orderno, as: :draft_reference
+    end
+    model = Struct.new(:orderno).new("ORD_2")
+
+    twin = klass.new
+    twin.to_object(model)
+
+    assert_equal "ORD_2", twin.draft_reference
+  end
+
   # --- assign_hash -----------------------------------------------------------
 
   test "assign_hash updates array element by index when not a twin/hash" do
     twin = CollectionItemsTwin.new(items: [1, 2, 3])
     twin.assign_hash(items: [9, 8, 7])
     assert_equal [9, 8, 7], twin.items
+  end
+
+  test "assign_hash shrinks a collection to the assigned size" do
+    twin = CollectionItemsTwin.new(items: [1, 2, 3])
+    twin.assign_hash(items: [9])
+    assert_equal [9], twin.items
+  end
+
+  test "assign_hash coerces collection items appended beyond the current size" do
+    klass = Class.new(Minitwin) do
+      collection :items do
+        property :name
+      end
+    end
+
+    obj = klass.new(items: [{ name: "a" }])
+    obj.assign_hash(items: [{ name: "a" }, { name: "b" }])
+
+    assert_equal "b", obj.items.last.name
   end
 
   test "assign_hash with one key only writes that one attribute" do

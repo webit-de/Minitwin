@@ -29,6 +29,8 @@ class Minitwin
     def initialize(**args)
       allowed_keys = self.class.send(:allowed_attribute_keys)
 
+      deferred = args.reject { |arg, _| allowed_keys.include?(arg.to_sym) } if self.class.dynamic_aliases?
+
       args.select! { |arg, _| allowed_keys.include?(arg.to_sym) }
 
       getter_defaults = {}
@@ -49,7 +51,17 @@ class Minitwin
       end
       @__skip_alias_recompute__ = false
 
-      __recompute_dynamic_aliases__ if self.class.dynamic_aliases?
+      return unless self.class.dynamic_aliases?
+
+      __recompute_dynamic_aliases__
+      __assign_dynamic_alias_keys__(deferred)
+    end
+
+    #: () -> Hash[Symbol, Symbol]
+    def dynamic_aliases
+      return {} unless instance_variable_defined?(ALIASES_REV_VAR) && instance_variable_get(ALIASES_REV_VAR)
+
+      instance_variable_get(ALIASES_REV_VAR).dup
     end
 
     private
@@ -118,6 +130,30 @@ class Minitwin
       end
     end
 
+    def __assign_dynamic_alias_keys__(hash, allowed: nil)
+      return if hash.nil? || hash.empty?
+
+      hash.each do |key, value|
+        target = __dynamic_alias_target__(key)
+        next if target.nil?
+        next if allowed && !allowed.include?(target)
+        next unless respond_to?("#{target}=", true)
+
+        send("#{target}=", value)
+      end
+    end
+
+    def __dynamic_alias_target__(key)
+      return nil unless instance_variable_defined?(ALIASES_REV_VAR)
+
+      target = instance_variable_get(ALIASES_REV_VAR)[key.to_sym]
+      return nil if target.nil?
+      return target unless target.to_s.start_with?(Minitwin::NESTED_READER_PREFIX)
+
+      entry = self.class.dynamic_nested_aliases.find { |e| e[:target] == target }
+      entry && entry[:path].last
+    end
+
     def __compute_alias_name__(as_proc)
       instance_exec(&as_proc)
     rescue StandardError
@@ -127,7 +163,7 @@ class Minitwin
     end
 
     def __compute_nested_alias_name__(entry)
-      obj = public_send(entry[:group])
+      obj = send(entry[:group])
       obj = Minitwin::Utils.traverse_path(obj, entry[:path][0..-2])
       obj.instance_exec(&entry[:as])
     rescue StandardError
@@ -176,13 +212,6 @@ class Minitwin
 
       aliases[target_method] = alias_key
       aliases_rev[alias_key] = target_method
-    end
-
-    # Public: expose current dynamic aliases as a Hash of alias_name => target_method
-    def dynamic_aliases
-      return {} unless instance_variable_defined?(ALIASES_REV_VAR) && instance_variable_get(ALIASES_REV_VAR)
-
-      instance_variable_get(ALIASES_REV_VAR).dup
     end
   end
 end

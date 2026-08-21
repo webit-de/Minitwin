@@ -12,9 +12,10 @@ class Minitwin
     #: (untyped) -> instance
     def to_object(model)
       assignable_attribute_methods.each do |method|
-        next unless model.respond_to?(method)
+        reader = self.class.model_reader_for(model, method)
+        next unless reader
 
-        value = model.public_send(method)
+        value = model.public_send(reader)
 
         ivar_name = Minitwin::Utils.ivar_name(method)
         current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
@@ -37,14 +38,20 @@ class Minitwin
 
     #: (Hash[ String | Symbol, untyped ] hash) -> instance
     def assign_hash(hash = {})
-      hash = hash.to_h.transform_keys(&:to_sym)
+      aliases = self.class.send(:setter_alias_map)
+      hash = hash.to_h.transform_keys { |key| aliases.fetch(key.to_sym, key.to_sym) }
       allowed = assignable_attribute_methods
+
+      deferred = {}
 
       was_skipping = @__skip_alias_recompute__
       @__skip_alias_recompute__ = true
       begin
         hash.each do |method, value|
-          next unless allowed.include?(method)
+          unless allowed.include?(method)
+            deferred[method] = value
+            next
+          end
 
           ivar_name = Minitwin::Utils.ivar_name(method)
           current_value = instance_variable_get(ivar_name) if instance_variable_defined?(ivar_name)
@@ -52,13 +59,7 @@ class Minitwin
           if current_value.respond_to?(:assign_hash) && value.is_a?(Hash)
             current_value.assign_hash(value)
           elsif value.is_a?(Array) && current_value.is_a?(Array)
-            value.each_with_index do |item, idx|
-              if item.is_a?(Hash) && current_value.size > idx && current_value[idx].respond_to?(:assign_hash)
-                current_value[idx].assign_hash(item)
-              else
-                current_value[idx] = item
-              end
-            end
+            assign_collection(method:, current: current_value, incoming: value)
           elsif respond_to?("#{method}=", true)
             send("#{method}=", value)
           end
@@ -69,6 +70,7 @@ class Minitwin
 
       if !@__skip_alias_recompute__ && self.class.dynamic_aliases?
         __recompute_dynamic_aliases__
+        __assign_dynamic_alias_keys__(deferred, allowed: allowed)
       end
 
       self
@@ -90,6 +92,31 @@ class Minitwin
         prop_meta = self.class.properties[method]
         prop_meta && prop_meta[:readonly]
       end
+    end
+
+    private
+
+    #: (method: Symbol, current: Array[untyped], incoming: Array[untyped]) -> void
+    def assign_collection(method:, current:, incoming:)
+      incoming.each_with_index do |item, index|
+        if index >= current.size
+          current << coerce_collection_item(method:, item:)
+        elsif item.is_a?(Hash) && current[index].respond_to?(:assign_hash)
+          current[index].assign_hash(item)
+        else
+          current[index] = coerce_collection_item(method:, item:)
+        end
+      end
+
+      current.slice!(incoming.size..) if current.size > incoming.size
+    end
+
+    #: (method: Symbol, item: untyped) -> untyped
+    def coerce_collection_item(method:, item:)
+      element_twin = self.class.collections.dig(method, :element_twin)
+      return item unless element_twin
+
+      self.class.send(:coerce_value_to_twin, item, element_twin)
     end
   end
 end

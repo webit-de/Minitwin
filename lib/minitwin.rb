@@ -40,9 +40,13 @@ class Minitwin
       ivar.to_s.delete_prefix("@").to_sym
     end
 
+    def model_attribute_name(name, as_meta)
+      as_meta.is_a?(Symbol) || as_meta.is_a?(String) ? as_meta.to_sym : name
+    end
+
     # Traverse a nested path on an object
     def traverse_path(obj, path)
-      path.each { |seg| obj = obj.public_send(seg) }
+      path.each { |seg| obj = obj.send(seg) }
       obj
     end
   end

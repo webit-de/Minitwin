@@ -34,6 +34,8 @@ class Minitwin
 
       def allowed_attribute_keys_array: () -> untyped
 
+      def setter_alias_map: () -> untyped
+
       def setter_methods: () -> untyped
     end
   end

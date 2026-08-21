@@ -193,4 +193,32 @@ class DslNestedTest < ActiveSupport::TestCase
     # Should be able to access via the nested group
     assert_equal "2024-01-01", obj.timestamp
   end
+
+  test "exposes a leaf dynamic alias on the parent when the container is aliased" do
+    klass = Class.new(Minitwin) do
+      nested :meta, as: :"data:meta" do
+        property :field_name
+        property :field_value, as: -> { field_name }
+      end
+    end
+
+    obj = klass.new(field_name: "score", field_value: 42)
+
+    assert_equal 42, obj.score
+  end
+
+  test "exposes a leaf dynamic alias reached through an aliased intermediate group" do
+    klass = Class.new(Minitwin) do
+      nested :meta do
+        property :group, as: :"data:group" do
+          property :field_name
+          property :field_value, as: -> { field_name }
+        end
+      end
+    end
+
+    obj = klass.new(field_name: "score", field_value: 42)
+
+    assert_equal 42, obj.score
+  end
 end

@@ -88,6 +88,12 @@ class Minitwin
         "#{Minitwin::INTERNAL_MODEL_PREFIX}#{name}" unless name.nil?
       end
 
+      #: (Symbol name) -> Symbol
+      def model_attribute_name(name)
+        meta = properties[name] || collections[name]
+        Minitwin::Utils.model_attribute_name(name, meta && meta[:as])
+      end
+
       def enrich_attributes_from_models!(attributes, models)
         properties.each_key do |key|
           enrich_attribute_from_models(attributes, models, key, is_collection: false)
@@ -106,14 +112,23 @@ class Minitwin
         return if attributes.key?(key) && !attributes[key].nil?
 
         models.each_value do |model|
-          next unless model.respond_to?(key)
+          reader = model_reader_for(model, key)
+          next unless reader
 
-          val = model.public_send(key)
+          val = model.public_send(reader)
           next if val.nil?
 
           attributes[key] = is_collection ? coerce_collection_array(val) : val
           break
         end
+      end
+
+      #: (untyped model, Symbol name) -> Symbol?
+      def model_reader_for(model, name)
+        aliased = model_attribute_name(name)
+        return aliased if model.respond_to?(aliased)
+
+        name if model.respond_to?(name)
       end
     end
   end

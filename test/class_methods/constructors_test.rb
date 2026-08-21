@@ -670,4 +670,16 @@ class ConstructorsTest < ActiveSupport::TestCase
     obj = klass.from_objects(model: model)
     assert_equal [1, 2, 3], obj.items
   end
+  test "from_object enriches a property from the model reader named by the as: alias" do
+    klass = Class.new(Minitwin) do
+      property :orderno, as: :draft_reference
+    end
+    source = Class.new do
+      def draft_reference
+        "ORD_3"
+      end
+    end.new
+
+    assert_equal "ORD_3", klass.from_object(source).draft_reference
+  end
 end

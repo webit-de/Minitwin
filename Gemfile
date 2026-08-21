@@ -10,6 +10,7 @@ group :development, :test do
   gem "actionpack", ">= 6.1"
   gem "activemodel", ">= 6.1"
   gem "dry-types", ">= 1.7"
+  gem "irb"
   gem "m", ">= 1.6"
   gem "minitest", ">= 5.18"
   gem "rake", ">= 13.0"

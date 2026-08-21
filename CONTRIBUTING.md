@@ -119,6 +119,14 @@ After cloning the repository, install dependencies with:
 bundle install
 ```
 
+To try the gem out interactively against your working tree, use the console. It
+loads the code from `lib/`, so a plain `require "minitwin"` in `irb` — which
+resolves an installed release instead — will not show your changes:
+
+```bash
+bin/console
+```
+
 Whenever you change code, make sure all tests still pass before opening a pull request:
 
 ```bash

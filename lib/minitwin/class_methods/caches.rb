@@ -25,6 +25,7 @@ class Minitwin
         @allowed_attribute_keys_array = nil
         @setter_methods = nil
         @has_dynamic_aliases_cache = nil
+        @setter_alias_map = nil
       end
 
       def serializable_getters
@@ -79,11 +80,17 @@ class Minitwin
 
       def allowed_attribute_keys_array
         @allowed_attribute_keys_array ||= begin
-          allowed = allowed_attribute_keys
+          allowed = allowed_attribute_keys - setter_alias_map.keys
           ordered = property_order.select { |k| allowed.include?(k) }
           remaining = allowed.to_a - ordered
           (ordered + remaining).freeze
         end
+      end
+
+      def setter_alias_map
+        @setter_alias_map ||= twin_class_hierarchy.reverse.each_with_object({}) do |klass, map|
+          map.merge!(klass.setter_aliases)
+        end.freeze
       end
 
       def setter_methods

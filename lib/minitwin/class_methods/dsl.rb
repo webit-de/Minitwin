@@ -25,6 +25,11 @@ class Minitwin
         @property_order ||= []
       end
 
+      #: () -> Hash[Symbol, Symbol]
+      def setter_aliases
+        @setter_aliases ||= {}
+      end
+
       #: () -> Array[Hash]
       def dynamic_nested_aliases
         @dynamic_nested_aliases ||= []
@@ -61,6 +66,7 @@ class Minitwin
         alias_method "#{name}_attributes=", "#{name}="
 
         define_getter_method(name:, on:, as:, default:, getter:, type: nil)
+        apply_alias_to_setter(name:, as:)
         alias_method "#{name}_attributes", name
         add_validation(name:, validates:)
         add_collection_property(name:)
@@ -125,6 +131,7 @@ class Minitwin
         end
 
         define_getter_method(name:, as:, on:, default:, getter:, type: type)
+        apply_alias_to_setter(name:, as:)
         add_validation(name:, validates:)
         add_unexposed_property(name:, expose:)
         invalidate_caches
@@ -253,13 +260,13 @@ class Minitwin
           # Fast path: a plain property with no getter override
           attr_reader(name)
         else
-          getter_proc = build_getter_proc(name:, on:, default:, getter:, type:)
+          getter_proc = build_getter_proc(name:, on:, default:, getter:, type:, as:)
           define_method(name, &getter_proc)
         end
         apply_alias_to_getter(name:, as:)
       end
 
-      def build_getter_proc(name:, on:, default:, getter:, type:)
+      def build_getter_proc(name:, on:, default:, getter:, type:, as:)
         if getter
           ivar = Minitwin::Utils.ivar_name(name)
           if getter.is_a?(Symbol)
@@ -278,19 +285,20 @@ class Minitwin
         end
 
         if on
-          build_composition_getter(name:, on:, default:, type:)
+          build_composition_getter(name:, on:, default:, type:, as:)
         else
           build_regular_getter(name:, default:, type:)
         end
       end
 
-      def build_composition_getter(name:, on:, default:, type:)
+      def build_composition_getter(name:, on:, default:, type:, as:)
         # Resolve model ivar name at definition time when on is a symbol
         model_ivar = on.is_a?(Proc) ? nil : internal_model_name(on)
         # Collection metadata will be resolved after property registration
         # via a lazy lookup on first access, then cached in the closure.
         col_meta = nil
         col_meta_resolved = false
+        model_reader = Minitwin::Utils.model_attribute_name(name, as)
 
         -> { # rubocop: disable Metrics/BlockLength
           # Get composition model - handle both symbol and proc cases
@@ -311,11 +319,12 @@ class Minitwin
                 "Ensure the model is provided via from_objects or a reader exists."
             )
           end
-          unless model.respond_to?(name)
+          reader = model.respond_to?(model_reader) ? model_reader : name
+          unless model.respond_to?(reader)
             raise "The instance of '#{model.class}' does not respond to '#{name}'."
           end
 
-          raw = model.send(name)
+          raw = model.send(reader)
 
           # Return default if raw is nil
           return self.class.send(:resolve_default_value, default, type) if raw.nil?
@@ -367,6 +376,13 @@ class Minitwin
           alias_method as, name
           protected name
         end
+      end
+
+      def apply_alias_to_setter(name:, as:)
+        return if as.nil? || as.is_a?(Proc) || as == name
+
+        alias_method "#{as}=", "#{name}="
+        setter_aliases[as.to_sym] = name.to_sym
       end
 
       def add_validation(name:, validates:)

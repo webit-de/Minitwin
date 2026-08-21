@@ -33,9 +33,15 @@ class Minitwin
       # : (Symbol name) -> String | nil
       def internal_model_name: (Symbol name) -> String
 
+      # : (Symbol name) -> Symbol
+      def model_attribute_name: (Symbol name) -> Symbol
+
       def enrich_attributes_from_models!: (untyped attributes, untyped models) -> untyped
 
       def enrich_attribute_from_models: (untyped attributes, untyped models, untyped key, is_collection: untyped) -> untyped
+
+      # : (untyped model, Symbol name) -> Symbol?
+      def model_reader_for: (untyped model, Symbol name) -> Symbol?
     end
   end
 end

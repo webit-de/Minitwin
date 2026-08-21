@@ -25,5 +25,13 @@ class Minitwin
     # Gets the non-readonly methods, which can be assigned with new values.
     # : () -> Array[Symbol]
     def assignable_attribute_methods: () -> Array[Symbol]
+
+    private
+
+    # : (method: Symbol, current: Array[untyped], incoming: Array[untyped]) -> void
+    def assign_collection: (method: Symbol, current: Array[untyped], incoming: Array[untyped]) -> void
+
+    # : (method: Symbol, item: untyped) -> untyped
+    def coerce_collection_item: (method: Symbol, item: untyped) -> untyped
   end
 end

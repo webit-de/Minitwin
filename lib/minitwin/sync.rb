@@ -23,9 +23,7 @@ class Minitwin
       return false if target_model.nil?
 
       attribute_methods.each do |method_name| # rubocop: disable Metrics/BlockLength
-        prop_meta = self.class.properties[method_name] || self.class.collections[method_name]
-        as_name = prop_meta&.[](:as)
-        target_name = as_name.is_a?(Symbol) || as_name.is_a?(String) ? as_name.to_sym : method_name
+        target_name = self.class.model_attribute_name(method_name)
 
         writer = :"#{target_name}="
         next unless target_model.respond_to?(writer) || target_model.respond_to?(target_name)

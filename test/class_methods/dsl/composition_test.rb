@@ -209,4 +209,12 @@ class DslCompositionTest < ActiveSupport::TestCase
       super(items: RelationProxy.new(items))
     end
   end
+  test "on: reads the composition source attribute named by the as: alias" do
+    klass = Class.new(Minitwin) do
+      property :orderno, as: :draft_reference, on: :order
+    end
+    order = Struct.new(:draft_reference).new("ORD_4")
+
+    assert_equal "ORD_4", klass.from_objects(order:).draft_reference
+  end
 end

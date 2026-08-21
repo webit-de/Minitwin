@@ -9,6 +9,7 @@
 - [Validations](#validations)
 - [Working with objects](#working-with-objects)
 - [Composition](#composition)
+- [Round-tripping](#round-tripping)
 - [DSL Reference](#dsl-reference)
 - [Public Interface](#public-interface)
 
@@ -133,10 +134,22 @@ way `property` does. Because the block uses the plain `name` internally, the ali
 may be any symbol — even one that is not a valid method or instance variable name:
 
 ```ruby
-nested :settings, as: :"app:settings" do
-  property :theme
+class SettingsTwin < Minitwin
+  nested :settings, as: :"app:settings" do
+    property :theme
+  end
 end
+
+SettingsTwin.new(theme: "dark").to_hash
 #=> { :"app:settings" => { theme: "dark" } }
+```
+
+The renamed container key is also accepted on the write path, so a serialized
+nested group can be read back in:
+
+```ruby
+twin = SettingsTwin.from_hash("app:settings" => { theme: "dark" })
+twin.theme #=> "dark"
 ```
 
 ## Aliases
@@ -144,14 +157,41 @@ end
 A static alias (symbol) renames the public getter and protects the original name. The serialized key follows the alias:
 
 ```ruby
-class TokenTwin < Minitwin
-  property :internal_token, as: :token
+class SessionTwin < Minitwin
+  property :access_token, as: :token
 end
 
-t = TokenTwin.new(internal_token: "abc")
+t = SessionTwin.new(access_token: "abc")
 t.token    #=> "abc"
 t.to_hash  #=> { token: "abc" }
 ```
+
+The alias is the name everything outside the class body uses: the reader, the
+`to_hash` key and — since the write path accepts it too — the input key are all
+`token`. The declared name is the twin's own name for the property. It names the
+instance variable, it is the key in `attributes`, and it stays callable as a
+protected reader from `getter:`, `as:` and validation blocks.
+
+```ruby
+t.attributes #=> { access_token: "abc" }
+```
+
+On the model side the alias is the name too: `sync` and `to_object` write
+`model.token=`, and `from_object`, `from_objects` and `on:` read `model.token`,
+each falling back to the declared name when the model does not carry the alias.
+That makes `as:` the way to map a property onto a differently named attribute:
+
+```ruby
+class OrderTwin < Minitwin
+  property :orderno, as: :draft_reference
+end
+
+OrderTwin.new(orderno: "ORD_1").sync(record) # writes record.draft_reference
+OrderTwin.from_object(record).draft_reference #=> "ORD_1"
+```
+
+A dynamic `as:` is skipped here — a name computed per instance cannot address a
+fixed attribute — so those properties always use the declared name.
 
 A dynamic alias (lambda) is evaluated per instance, so the public name can depend on other attributes:
 
@@ -172,6 +212,21 @@ t.to_hash  #=> { key: "total", total: 99 }
 ```
 
 The lambda runs in instance context, so any reader on the twin is available. `as:` works the same way on `collection`.
+
+Every constructor and assignment method accepts both spellings — the declared
+property name and the alias that `to_hash` emits:
+
+```ruby
+SessionTwin.from_hash(access_token: "abc").token #=> "abc"
+SessionTwin.from_hash(token: "abc").token        #=> "abc"
+
+FieldTwin.from_hash(key: "score", score: 42).score #=> 42
+```
+
+Dynamic aliases are resolved in two passes: the plain properties are assigned
+first, the alias names are recomputed from them, and the remaining keys are then
+routed to their targets. A dynamically aliased key is therefore only recognised
+when the attributes its lambda depends on are part of the same payload.
 
 ## Coercion
 
@@ -323,6 +378,58 @@ or `getter: -> { address&.installation&.street }`.
 The flattening only works for reading: `site.city = "Hamburg"` is discarded, so assign to
 `site.address.city` instead.
 
+## Round-tripping
+
+`from_hash(twin.to_hash)` reproduces the twin for properties, collections,
+`nested` groups and every form of `as:`:
+
+```ruby
+class WebhookTwin < Minitwin
+  property   :occurredAt, as: :timestamp
+  property   :fieldName,  as: :field_name
+  property   :fieldValue, as: -> { field_name }
+  collection :labels,     as: :tags
+
+  nested :meta, as: :metadata do
+    property :source
+  end
+end
+
+payload = {
+  occurredAt: "2026-08-21T09:00:00Z",
+  fieldName:  "score",
+  fieldValue: 42,
+  labels:     ["urgent", "vip"],
+  meta:       { source: "stripe" }
+}
+
+twin = WebhookTwin.from_hash(payload)
+twin.timestamp  #=> "2026-08-21T09:00:00Z"
+twin.score      #=> 42
+twin.tags       #=> ["urgent", "vip"]
+twin.source     #=> "stripe"
+
+WebhookTwin.from_hash(twin.to_hash).to_hash == twin.to_hash #=> true
+```
+
+Both spellings are accepted on the way in — the payload above uses the declared
+names, and the serialized keys work just as well. Only the aliases come back out,
+so `to_hash` does not reproduce a declared-name payload key for key. What it does
+guarantee is that its own output can be read back unchanged, however many aliases
+are in play.
+
+A twin is a contract, not a copy of the document. Three things are dropped on
+purpose and cannot be restored from `to_hash`:
+
+| Dropped | Why |
+|---|---|
+| Keys the twin does not declare | `initialize` filters unknown keys, which is what makes mass assignment safe. Keep the raw payload if you need it. |
+| Values behind `on:` and `getter:` | Both are derived at read time, so they have no writer to assign back to. |
+| The difference between an absent key and an explicit `null` | `to_hash` omits `nil` unless `render_nil: true` is passed, and both spellings assign `nil`. |
+
+`type:` coercion is applied on assignment, so `"42"` deserializes to `42` and
+serializes back as `42`, not as the original string.
+
 ---
 
 ## DSL Reference
@@ -383,10 +490,10 @@ The leaf properties (`city`, `zip`) are accessible directly on the parent instan
 
 | Method | Description |
 |---|---|
-| `from_hash(hash)` | Instantiates a twin from a plain Ruby Hash. |
+| `from_hash(hash)` | Instantiates a twin from a plain Ruby Hash. Accepts declared property names as well as the keys `to_hash` emits for `as:` aliases. Unknown keys are ignored. |
 | `from_json(string)` | Parses a JSON string and delegates to `from_hash`. |
 | `from_params(params)` | Accepts `ActionController::Parameters` or a plain Hash. Unwraps `to_unsafe_h` automatically. |
-| `from_object(model)` | Reads attributes from a single object via `attributes`, `to_h`, or readers. Stores the object for later `sync`. |
+| `from_object(model)` | Reads attributes from a single object via `attributes`, `to_h`, or readers, accepting the name given by a static `as:` as well as the declared one. Stores the object for later `sync`. |
 | `from_objects(**models)` | Merges attributes from multiple named objects. Last value wins on key conflicts. Stored objects are available as composition sources via `on:`. |
 | `from_collection(array)` | Applies `from_objects` semantics to each element and returns an array of twins. |
 
@@ -420,16 +527,16 @@ The leaf properties (`city`, `zip`) are accessible directly on the parent instan
 
 | Method | Description |
 |---|---|
-| `assign_hash(hash)` | Updates known attributes in place from a Hash. Recurses into nested twins and collection elements. |
+| `assign_hash(hash)` | Updates known attributes in place from a Hash, accepting `as:` alias keys as well. Recurses into nested twins and collection elements. An assigned collection replaces the current one: elements at matching indexes are patched in place, extra elements are appended as element twins, and surplus elements are dropped. |
 | `assign_params(params)` | Like `assign_hash`, but also accepts `ActionController::Parameters`. |
 | `assign_object(model)` | Copies matching attributes from an object via its readers and stores the object for later `sync`. |
-| `to_object(model)` | Mirrors the twin's values into an existing model via its writers. Does not store the model. |
+| `to_object(model)` | Mirrors the twin's values into an existing model via its writers, preferring the name given by a static `as:`. Does not store the model. |
 
 **Sync**
 
 | Method | Description |
 |---|---|
-| `sync(model = nil, validate: true)` | Writes the twin's values back to the model. When `model` is omitted, uses the object stored by `from_object`/`assign_object`. Returns `false` when validation fails or no model is available. Recurses into nested twins and collection elements. |
+| `sync(model = nil, validate: true)` | Writes the twin's values back to the model, targeting the name given by a static `as:` when present. When `model` is omitted, uses the object stored by `from_object`/`assign_object`. Returns `false` when validation fails or no model is available. Recurses into nested twins and collection elements. |
 
 **Introspection**
 

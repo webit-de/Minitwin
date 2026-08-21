@@ -16,6 +16,9 @@ class Minitwin
     # : (**untyped) -> instance
     def initialize: (**untyped) -> instance
 
+    # : () -> Hash[Symbol, Symbol]
+    def dynamic_aliases: () -> Hash[Symbol, Symbol]
+
     private
 
     def assign_attribute: (method: untyped, value: untyped) -> untyped
@@ -33,13 +36,14 @@ class Minitwin
 
     def __recompute_nested_aliases__: () -> untyped
 
+    def __assign_dynamic_alias_keys__: (untyped hash, ?allowed: untyped) -> untyped
+
+    def __dynamic_alias_target__: (untyped key) -> untyped
+
     def __compute_alias_name__: (untyped as_proc) -> untyped
 
     def __compute_nested_alias_name__: (untyped entry) -> untyped
 
     def __apply_dynamic_alias__: (untyped target_method, untyped alias_name) -> untyped
-
-    # Public: expose current dynamic aliases as a Hash of alias_name => target_method
-    def dynamic_aliases: () -> untyped
   end
 end

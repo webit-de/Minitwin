@@ -15,6 +15,9 @@ class Minitwin
       # : () -> Array[Symbol]
       def property_order: () -> Array[Symbol]
 
+      # : () -> Hash[Symbol, Symbol]
+      def setter_aliases: () -> Hash[Symbol, Symbol]
+
       # : () -> Array[Hash]
       def dynamic_nested_aliases: () -> Array[Hash]
 
@@ -55,13 +58,15 @@ class Minitwin
 
       def define_getter_method: (name: untyped, as: untyped, on: untyped, default: untyped, getter: untyped, ?type: untyped) -> untyped
 
-      def build_getter_proc: (name: untyped, on: untyped, default: untyped, getter: untyped, type: untyped) -> untyped
+      def build_getter_proc: (name: untyped, on: untyped, default: untyped, getter: untyped, type: untyped, as: untyped) -> untyped
 
-      def build_composition_getter: (name: untyped, on: untyped, default: untyped, type: untyped) -> untyped
+      def build_composition_getter: (name: untyped, on: untyped, default: untyped, type: untyped, as: untyped) -> untyped
 
       def build_regular_getter: (name: untyped, default: untyped, type: untyped) -> untyped
 
       def apply_alias_to_getter: (name: untyped, as: untyped) -> untyped
+
+      def apply_alias_to_setter: (name: untyped, as: untyped) -> untyped
 
       def add_validation: (name: untyped, validates: untyped) -> untyped
 
