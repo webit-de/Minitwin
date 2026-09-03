@@ -224,6 +224,69 @@ class SerializationTest < ActiveSupport::TestCase
     assert_nil hash[:value]
   end
 
+  test "expose_nil renders a nil property while other nil properties stay absent" do
+    klass = Class.new(Minitwin) do
+      property :name
+      property :value, expose_nil: true
+    end
+
+    hash = klass.new.to_hash
+
+    assert hash.key?(:value)
+    assert_nil hash[:value]
+    refute hash.key?(:name)
+  end
+
+  test "expose_nil renders nil under a static alias" do
+    klass = Class.new(Minitwin) do
+      property :internal_name, as: :name, expose_nil: true
+    end
+
+    hash = klass.new.to_hash
+
+    assert hash.key?(:name)
+    assert_nil hash[:name]
+  end
+
+  test "expose_nil renders nil under a dynamic alias" do
+    klass = Class.new(Minitwin) do
+      property :key
+      property :value, as: -> { key.to_sym }, expose_nil: true
+    end
+
+    hash = klass.new(key: "alias").to_hash
+
+    assert hash.key?(:alias)
+    assert_nil hash[:alias]
+  end
+
+  test "expose_nil is honored for properties inherited from a parent twin" do
+    parent = Class.new(Minitwin) do
+      property :value, expose_nil: true
+    end
+    child = Class.new(parent) do
+      property :name
+    end
+
+    hash = child.new(name: "test").to_hash
+
+    assert hash.key?(:value)
+    assert_nil hash[:value]
+  end
+
+  test "nested twins honor their own expose_nil without render_nil" do
+    klass = Class.new(Minitwin) do
+      property :sub_twin do
+        property :sub_property, expose_nil: true
+      end
+    end
+
+    hash = klass.new(sub_twin: {}).to_hash
+
+    assert hash[:sub_twin].key?(:sub_property)
+    assert_nil hash[:sub_twin][:sub_property]
+  end
+
   test "to_json serializes properties" do
     klass = Class.new(Minitwin) do
       property :name
