@@ -17,7 +17,10 @@ end
 
 # Setup Zeitwerk loader for the gem to support Rails autoloading
 loader = Zeitwerk::Loader.for_gem
+loader.ignore("#{__dir__}/minitwin/errors.rb")
 loader.setup
+
+require_relative "minitwin/errors"
 
 class Minitwin
   # Constants for internal variable naming

@@ -62,6 +62,12 @@ class Minitwin
         return raw_value unless type
 
         type.call(raw_value)
+      rescue Minitwin::Error
+        # Re-raise: a Minitwin::Error (e.g. from a custom type: callable) must propagate
+        # instead of being swallowed by the broader rescue below, which is for ordinary
+        # coercion failures only. CoercionError/AliasError/ParseError/DefinitionError are
+        # all TypeError/ArgumentError subclasses, so this clause has to come first.
+        raise
       rescue *Minitwin.send(:coercion_error_classes)
         raw_value
       end

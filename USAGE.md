@@ -9,6 +9,7 @@
 - [Validations](#validations)
 - [Working with objects](#working-with-objects)
 - [Composition](#composition)
+- [Error Handling](#error-handling)
 - [DSL Reference](#dsl-reference)
 - [Public Interface](#public-interface)
 
@@ -322,6 +323,77 @@ or `getter: -> { address&.installation&.street }`.
 
 The flattening only works for reading: `site.city = "Hamburg"` is discarded, so assign to
 `site.address.city` instead.
+
+## Error Handling
+
+Minitwin raises gem-specific exception classes so misuse of the DSL, of composition, of
+dynamic aliases, of type coercion, and of the constructors can each be rescued on their own —
+or all at once via the shared marker module:
+
+```ruby
+begin
+  UserTwin.from_object({ id: 42 })
+rescue Minitwin::Error => e
+  # any Minitwin-raised error, regardless of which of the five classes below
+end
+```
+
+| Class | Ruby base class | Raised when |
+|---|---|---|
+| `Minitwin::DefinitionError` | `ArgumentError` | The DSL itself is used incorrectly (e.g. `nested` without a block, `setter:` together with a block, `validates:` without ActiveModel). |
+| `Minitwin::CompositionError` | `RuntimeError` | A composition source given via `on:` is missing, or the source object doesn't respond to the composed property. |
+| `Minitwin::AliasError` | `ArgumentError` | A dynamic alias (`as: -> { ... }`) is invalid, forbidden, or collides with another alias or an existing method. |
+| `Minitwin::CoercionError` | `TypeError` | A value assigned to a block/nested property cannot be converted into that nested twin (or a custom `type:` callable raises it explicitly). |
+| `Minitwin::ParseError` | `ArgumentError` | Input data is structurally unusable — malformed JSON in `from_json`, or a Hash passed to `from_object` instead of `from_objects`. |
+
+`AliasError` (raised from the dynamic-alias checks) and `CompositionError` (raised from the
+`on:` composition checks) keep their original Ruby base class unchanged — `ArgumentError` and
+`RuntimeError` respectively — so existing `rescue ArgumentError` / `rescue RuntimeError` call
+sites around those two paths are unaffected by this release.
+
+Four previously-`RuntimeError` paths, however, now raise an `ArgumentError`/`TypeError`
+sibling instead:
+
+- `property ... setter: ->(v) { ... } do ... end` (a `setter:` combined with a block) —
+  now `Minitwin::DefinitionError` (`ArgumentError`)
+- Assigning an unconvertible value to a block/nested property — now `Minitwin::CoercionError`
+  (`TypeError`)
+- `validates:` used without ActiveModel available — now `Minitwin::DefinitionError`
+  (`ArgumentError`)
+- `from_object` called with a Hash instead of `from_objects` — now `Minitwin::ParseError`
+  (`ArgumentError`)
+
+Code that specifically rescued `RuntimeError` around any of these four call sites must widen
+the rescue to `StandardError` / `Minitwin::Error`, or catch the new specific class, to keep
+catching them. `Minitwin::Error` is an additional, more specific way to catch any of the five
+classes above, not a replacement hierarchy.
+
+This release ships three behavior changes relative to earlier versions:
+
+1. **`from_json` wraps malformed JSON.** A `JSON::ParserError` raised while parsing is now
+   wrapped into `Minitwin::ParseError`; the original error is still available via `#cause`:
+
+   ```ruby
+   begin
+     UserTwin.from_json("{not valid json")
+   rescue Minitwin::ParseError => e
+     e.cause #=> #<JSON::ParserError: ...>
+   end
+   ```
+
+   Code that rescued `JSON::ParserError` directly around `from_json` needs to rescue
+   `Minitwin::ParseError` (or `ArgumentError`) instead.
+2. **Four `RuntimeError` sites were reclassified**, as listed above — `rescue RuntimeError`
+   around them must be widened.
+3. **A custom `type:` callable that raises a `Minitwin::Error` subclass now propagates it**
+   instead of having it swallowed:
+
+   ```ruby
+   property :x, type: ->(v) { raise Minitwin::ParseError, "bad input" if v.blank?; v }
+   ```
+
+   Before this release: a `Minitwin::Error` raised inside a custom `type:` callable was
+   swallowed and the raw value returned. Now it propagates.
 
 ---
 
