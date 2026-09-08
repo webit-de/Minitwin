@@ -9,6 +9,7 @@
 - [Validations](#validations)
 - [Working with objects](#working-with-objects)
 - [Composition](#composition)
+- [Round-tripping](#round-tripping)
 - [DSL Reference](#dsl-reference)
 - [Public Interface](#public-interface)
 
@@ -322,6 +323,86 @@ or `getter: -> { address&.installation&.street }`.
 
 The flattening only works for reading: `site.city = "Hamburg"` is discarded, so assign to
 `site.address.city` instead.
+
+## Round-tripping
+
+Talking to an API usually means two conversions: your own model has to become a request
+payload, and the response has to become your own model again. Use **one twin per
+direction** — a request twin that serializes, and a response twin that deserializes.
+
+The request twin is written from your side: the property names are your model's attribute
+names (so `from_object` can read them), and `as:` supplies the names the API expects:
+
+```ruby
+class SubscriptionRequestTwin < Minitwin
+  property :plan
+  property :seats,      as: :seat_count,      type: Types::Params::Integer.lax
+  property :start_date, as: :activation_date, type: Types::Params::Date.lax
+end
+
+subscription = Subscription.new(plan: "pro", seats: "3", start_date: "2026-01-01")
+
+request = SubscriptionRequestTwin.from_object(subscription)
+request.to_json
+#=> '{"plan":"pro","seat_count":3,"activation_date":"2026-01-01"}'
+```
+
+The response twin is written from the API's side: the property names are the keys the API
+sends (so `from_json`/`from_hash` can pick them up), and `as:` maps them back onto your own
+vocabulary — which is also the name `sync` writes to on the model:
+
+```ruby
+class SubscriptionResponseTwin < Minitwin
+  property :id,              as: :remote_id
+  property :status
+  property :seat_count,      as: :seats,      type: Types::Params::Integer.lax
+  property :activation_date, as: :start_date, type: Types::Params::Date.lax
+end
+
+response = SubscriptionResponseTwin.from_json(api_response_body)
+response.remote_id   #=> "sub_1"
+response.seats       #=> 5
+response.start_date  #=> #<Date: 2026-02-01>
+
+response.sync(subscription)
+subscription.remote_id   #=> "sub_1"
+subscription.seats       #=> 5
+subscription.start_date  #=> #<Date: 2026-02-01>
+```
+
+Both twins declare the same mapping, just from opposite ends. Coercion happens on both
+legs, so the payload carries a real `Integer` and the model receives a real `Date` — even
+though the wire format is a string in both cases.
+
+### Why two twins and not one?
+
+Reusing a single twin for both legs looks tempting: the mapping is the same, so why declare
+it twice? Because a twin is a *directed* mapping, not a bidirectional schema. Its structure
+is already asymmetric:
+
+- **Input keys** are the property names (the generated setters), so a hash is read using the
+  original names.
+- **Output keys** follow `as:`, and `as:` also protects the original name — so what
+  `to_hash` writes is deliberately not what `from_hash` accepts.
+
+More importantly, the interesting parts of a mapping cannot be inverted automatically:
+
+- **Type coercion is one-way.** `Types::Params::Integer.lax` turns `"3"` into `3`, but
+  nothing says whether the reverse should be `"3"`, `"3.0"`, or `3`. And because coercion
+  errors fall back to the raw value, the same type can even be a no-op for some inputs —
+  there is no function to invert.
+- **Dynamic `as:` aliases depend on the instance.** `property :value, as: -> { key }` names
+  the output key from another attribute. Going backwards would mean guessing which incoming
+  key was produced by that lambda before the twin exists to evaluate it.
+- **`getter:`/`setter:` lambdas are opaque.** They are arbitrary Ruby, so a getter that
+  joins, formats, or derives a value gives no way to compute the inverse. A `setter:` that
+  normalizes input cannot be run backwards to recover what came in.
+
+So instead of one twin trying to be reversible, write each direction explicitly. Two small
+twins are cheap, they document the API contract twice from the two perspectives that matter,
+and each one keeps the coercions and defaults appropriate for its own direction — the
+outbound payload and the inbound response often differ anyway (the response carries an `id`
+and a `status` the request never sends).
 
 ---
 
