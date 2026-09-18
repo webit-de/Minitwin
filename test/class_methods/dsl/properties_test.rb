@@ -202,6 +202,26 @@ class DslPropertiesTest < ActiveSupport::TestCase
     assert_equal 42, obj.count
   end
 
+  test "expose_nil is stored in the property metadata" do
+    klass = Class.new(Minitwin) do
+      property :always_there, expose_nil: true
+      property :plain
+    end
+
+    assert klass.properties[:always_there][:expose_nil]
+    refute klass.properties[:plain][:expose_nil]
+  end
+
+  test "expose_nil combined with expose false raises" do
+    error = assert_raises(ArgumentError) do
+      Class.new(Minitwin) do
+        property :internal, expose: false, expose_nil: true
+      end
+    end
+
+    assert_equal "Property 'internal' cannot combine `expose: false` with `expose_nil: true`.", error.message
+  end
+
   test "boolean property with question mark" do
     klass = Class.new(Minitwin) do
       property :active?
