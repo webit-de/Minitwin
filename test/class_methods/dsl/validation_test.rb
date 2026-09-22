@@ -63,7 +63,7 @@ class DslValidationTest < ActiveSupport::TestCase
     end
 
     # Should raise when trying to add validations without ActiveModel
-    error = assert_raises(RuntimeError) do
+    error = assert_raises(Minitwin::DefinitionError) do
       base.class_eval do
         property :name, validates: { presence: true }
       end
