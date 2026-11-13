@@ -193,4 +193,16 @@ class DslNestedTest < ActiveSupport::TestCase
     # Should be able to access via the nested group
     assert_equal "2024-01-01", obj.timestamp
   end
+
+  test "nested with an unknown option raises a Minitwin::DefinitionError" do
+    error = assert_raises(Minitwin::DefinitionError) do
+      Class.new(Minitwin) do
+        nested :address, sa: :location do
+          property :city
+        end
+      end
+    end
+
+    assert_equal "Unknown option `sa:` for nested 'address'. Allowed options: as.", error.message
+  end
 end
