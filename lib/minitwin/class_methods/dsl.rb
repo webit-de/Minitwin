@@ -43,7 +43,9 @@ class Minitwin
       # @rbs twin: untyped
       # @rbs on: Symbol
       # @rbs return: void
-      def collection(name, validates: {}, default: [], as: nil, getter: nil, twin: nil, on: nil, **_opts, &block)
+      def collection(name, validates: {}, default: [], as: nil, getter: nil, twin: nil, on: nil, **opts, &block)
+        reject_unknown_options!(:collection, name, opts)
+
         nested_class = block ? create_nested_class(name:, &block) : nil
         element_klass = twin || nested_class
         ivar = Minitwin::Utils.ivar_name(name)
@@ -85,8 +87,10 @@ class Minitwin
       # @rbs return: void
       def property(
         name, validates: {}, default: nil, as: nil, expose: true, expose_nil: false, readonly: false, type: nil,
-        getter: nil, setter: nil, twin: nil, on: nil, **_opts, &block
+        getter: nil, setter: nil, twin: nil, on: nil, **opts, &block
       )
+        reject_unknown_options!(:property, name, opts)
+
         if expose_nil && !expose
           raise(
             DefinitionError,
@@ -152,7 +156,8 @@ class Minitwin
       # @rbs name: Symbol
       # @rbs as: Symbol | Proc
       # @rbs return: void
-      def nested(name, as: nil, &block)
+      def nested(name, as: nil, **opts, &block)
+        reject_unknown_options!(:nested, name, opts)
         raise DefinitionError, "nested requires a block" unless block_given?
 
         property(name, as: as, &block)
@@ -231,6 +236,21 @@ class Minitwin
         end
 
         invalidate_caches
+      end
+
+      # Unknown options would otherwise be dropped silently, hiding typos
+      # such as `validatse:`. The allowed list is read from the DSL method's
+      # own signature so it cannot drift from it.
+      def reject_unknown_options!(dsl_method, name, opts)
+        return if opts.empty?
+
+        allowed = method(dsl_method).parameters.filter_map { |kind, key| key if kind == :key }
+        unknown = opts.keys.map { |key| "`#{key}:`" }.join(", ")
+        raise(
+          DefinitionError,
+          "Unknown option#{"s" if opts.size > 1} #{unknown} for #{dsl_method} '#{name}'. " \
+            "Allowed options: #{allowed.join(", ")}."
+        )
       end
 
       def constantize_name(name)

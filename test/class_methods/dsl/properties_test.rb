@@ -244,4 +244,39 @@ class DslPropertiesTest < ActiveSupport::TestCase
       obj.active? # Should not raise
     end
   end
+
+  test "property with an unknown option raises a Minitwin::DefinitionError" do
+    error = assert_raises(Minitwin::DefinitionError) do
+      Class.new(Minitwin) do
+        property :name, validatse: { presence: true }
+      end
+    end
+
+    assert_equal(
+      "Unknown option `validatse:` for property 'name'. Allowed options: validates, default, as, expose, " \
+        "expose_nil, readonly, type, getter, setter, twin, on.",
+      error.message
+    )
+  end
+
+  test "property with several unknown options names all of them" do
+    error = assert_raises(Minitwin::DefinitionError) do
+      Class.new(Minitwin) do
+        property :name, validatse: {}, defualt: 1
+      end
+    end
+
+    assert_match(/\AUnknown options `validatse:`, `defualt:` for property 'name'\./, error.message)
+  end
+
+  test "property with an unknown option does not define the property" do
+    klass = Class.new(Minitwin)
+
+    assert_raises(Minitwin::DefinitionError) do
+      klass.class_eval { property :name, typo: true }
+    end
+
+    refute klass.properties.key?(:name)
+    refute klass.method_defined?(:name)
+  end
 end

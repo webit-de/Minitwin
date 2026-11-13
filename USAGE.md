@@ -421,7 +421,7 @@ end
 
 | Class | Ruby base class | Raised when |
 |---|---|---|
-| `Minitwin::DefinitionError` | `ArgumentError` | The DSL itself is used incorrectly (e.g. `nested` without a block, `setter:` together with a block, `validates:` without ActiveModel). |
+| `Minitwin::DefinitionError` | `ArgumentError` | The DSL itself is used incorrectly (e.g. an unknown option such as a misspelled `validatse:`, `nested` without a block, `setter:` together with a block, `validates:` without ActiveModel). |
 | `Minitwin::CompositionError` | `RuntimeError` | A composition source given via `on:` is missing, or the source object doesn't respond to the composed property. |
 | `Minitwin::AliasError` | `ArgumentError` | A dynamic alias (`as: -> { ... }`) is invalid, forbidden, or collides with another alias or an existing method. |
 | `Minitwin::CoercionError` | `TypeError` | A value assigned to a block/nested property cannot be converted into that nested twin (or a custom `type:` callable raises it explicitly). |
@@ -481,6 +481,12 @@ This release ships three behavior changes relative to earlier versions:
 ---
 
 ## DSL Reference
+
+`property`, `collection` and `nested` accept only the options listed below. Any other option —
+typically a typo such as `validatse:` — raises a `Minitwin::DefinitionError` when the class is
+defined, naming the unknown option and the allowed ones. Before this release unknown options were
+silently ignored; this includes `property`-only options passed to `collection` (e.g.
+`collection :items, expose: false`), which never had an effect and now raise as well.
 
 ### `property`
 
