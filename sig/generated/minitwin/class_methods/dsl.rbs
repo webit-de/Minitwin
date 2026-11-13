@@ -28,7 +28,7 @@ class Minitwin
       # @rbs twin: untyped
       # @rbs on: Symbol
       # @rbs return: void
-      def collection: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?getter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
+      def collection: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?getter: Proc, ?twin: untyped, ?on: Symbol, **untyped opts) ?{ (?) -> untyped } -> void
 
       # @rbs name: Symbol
       # @rbs validates: Hash[Symbol, untyped]
@@ -43,12 +43,17 @@ class Minitwin
       # @rbs twin: untyped
       # @rbs on: Symbol
       # @rbs return: void
-      def property: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?expose: bool, ?expose_nil: bool, ?readonly: bool, ?type: untyped, ?getter: Proc, ?setter: Proc, ?twin: untyped, ?on: Symbol, **untyped _opts) ?{ (?) -> untyped } -> void
+      def property: (Symbol name, ?validates: Hash[Symbol, untyped], ?default: untyped, ?as: untyped, ?expose: bool, ?expose_nil: bool, ?readonly: bool, ?type: untyped, ?getter: Proc, ?setter: Proc, ?twin: untyped, ?on: Symbol, **untyped opts) ?{ (?) -> untyped } -> void
 
       # @rbs name: Symbol
       # @rbs as: Symbol | Proc
       # @rbs return: void
-      def nested: (Symbol name, ?as: untyped) ?{ (?) -> untyped } -> void
+      def nested: (Symbol name, ?as: untyped, **untyped opts) ?{ (?) -> untyped } -> void
+
+      # Unknown options would otherwise be dropped silently, hiding typos
+      # such as `validatse:`. The allowed list is read from the DSL method's
+      # own signature so it cannot drift from it.
+      def reject_unknown_options!: (untyped dsl_method, untyped name, untyped opts) -> untyped
 
       def constantize_name: (untyped name) -> untyped
 
